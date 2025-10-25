@@ -18,14 +18,6 @@
                 <form role="search">
                     <input class="form-control" type="search" placeholder="Search photos and more..." aria-label="Search ">
                 </form>
-                {{-- <div class="d-grid gap-2 d-md-flex justify-content-md-start">
-                    <button type="button" class="btn btn-primary btn-lg px-4 me-md-2">
-                        Primary
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary btn-lg px-4">
-                        Default
-                    </button>
-                </div> --}}
             </div>
         </div>
     </div>
