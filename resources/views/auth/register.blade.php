@@ -109,7 +109,7 @@
                         <label for="password_confirmation">Confirm Password</label>
                     </div>
 
-                    <button class="w-100 btn btn-lg btn-primary" type="submit">
+                    <button class="w-100 btn btn-lg btn-dark" type="submit">
                         Sign up
                     </button>
 

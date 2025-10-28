@@ -13,7 +13,7 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6 enctype="multipart/form-data">
+    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data">
         @csrf
         @method('patch')
 
@@ -26,7 +26,7 @@
         <div class="mb-3">
             <label for="name" :value="__('Name')" class="form-label">Name</label>
             <input id="name" name="name" type="text" class="form-control @error('name') is-invalid @enderror"
-                value="{{ old('name', $user->name) }}" required autofocus autocomplete="name">
+                value="{{ old('name', $user->name) }}" required autocomplete="name">
 
             @error('name')
                 <div class="invalid-feedback">
@@ -80,12 +80,11 @@
             @enderror
         </div>
 
-        <div class="flex items-center gap-4">
-            <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
+        <div class="d-flex align-items-center gap-4">
+            <button type="submit" class="btn btn-dark">{{ __('Save') }}</button>
             @if (session('status') === 'profile-updated')
                 <span class="text-success">{{ __('Saved.') }}</span>
             @endif
         </div>
-
     </form>
 </section>

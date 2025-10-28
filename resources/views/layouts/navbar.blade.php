@@ -2,11 +2,11 @@
     <div class="container">
         <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
             <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
-                <img src="{{ url('aset/rupaia_logo.png') }}" alt="Logo" width="50"
+                <img src="{{ url('aset/rupaia_logo.png') }}" alt="Logo" class="rounded-circle" width="50"
                     class="d-inline-block align-text-top">
             </a>
             <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-                <li><a href="/" class="nav-link px-2 text-white">Home</a></li>
+                {{-- <li><a href="/" class="nav-link px-2 text-white">Home</a></li> --}}
                 <li><a href="/about" class="nav-link px-2 text-white">About</a></li>
                 <li><a href="#" class="nav-link px-2 text-white">License</a></li>
             </ul>
