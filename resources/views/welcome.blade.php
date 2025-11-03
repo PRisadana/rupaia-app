@@ -9,11 +9,11 @@
             </div>
             <div class="col-lg-6 items-center">
                 <h1 class="display-5 fw-bold text-body-emphasis lh-1 mb-3">
-                    Temukan karya visual autentik dari kreator terbaik Indonesia.
+                    Discover authentic visual works from Indonesia's best creators.
                 </h1>
                 <p class="lead">
-                    Jelajahi koleksi foto, ilustrasi, dan video premium untuk proyek Anda, atau mulai jual karya Anda di
-                    platform yang aman dan terpercaya.
+                    Explore a collection of premium photos, illustrations, and videos for your projects, or start selling
+                    your work on a secure and trusted platform.
                 </p>
                 <form role="search">
                     <input class="form-control" type="search" placeholder="Search photos and more..." aria-label="Search ">

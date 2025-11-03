@@ -4,7 +4,7 @@
             <a href="/" class="mb-3 me-2 mb-md-0 text-body-secondary text-decoration-none lh-1"
                 aria-label="Bootstrap">
                 <img src="{{ url('aset/rupaia_logo.png') }}" alt="Logo" width="30"
-                    class="d-inline-block align-text-top">
+                    class="d-inline-block align-text-top rounded-circle">
             </a>
             <span class="mb-3 mb-md-0 text-body-secondary">© 2025 Company, inc</span>
         </div>

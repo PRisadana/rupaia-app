@@ -5,10 +5,10 @@
         <div class="row align-items-center g-lg-5 py-5">
             <div class="col-lg-7 text-center text-lg-start">
                 <h1 class="display-4 fw-bold lh-1 text-body-emphasis mb-3">
-                    Selamat Datang Kembali
+                    Hi Dear, Welcome Back!
                 </h1>
                 <p class="col-lg-10 fs-4">
-                    Silakan masuk ke akun Rupaia Anda untuk melanjutkan.
+                    Please enter your credentials to access your account.
                 </p>
             </div>
             <div class="col-md-10 mx-auto col-lg-5">
@@ -42,16 +42,13 @@
                         Sign in
                     </button>
 
-                    @if (Route::has('password.request'))
+                    <a href="{{ route('register') }}" class="nav-link px-2 text-dark mb-3 mt-3 ">Register new account</a>
+
+                    {{-- @if (Route::has('password.request'))
                         <a href="{{ route('password.request') }}" class="nav-link px-2 text-dark mb-3 mt-3">
                             {{ __('Forgot your password?') }}
                         </a>
-                    @endif
-
-                    <a href="{{ route('register') }}" class="nav-link px-2 text-dark mb-3 mt-3 ">Register new account</a>
-
-                    <hr class="my-4">
-                    <small class="text-body-secondary">By clicking Sign up, you agree to the terms of use.</small>
+                    @endif --}}
                 </form>
             </div>
         </div>

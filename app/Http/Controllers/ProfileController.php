@@ -33,7 +33,7 @@ class ProfileController extends Controller
             $request->user()->email_verified_at = null;
         }
 
-        // validasi manual di sini karena ProfileUpdateRequest tidak tahu ttg field baru kita
+        // validasi manual di sini karena ProfileUpdateRequest tidak tahu ttg field baru
         $request->validate([
         'bio' => ['nullable', 'string', 'max:1000'],
         'profile_photo_path' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],

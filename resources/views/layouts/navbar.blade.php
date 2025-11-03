@@ -1,7 +1,7 @@
 <header class="p-3 text-white bg-dark">
     <div class="container">
         <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-            <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
+            <a href="/" class="d-flex align-items-center mx-2 mb-2 mb-lg-0 text-white text-decoration-none">
                 <img src="{{ url('aset/rupaia_logo.png') }}" alt="Logo" class="rounded-circle" width="50"
                     class="d-inline-block align-text-top">
             </a>
