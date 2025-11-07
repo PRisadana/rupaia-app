@@ -14,6 +14,6 @@ class Tags extends Model
 
     public function contents()
     {
-        return $this->belongsToMany(Content::class, 'tb_content_tag');
+        return $this->belongsToMany(Content::class, 'tb_content_tag', 'id_tag', 'id_content', 'id', 'id');
     }
 }

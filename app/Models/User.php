@@ -50,12 +50,12 @@ class User extends Authenticatable
 
     public function folders()
     {
-        return $this->hasMany(Folder::class);
+        return $this->hasMany(Folder::class, 'id_users');
     }
 
     public function contents()
     {
-        return $this->hasMany(Content::class);
+        return $this->hasMany(Content::class, 'id_users');
     }
 
 

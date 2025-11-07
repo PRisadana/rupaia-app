@@ -29,7 +29,7 @@
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
 
                         <li>
-                            <a class="dropdown-item" href="#">
+                            <a class="dropdown-item" href="{{ route('content.index') }}">
                                 {{ __('Your Profile') }}
                             </a>
                         </li>

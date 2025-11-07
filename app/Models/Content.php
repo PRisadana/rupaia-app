@@ -20,16 +20,16 @@ class Content extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'id_users');
     }
 
     public function folder()
     {
-        return $this->belongsTo(Folder::class);
+        return $this->belongsTo(Folder::class, 'id_folder');
     }
 
     public function tags()
     {
-        return $this->belongsToMany(Tags::class, 'tb_content_tag');
+        return $this->belongsToMany(Tags::class, 'tb_content_tag', 'id_content', 'id_tag');
     }
 }
