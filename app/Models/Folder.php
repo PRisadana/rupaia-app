@@ -20,9 +20,9 @@ class Folder extends Model
         return $this->belongsTo(User::class, 'id_users');
     }
 
-    public function content()
+    public function contents()
     {
-        return $this->hasMany(Folder::class);
+        return $this->hasMany(Folder::class, 'id');
     }
 
     public function parent()

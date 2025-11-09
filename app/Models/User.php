@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+use App\Models\Content;
+
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -55,8 +57,6 @@ class User extends Authenticatable
 
     public function contents()
     {
-        return $this->hasMany(Content::class, 'id_users');
+        return $this->hasMany(Content::class, 'id_users', 'id');
     }
-
-
 }

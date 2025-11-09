@@ -15,12 +15,12 @@
             <p class="col-lg-8 mx-auto my-3 fs-5 text-muted">
                 {{ Auth::user()->bio ?? 'This user has not set a bio yet.' }}
             </p>
-            <div class="d-inline-flex gap-2 my-4">
+            <div class="d-inline-flex gap-2 my-3">
                 <button class="d-inline-flex align-items-center btn btn-primary px-4 rounded-pill" type="button">
                     <a class="text-white nav-link" href="{{ route('profile.edit') }}">{{ __('Profile Setting') }}</a>
                 </button>
                 <button class="d-inline-flex align-items-center btn btn-outline-secondary px-4 rounded-pill" type="button">
-                    <a class="text-dark nav-link" href="{{ route('content.create') }}">{{ __('Upload Content') }}</a>
+                    <a class="text-dark nav-link" href="{{ route('folder.create') }}">{{ __('Add Folder') }}</a>
                 </button>
             </div>
         </div>
@@ -28,43 +28,44 @@
 
     <ul class="nav nav-underline justify-content-center">
         <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="{{ route('content.index') }}">Contents</a>
+            <a class="nav-link" href="{{ route('content.index') }}">Contents</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="{{ route('folder.index') }}">Folders</a>
+            <a class="nav-link active" aria-current="page" href="{{ route('folder.index') }}">Folders</a>
         </li>
     </ul>
 
+    {{-- <div class="row my-4">
+        <div>
+            <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Landscape</li>
+                </ol>
+            </nav>
+        </div>
+    </div> --}}
+
     <div class="row my-4">
-        @foreach ($contents as $content)
+        @foreach ($folders as $folder)
             <div class="col-md-4 mb-4">
                 <div class="card">
-                    <img src="{{ asset('storage/' . $content->path_low_res) }}" class="card-img-top"
-                        alt="{{ $content->content_title }}">
+                    {{-- <img src="{{ asset('storage/' . $content->path_low_res) }}" class="card-img-top"
+                        alt="{{ $content->content_title }}"> --}}
 
                     <div class="card-body">
-                        <h5 class="card-title">{{ $content->content_title }}</h5>
-                        <p class="card-text">Description: {{ $content->content_description }}</p>
-                        <p class="card-text">Folder: {{ $content->folder->folder_name }}</p>
-                        <p class="card-text">Visibility Content: {{ $content->visibility_content }}</p>
-                        <p class="card-text">
-                            Tags:
-                            @foreach ($content->tags as $tag)
-                                <span class="badge bg-secondary">{{ $tag->name_tag }}</span>
-                            @endforeach
-                        </p>
-                        <div col-4>
-
-                        </div>
+                        <h5><a href="#" class="card-title">{{ $folder->folder_name }}</a></h5>
+                        <p class="card-text">Description: {{ $folder->folder_description }}</p>
+                        {{-- <p class="card-text">Visibility Content: {{ $content->visibility_content }}</p> --}}
                         <div class="card">
                             <div></div>
                         </div>
                         <div class="d-flex flex-row mb-2 my-3">
-                            <a href="{{ route('content.edit', $content) }}"
+                            <a href="{{ route('folder.edit', $folder) }}"
                                 class="btn btn-sm btn-outline-primary mx-1">Edit</a>
 
-                            <form action="{{ route('content.destroy', $content) }}" method="POST"
-                                onsubmit="return confirm ('Are you sure for delete this content?')">
+                            <form action="{{ route('folder.destroy', $folder) }} " method="POST"
+                                onsubmit="return confirm ('Are you sure for delete this folder?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger">Delete</button>
@@ -76,6 +77,6 @@
         @endforeach
     </div>
     <div class="mt-4 d-flex justify-content-center">
-        {{ $contents->links() }}
+        {{ $folders->links() }}
     </div>
 @endsection

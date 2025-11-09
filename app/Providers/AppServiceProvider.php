@@ -5,7 +5,9 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Content;
+use App\Models\Folder;
 use App\Policies\ContentPolicy;
+use App\Policies\FolderPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,5 +25,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(Content::class, ContentPolicy::class);
+        Gate::policy(Folder::class, FolderPolicy::class);
     }
 }

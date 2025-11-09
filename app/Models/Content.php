@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Content extends Model
 {
+    use HasFactory;
+
     protected $table = 'tb_content';
 
     protected $fillable = [
@@ -20,7 +24,7 @@ class Content extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'id_users');
+        return $this->belongsTo(User::class, 'id_users', 'id');
     }
 
     public function folder()
@@ -30,6 +34,17 @@ class Content extends Model
 
     public function tags()
     {
-        return $this->belongsToMany(Tags::class, 'tb_content_tag', 'id_content', 'id_tag');
+        return $this->belongsToMany(Tags::class, 'tb_content_tag', 'id_content', 'id_tag', 'id', 'id');
+    }
+
+    protected static function booted(): void
+    {
+        // Ini akan berjalan OTOMATIS setiap kali $content->delete() dipanggil
+        static::deleting(function (Content $content) {
+            Storage::disk('public')->delete([$content->path_hi_res, $content->path_low_res]);
+
+            // Hapus relasi tags ketika konten dihapus
+            $content->tags()->detach();
+        });
     }
 }

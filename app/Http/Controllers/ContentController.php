@@ -23,42 +23,37 @@ class ContentController extends Controller
 {
     public function index(Request $request)
     {
-        $contents = $request->user()->contents()->with('folder', 'tags')->latest()->paginate(12);
+        $user = $request->user();
 
+        $contents = $user->contents()->with('folder', 'tags')->latest()->paginate(10);
+
+        // // ambil konten
+        // // jika $currentFolder ada, ambil konten di dalamnya
+        // // jika $currentFolder null, ambil konten yang tidak berada di folder manapun (id_folder = null)
+        // $queryContents = $folder ? $folder->contents() : $user->contents()->whereNull('id_folder');
+
+        // $contents = $queryContents->with('folder', 'tags')->latest()->paginate(12);
+
+        // Kirim data ke view
         return view('dashboard.content.index', compact('contents'));
     }
 
     // menampilkan form untuk mengunggah konten baru
     public function create(Request $request)
     {
+        // $currentFolder = $folder;
+
+        // // Otorisasi: Pastikan user hanya mengakses folder miliknya sendiri
+        // if ($currentFolder) {
+        //     $this->authorize('view', $currentFolder);
+        // }
+
         // Ambil semua folder milik pengguna yang sedang login
         $folders = $request->user()->folders()->orderBy('folder_name')->get();
 
         $tags = Tags::orderBy('name_tag')->get();
 
         return view('dashboard.content.create', compact('folders', 'tags'));
-    }
-
-    // menyimpan folder baru
-    public function storeFolder(Request $request)
-    {
-        $validated = $request->validate([
-            'folder_name' => 'required|string|max:255',
-            'folder_description' => 'nullable|string|max:1000',
-            'id_parent' => [
-                'nullable',
-                Rule::exists('tb_folder', 'id')->where(function ($query) {
-                    return $query->where('id_users', Auth::id());
-                })
-            ],
-        ]);
-
-        //  Buat folder baru menggunakan relasi Eloquent
-        // 'folders()' adalah relasi 'hasMany' di Model User
-        // Ini otomatis mengisi 'user_id' dengan ID user yang sedang login
-        $request->user()->folders()->create($validated);
-
-        return back()->with('success', 'Folder created successfully!');
     }
 
     // menyimpan konten baru (upload)
@@ -75,7 +70,7 @@ class ContentController extends Controller
             ],
             'name_tag' => 'nullable|array',
             'name_tag.*' => 'exists:tb_tag,id',
-            'path_hi_res' => 'required|file|mimes:jpg,jpeg,png|max:10240',
+            'path_hi_res' => 'required|image|mimes:jpg,jpeg,png|max:10240',
             'visibility_content' => 'required|in:public,private,by_request',
         ]);
 
@@ -133,7 +128,7 @@ class ContentController extends Controller
         // OTORISASI: Cek apakah user ini boleh meng-update konten ini. Ini akan memanggil ContentPolicy@update
         $this->authorize('update', $content);
 
-        $folders = $request->user()->folders()->orderBy('folder_name')->get();
+        $folders = $request->user()->folders()->get();
         $tags = Tags::orderBy('name_tag')->get();
 
         return view('dashboard.content.edit', compact('content', 'folders', 'tags'));
@@ -179,5 +174,132 @@ class ContentController extends Controller
         $content->delete();
 
         return redirect()->route('content.index')->with('success', 'Content deleted successfully!');
+    }
+
+    public function folderIndex(Request $request)
+    {
+        $user = $request->user();
+        $folders = $user->folders()->latest()->paginate(10);
+        // // Menentukan folder saat ini
+        // $currentFolder = $folder;
+
+        // // Otorisasi: Pastikan user hanya mengakses folder miliknya sendiri
+        // if ($currentFolder) {
+        //     $this->authorize('view', $currentFolder);
+        // }
+
+        // ambil subfolder
+        // jika $currentFolder ada, ambil subfoldernya (children)
+        // jika $currentFolder null, ambil folder root (id_parent = null)
+        // $queryFolders = $currentFolder ? $currentFolder->children() : $user->folders()->whereNull('id_parent');
+
+        // $folders = $queryFolders->orderBy('folder_name')->get();
+
+        // ambil konten
+        // jika $currentFolder ada, ambil konten di dalamnya
+        // jika $currentFolder null, ambil konten yang tidak berada di folder manapun (id_folder = null)
+        // $queryContents = $folder ? $folder->contents() : $user->contents()->whereNull('id_folder');
+
+        // $contents = $queryContents->with('folder', 'tags')->latest()->paginate(12);
+
+        // // Breadcrumbs
+        // $breadcrumbs = collect();
+        // $tempFolder = $currentFolder;
+        // while ($tempFolder) {
+        //     $breadcrumbs->prepend($tempFolder);
+        //     $tempFolder = $tempFolder->parent; // memanggil relasi parent di Model Folder
+        // };
+
+        // Kirim data ke view
+        // return view('dashboard.folder.index', compact('contents'));
+
+        return view('dashboard.folder.index', compact('folders'));
+    }
+
+    // menampilkan form untuk menambahkan folder baru
+    public function createFolder(Request $request, ?Folder $folder)
+    {
+        // Ambil semua folder milik pengguna yang sedang login
+        $allFolders = $request->user()->folders()->orderBy('folder_name')->get();
+
+        return view('dashboard.folder.create', compact('allFolders'));
+    }
+
+    // menyimpan folder baru
+    public function storeFolder(Request $request)
+    {
+        $validated = $request->validate([
+            'folder_name' => 'required|string|max:255',
+            'folder_description' => 'nullable|string|max:1000',
+            // 'id_parent' => [
+            //     'nullable',
+            //     Rule::exists('tb_folder', 'id')->where(function ($query) {
+            //         return $query->where('id_users', Auth::id());
+            //     })
+            // ],
+        ]);
+
+        $request->user()->folders()->create($validated);
+
+        return redirect()->route('folder.index')->with('success', 'Folder created successfully!');
+    }
+
+    public function editFolder(Request $request, Folder $folder)
+    {
+        // OTORISASI: Cek apakah user ini boleh meng-update folder ini. Ini akan memanggil FolderPolicy@update
+        $this->authorize('update', $folder);
+
+        // $folder = $request->user()->folders()->get();
+
+        // dapatkan daftar folder yang bisa dipilih sebagai parent,
+        // kecuali folder itu sendiri (untuk menghindari circular reference)
+        // $possibleParents = $allFolders->where('id', '!=', $folder->id);
+
+        return view('dashboard.folder.edit', compact('folder'));
+    }
+
+    public function updateFolder(Request $request, Folder $folder)
+    {
+        $this->authorize('update', $folder);
+
+        $validated = $request->validate([
+            'folder_name' => 'required|string|max:255',
+            'folder_description' => 'nullable|string|max:1000',
+            // 'id_parent' => [
+            //     'nullable', // Boleh 'null' (jika dipindah ke root)
+            //     Rule::exists('tb_folder', 'id')->where('id_users', Auth::id()), // Harus milik user
+            //     Rule::notIn([$folder->id]) // Tidak boleh sama dengan dirinya sendiri
+            // ],
+        ]);
+
+        $folderData = [
+            'folder_name' => $validated['folder_name'],
+            'folder_description' => $validated['folder_description'],
+            // 'id_parent' => $validated['id_parent'],
+        ];
+
+        // update data
+        $folder->fill($folderData);
+        $folder->save();
+
+        return redirect()->route('folder.index')->with('success', 'Folder updated successfully!');
+    }
+
+    public function destroyFolder(Folder $folder)
+    {
+        $this->authorize('delete', $folder);
+
+        // Simpan parent id untuk redirect setelah penghapusan
+        // $parentFolder = $folder->parent;
+
+        // INI AKAN MEMICU SEMUA KEJADIAN:
+        // - DB akan menghapus folder ini
+        // - DB (via cascade) akan menghapus semua sub-folder
+        // - DB (via cascade) akan menghapus semua 'content' di folder ini & sub-folder
+        // - Model Event 'deleting' akan dipanggil untuk 
+        //   setiap 'content' yang dihapus, dan membersihkan file di storage.
+        $folder->delete();
+
+        return redirect()->route('folder.index')->with('success', 'Folder deleted successfully!');
     }
 }

@@ -61,10 +61,10 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
+                                {{-- <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
                                     data-bs-target="#tambahFolderModal">
                                     Buat Folder Baru
-                                </button>
+                                </button> --}}
                                 @error('id_folder')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

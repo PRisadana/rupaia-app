@@ -70,16 +70,20 @@
                                     @endforeach
                                 </select>
 
-                                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
+
+                                {{-- <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
                                     data-bs-target="#tambahFolderModal">
                                     Buat Folder Baru
-                                </button>
+                                </button> --}}
 
                                 @error('id_folder')
                                     <div class="invalid-feedback">
                                         {{ $message }}
                                     </div>
                                 @enderror
+                            </div>
+                            <div class="form-text">
+                                Folder di atas adalah folder utama
                             </div>
                         </div>
 
@@ -117,7 +121,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="tambahFolderModal" tabindex="-1" aria-labelledby="tambahFolderModalLabel"
+    {{-- <div class="modal fade" id="tambahFolderModal" tabindex="-1" aria-labelledby="tambahFolderModalLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -155,10 +159,10 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-primary">Simpan Folder</button>
-                    </div>
+                    </div> --}}
 
-                </form>
-            </div>
-        </div>
+    </form>
+    </div>
+    </div>
     </div>
 @endsection
