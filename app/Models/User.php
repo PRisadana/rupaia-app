@@ -52,7 +52,7 @@ class User extends Authenticatable
 
     public function folders()
     {
-        return $this->hasMany(Folder::class, 'id_users');
+        return $this->hasMany(Folder::class, 'id_users', 'id');
     }
 
     public function contents()

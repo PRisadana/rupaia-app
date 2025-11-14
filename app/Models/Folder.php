@@ -20,11 +20,6 @@ class Folder extends Model
         return $this->belongsTo(User::class, 'id_users');
     }
 
-    public function contents()
-    {
-        return $this->hasMany(Folder::class, 'id');
-    }
-
     public function parent()
     {
         return $this->belongsTo(Folder::class, 'id_parent');
@@ -33,5 +28,10 @@ class Folder extends Model
     public function children()
     {
         return $this->hasMany(Folder::class, 'id_parent');
+    }
+
+    public function contents()
+    {
+        return $this->hasMany(Content::class, 'id_folder', 'id');
     }
 }

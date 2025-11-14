@@ -35,17 +35,6 @@
         </li>
     </ul>
 
-    {{-- <div class="row my-4">
-        <div>
-            <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="#">Home</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Landscape</li>
-                </ol>
-            </nav>
-        </div>
-    </div> --}}
-
     <div class="row my-4">
         @foreach ($folders as $folder)
             <div class="col-md-4 mb-4">
@@ -54,7 +43,9 @@
                         alt="{{ $content->content_title }}"> --}}
 
                     <div class="card-body">
-                        <h5><a href="#" class="card-title">{{ $folder->folder_name }}</a></h5>
+                        <h5><a href="{{ route('detail.folder.show', $folder) }}"
+                                class="card-title">{{ $folder->folder_name }}</a>
+                        </h5>
                         <p class="card-text">Description: {{ $folder->folder_description }}</p>
                         {{-- <p class="card-text">Visibility Content: {{ $content->visibility_content }}</p> --}}
                         <div class="card">
