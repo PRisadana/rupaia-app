@@ -61,7 +61,7 @@
                     Make your Rupaia account now!
                 </h1>
                 <p class="col-lg-10 fs-4">
-                    Regiter your new account to start exploring and selling your visual works on Rupaia.
+                    Register your new account to start exploring and selling your visual works on Rupaia.
                 </p>
             </div>
             <div class="col-md-10 mx-auto col-lg-5">

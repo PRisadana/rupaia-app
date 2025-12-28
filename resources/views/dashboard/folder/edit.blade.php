@@ -43,6 +43,28 @@
                             @enderror
                         </div>
 
+                        <div class="mb-3">
+                            <label for="visibility_folder" :value="__('Folder Visibility')" class="form-label">Folder
+                                Visibility</label>
+                            <select name="visibility_folder" id="visibility_folder"
+                                class="form-select @error('visibility_folder') is-invalid @enderror">
+                                <option value="public" {{ old('visibility_folder') == 'public' ? 'selected' : '' }}>Public
+                                    (default)
+                                </option>
+                                <option value="private"
+                                    {{ old('visibility_folder', 'private') == 'private' ? 'selected' : '' }}>Private
+                                </option>
+                                <option value="by_request" {{ old('visibility_folder') == 'by_request' ? 'selected' : '' }}>
+                                    By Request</option>
+                            </select>
+
+                            @error('visibility_folder')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+
                         <button class="w-100 btn btn-lg btn-dark" type="submit">
                             Update Folder
                         </button>

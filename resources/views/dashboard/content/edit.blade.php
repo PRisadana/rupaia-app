@@ -11,9 +11,22 @@
                         </h2>
                     </header>
 
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <strong>Terjadi kesalahan:</strong>
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <form method="POST" action="{{ route('content.update', $content) }}" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
+
+                        <input type="hidden" name="id_folder" value="{{ $currentFolder?->id }}">
 
                         <div class="mb-3 text-center">
                             <img src="{{ asset('storage/' . $content->path_low_res) }}" class="img-thumbnail"
@@ -50,6 +63,31 @@
                         </div>
 
                         <div class="mb-3">
+                            <label class="form-label">Folder</label>
+                            <div class="form-control-plaintext">
+                                {{ $currentFolder->folder_name }}
+                            </div>
+                            <div class="form-text">
+                                To move content to another folder, use the <strong>move</strong> feature.
+                            </div>
+                        </div>
+
+                        {{-- <div class="mb-3">
+                            <label class="form-label">Visibilitas Konten</label>
+                            <div class="form-control-plaintext">
+                                @if ($content->folder)
+                                    {{ $content->folder->visibility_folder }}
+                                @else
+                                    {{ $content->visibility_content }}
+                                @endif
+                            </div>
+                            <div class="form-text">
+                                Visibilitas konten mengikuti visibilitas folder.
+                                Ubah lewat <strong>Edit Folder</strong> atau pindahkan konten ke folder lain.
+                            </div>
+                        </div> --}}
+
+                        {{-- <div class="mb-3">
                             <label for="id_folder" class="form-label">Pilih Folder</label>
                             <div class="input-group">
                                 <select class="form-select @error('id_folder') is-invalid @enderror" id="id_folder"
@@ -61,34 +99,30 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                {{-- <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
-                                    data-bs-target="#tambahFolderModal">
-                                    Buat Folder Baru
-                                </button> --}}
+                                
                                 @error('id_folder')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </div>
+                        </div> --}}
 
                         <div class="mb-3">
-                            <label for="visibility_content" class="form-label">Visibilitas</label>
+                            <label for="visibility_content" class="form-label">Visibility</label>
                             <select class="form-select" id="visibility_content" name="visibility_content" required>
                                 <option value="public"
                                     {{ old('visibility_content', $content->visibility_content) == 'public' ? 'selected' : '' }}>
-                                    Public (Default, semua orang bisa lihat)</option>
+                                    Public (Default, All people can see)</option>
                                 <option value="private"
                                     {{ old('visibility_content', $content->visibility_content) == 'private' ? 'selected' : '' }}>
-                                    Private (Hanya Anda yang lihat)</option>
+                                    Private (Just you can see)</option>
                                 <option value="by_request"
                                     {{ old('visibility_content', $content->visibility_content) == 'by_request' ? 'selected' : '' }}>
-                                    By Request (Pengguna lain harus meminta izin)</option>
+                                    By Request (Other user must have permission)</option>
                             </select>
                         </div>
 
                         <div class="mb-3">
-                            <label for="name_tag" class="form-label">Pilih Tags
-                                satu</label>
+                            <label for="name_tag" class="form-label">Choose Tags</label>
                             @php
                                 $selectedTagIDs = old('name_tag', $content->tags->pluck('id')->all());
                             @endphp

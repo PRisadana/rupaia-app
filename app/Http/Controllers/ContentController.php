@@ -25,7 +25,7 @@ class ContentController extends Controller
     {
         $user = $request->user();
 
-        $contents = $user->contents()->with('folder', 'tags')->latest()->paginate(10);
+        $contents = $user->contents()->with('folder', 'tags')->latest()->paginate(12);
 
         // Kirim data ke view
         return view('dashboard.content.index', compact('contents'));
@@ -45,6 +45,8 @@ class ContentController extends Controller
     // menyimpan konten baru (upload)
     public function store(Request $request)
     {
+        $user = $request->user();
+
         $validated = $request->validate([
             'content_title' => 'required|string|max:255',
             'content_description' => 'nullable|string',
@@ -56,9 +58,17 @@ class ContentController extends Controller
             ],
             'name_tag' => 'nullable|array',
             'name_tag.*' => 'exists:tb_tag,id',
-            'path_hi_res' => 'required|image|mimes:jpg,jpeg,png|max:10240',
-            'visibility_content' => 'required|in:public,private,by_request',
+            'path_hi_res' => 'required|image|mimes:jpg,jpeg,png|max:10240'
+            // 'visibility_content' => 'required|in:public,private,by_request',
         ]);
+
+        //cari folder tujuan
+        $folder = Folder::where('id', $validated['id_folder'])
+            ->where('id_users', $user->id)
+            ->firstOrFail();
+
+        // pakai visibility folder untuk konten
+        $visibility = $folder->visibility_folder;
 
         $file = $request->file('path_hi_res');
         $fileName = time() . '_' . $file->getClientOriginalName();
@@ -94,8 +104,14 @@ class ContentController extends Controller
             'content_description' => $validated['content_description'],
             'path_hi_res' => $path_hi_res,
             'path_low_res' => $path_low_res,
-            'visibility_content' => $validated['visibility_content'],
+            'visibility_content' => $visibility,
         ]);
+
+        // if($id_folder){
+        //     $visibility = $folder->visibility_folder;
+        // } else {
+        //     $visibility = 'public';
+        // }
 
         // Proses dan hubungkan tags
         if (!empty($validated['name_tag'])) {
@@ -114,10 +130,10 @@ class ContentController extends Controller
         // OTORISASI: Cek apakah user ini boleh meng-update konten ini. Ini akan memanggil ContentPolicy@update
         $this->authorize('update', $content);
 
-        $folders = $request->user()->folders()->whereNull('id_parent')->get();
         $tags = Tags::orderBy('name_tag')->get();
+        $currentFolder = $content->folder;
 
-        return view('dashboard.content.edit', compact('content', 'folders', 'tags'));
+        return view('dashboard.content.edit', compact('content', 'currentFolder', 'tags'));
     }
 
     public function update(Request $request, Content $content)
@@ -138,6 +154,10 @@ class ContentController extends Controller
             'name_tag.*' => 'exists:tb_tag,id',
             'visibility_content' => 'required|in:public,private,by_request',
         ]);
+
+        // $content->content_title = $validated['content_title'];
+        // $content->content_description = $validated['content_description'];
+        // $content->visibility_content = $content->folder->visibility_folder;
 
         $content->fill($validated);
         $content->save();
@@ -168,7 +188,7 @@ class ContentController extends Controller
 
         // $this->authorize('view', $folder);
 
-        $folders = $user->folders()->whereNull('id_parent')->latest()->paginate(10);
+        $folders = $user->folders()->whereNull('id_parent')->latest()->paginate(12);
 
         return view('dashboard.folder.index', compact('folders'));
     }
@@ -188,6 +208,8 @@ class ContentController extends Controller
         $validated = $request->validate([
             'folder_name' => 'required|string|max:255',
             'folder_description' => 'nullable|string|max:1000',
+            'visibility_folder' => 'required|in:public,private,by_request',
+            'id_parent' => ['nullable', 'exists:tb_folder,id']
         ]);
 
         $request->user()->folders()->create($validated);
@@ -210,11 +232,13 @@ class ContentController extends Controller
         $validated = $request->validate([
             'folder_name' => 'required|string|max:255',
             'folder_description' => 'nullable|string|max:1000',
+            'visibility_folder' => 'required|in:public,private,by_request',
         ]);
 
         $folderData = [
             'folder_name' => $validated['folder_name'],
             'folder_description' => $validated['folder_description'],
+            'visibility_folder' => $validated['visibility_folder']
         ];
 
         // update data
@@ -310,6 +334,7 @@ class ContentController extends Controller
         $validated = $request->validate([
             'folder_name' => 'required|string|max:255',
             'folder_description' => 'nullable|string|max:1000',
+            'visibility_folder' => 'required|in:public,private,by_request',
             'id_parent' => ['nullable', 'exists:tb_folder,id']
         ]);
 
@@ -324,7 +349,7 @@ class ContentController extends Controller
 
         // Kalau tidak ada parent → folder di root
         return redirect()
-            ->route('detail.folder.index')
+            ->route('folder.index')
             ->with('success', 'Folder root berhasil dibuat.');
     }
 
@@ -364,9 +389,19 @@ class ContentController extends Controller
             'visibility_content' => 'required|in:public,private,by_request',
         ]);
 
+        $id_user = $request->user()->id;
+        $id_folder = $validated['id_folder'];
+
+        //cari folder tujuan
+        $folder = Folder::where('id', $id_folder)
+            ->where('id_users', $id_user)
+            ->firstOrFail();
+
+        // pakai visibility folder untuk konten
+        $visibility = $folder->visibility_folder;
+
         $file = $request->file('path_hi_res');
         $fileName = time() . '_' . $file->getClientOriginalName();
-        $id_user = $request->user()->id;
 
         // Simpan file asli
         $path_hi_res = $file->storeAs("content_file/{$id_user}/hi_res", $fileName, 'public');
@@ -398,7 +433,7 @@ class ContentController extends Controller
             'content_description' => $validated['content_description'],
             'path_hi_res' => $path_hi_res,
             'path_low_res' => $path_low_res,
-            'visibility_content' => $validated['visibility_content'],
+            'visibility_content' => $visibility,
         ]);
 
         // Proses dan hubungkan tags
@@ -411,5 +446,103 @@ class ContentController extends Controller
         }
 
         return redirect()->route('detail.folder.show', $validated['id_folder'])->with('succes', 'Content uploaded successfully!');
+    }
+
+    public function contentMove(Request $request, Content $content)
+    {
+        $this->authorize('update', $content);
+
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'id_folder' => [
+                'required',
+                Rule::exists('tb_folder', 'id')->where(function ($query) use ($user) {
+                    // pastikan folder tujuan milik user yang sama
+                    return $query->where('id_users', $user->id);
+                }),
+            ],
+        ]);
+
+        $destinationFolderId = $validated['id_folder'];
+
+        if ($destinationFolderId) {
+            $folder = Folder::where('id', $destinationFolderId)
+                ->where('id_users', $user->id)
+                ->firstOrFail();
+
+            $content->id_folder = $destinationFolderId;
+            $content->visibility_content = $folder->visibility_folder;
+        } else {
+            $content->id_folder = null;
+            $content->visibility_content = 'public';
+        }
+
+        // $content->id_folder = $destinationFolderId;
+
+        $content->save();
+
+        if ($destinationFolderId) {
+            return redirect()
+                ->route('detail.folder.show', $destinationFolderId)
+                ->with('success', 'Content moved');
+        }
+
+        return redirect()
+            ->route('folder.index')
+            ->with('success', 'Content moved to root');
+    }
+
+    public function folderMove(Request $request, Folder $folder)
+    {
+        $this->authorize('update', $folder);
+
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'id_parent' => [
+                'nullable',
+                Rule::exists('tb_folder', 'id')->where(function ($query) use ($user) {
+                    // pastikan folder tujuan milik user yang sama
+                    return $query->where('id_users', $user->id);
+                }),
+            ],
+        ]);
+
+        $destinationFolderId = $validated['id_parent'] ?? null;
+
+        // Cegah folder jadi parent dirinya sendiri
+        if ($destinationFolderId && $destinationFolderId == $folder->id) {
+            return back()->withErrors([
+                'id_parent' => 'Folder tidak boleh menjadi parent dirinya sendiri'
+            ]);
+        }
+
+        if ($destinationFolderId) {
+            $parentFolder = Folder::where('id', $destinationFolderId)
+                ->where('id_users', $user->id)
+                ->firstOrFail();
+
+            $folder->id_parent = $parentFolder->id;
+            $folder->save();
+
+            // samakan visibilitas folder, subfolder, dan content
+            $folder->updateVisibilityRecursive($parentFolder->visibility_folder);
+        } else {
+            $folder->id_parent = null;
+            $folder->save();
+        }
+
+        // $folder->id_parent = $destinationFolderId;
+
+        if ($destinationFolderId) {
+            return redirect()
+                ->route('detail.folder.show', $destinationFolderId)
+                ->with('success', 'Folder moved');
+        }
+
+        return redirect()
+            ->route('folder.index')
+            ->with('success', 'Folder moved to root');
     }
 }

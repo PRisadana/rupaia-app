@@ -11,10 +11,22 @@
                         </h2>
                     </header>
 
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <strong>Terjadi kesalahan:</strong>
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <form method="POST" action="{{ route('content.detail.folder.store') }}" enctype="multipart/form-data">
                         @csrf
 
                         <input type="hidden" name="id_folder" value="{{ $parentFolder?->id }}">
+                        <input type="hidden" name="visibility_content" value="{{ $parentFolder->visibility_folder }}">
 
                         <div class="mb-3">
                             <label for="content_title" :value="__('Content Title')" class="form-label">Content Title</label>
@@ -51,14 +63,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="visibility_content" class="form-label">Visibilitas</label>
-                            <select class="form-select" id="visibility_content" name="visibility_content" required>
-                                <option value="public" selected>Public (Default, semua orang bisa lihat)</option>
-                                <option value="private">Private (Hanya Anda yang lihat)</option>
-                                <option value="by_request">By Request (Pengguna lain harus meminta izin)</option>
-                            </select>
+                            <h3 class="form-label">{{ $parentFolder->visibility_folder }}</h3>
                             <div class="form-text">
-                                Pilih siapa yang dapat melihat konten ini.
+                                Visibilitas di atas mengikuti folder yang digunakan
                             </div>
                         </div>
 

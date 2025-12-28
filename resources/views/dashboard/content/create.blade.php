@@ -11,6 +11,17 @@
                         </h2>
                     </header>
 
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <strong>Terjadi kesalahan:</strong>
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <form method="POST" action="{{ route('content.store') }}" enctype="multipart/form-data">
                         @csrf
                         <div class="mb-3">
@@ -48,33 +59,17 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="visibility_content" class="form-label">Visibilitas</label>
-                            <select class="form-select" id="visibility_content" name="visibility_content" required>
-                                <option value="public" selected>Public (Default, semua orang bisa lihat)</option>
-                                <option value="private">Private (Hanya Anda yang lihat)</option>
-                                <option value="by_request">By Request (Pengguna lain harus meminta izin)</option>
-                            </select>
-                            <div class="form-text">
-                                Pilih siapa yang dapat melihat konten ini.
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="id_folder" class="form-label">Pilih Folder</label>
+                            <label for="id_folder" class="form-label">Choose Folder</label>
                             <div class="input-group">
                                 <select class="form-select @error('id_folder') is-invalid @enderror" id="id_folder"
                                     name="id_folder" required>
-                                    <option value="" disabled selected>Wajib Pilih Folder</option>
+                                    <option value="" disabled selected>Must choose Folder</option>
                                     @foreach ($folders as $folder)
-                                        <option value="{{ $folder->id }}">{{ $folder->folder_name }}</option>
+                                        <option value="{{ $folder->id }}""
+                                            data-visibility="{{ $folder->visibility_folder }}">
+                                            {{ $folder->folder_name }} ({{ $folder->visibility_folder }})</option>
                                     @endforeach
                                 </select>
-
-
-                                {{-- <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
-                                    data-bs-target="#tambahFolderModal">
-                                    Buat Folder Baru
-                                </button> --}}
 
                                 @error('id_folder')
                                     <div class="invalid-feedback">
@@ -83,13 +78,13 @@
                                 @enderror
                             </div>
                             <div class="form-text">
-                                Folder di atas adalah folder utama
+                                The folder above is the main folder and its visibility
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="name_tag" class="form-label">
-                                Pilih Tags
+                                Choose Tags
                             </label>
                             <select class="form-select @error('name_tag') is-invalid @enderror" id="name_tag"
                                 name="name_tag[]" multiple size="8">
@@ -98,7 +93,7 @@
                                 @endforeach
                             </select>
                             <div class="form-text">
-                                Ini adalah daftar tag yang sudah disetujui Admin.
+                                This is a list of tags that have been approved by the Admin.
                             </div>
                             @error('name_tag')
                                 <div class="invalid-feedback d-block">

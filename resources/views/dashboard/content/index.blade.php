@@ -69,13 +69,106 @@
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                             </form>
+
+                            <button type="button" class="btn btn-sm btn-outline-secondary mx-1" data-bs-toggle="modal"
+                                data-bs-target="#moveContentModal-{{ $content->id }}">
+                                Move
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <div class="modal fade" id="moveContentModal-{{ $content->id }}" tabindex="-1"
+                aria-labelledby="moveContentModalLabel-{{ $content->id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <form method="POST" action="{{ route('content.move', $content) }}">
+                            @csrf
+                            @method('PUT')
+
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="moveContentModalLabel-{{ $content->id }}">
+                                    Move: {{ $content->content_title }}
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Now Location</label>
+                                    <div class="small text-muted">
+                                        @if ($content->folder)
+                                            @php
+                                                $bc = collect();
+                                                $temp = $content->folder;
+                                                while ($temp) {
+                                                    $bc->prepend($temp);
+                                                    $temp = $temp->parent;
+                                                }
+                                            @endphp
+
+                                            @foreach ($bc as $crumb)
+                                                {{ $loop->first ? '' : ' / ' }}
+                                                {{ $crumb->folder_name }}
+                                            @endforeach
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="move-folder-{{ $content->id }}" class="form-label">Move to folder</label>
+
+                                    <select name="id_folder" id="move-folder-{{ $content->id }}" class="form-select">
+                                        {{-- <option value="">Root (tanpa folder)</option> --}}
+
+                                        @php
+                                            $allFoldersForMove = auth()
+                                                ->user()
+                                                ->folders()
+                                                ->orderBy('folder_name')
+                                                ->get();
+
+                                            $printTree = function ($folders, $parentId = null, $prefix = '') use (
+                                                &$printTree,
+                                                $content,
+                                            ) {
+                                                $children = $folders->where('id_parent', $parentId);
+                                                foreach ($children as $f) {
+                                                    // Jangan tampilkan folder tempat konten berada sekarang sebagai selected? boleh, tapi biasanya tetap boleh dipilih
+                                                    echo '<option value="' .
+                                                        $f->id .
+                                                        '">' .
+                                                        $prefix .
+                                                        $f->folder_name .
+                                                        '</option>';
+                                                    $printTree($folders, $f->id, $prefix . '+ ');
+                                                }
+                                            };
+
+                                            $printTree($allFoldersForMove, null, '');
+                                        @endphp
+
+                                    </select>
+                                    <div class="form-text">
+                                        Choose folder destination.
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Move</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         @endforeach
-    </div>
-    <div class="mt-4 d-flex justify-content-center">
-        {{ $contents->links() }}
+        <div class="my-2">
+            {{ $contents->links() }}
+        </div>
     </div>
 @endsection

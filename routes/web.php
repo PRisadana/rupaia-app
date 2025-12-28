@@ -36,13 +36,17 @@ Route::middleware('auth')->group(function () {
     Route::put('/dashboard/folder/{folder}', [ContentController::class, 'updateFolder'])->name('folder.update');
     Route::delete('/dashboard/folder/{folder}', [ContentController::class, 'destroyFolder'])->name('folder.destroy');
 
-    Route::get('/dashboard/folder/detail/', [ContentController::class, 'detailFolderIndex'])->name('detail.folder.index');
+    // Route::get('/dashboard/folder/detail/', [ContentController::class, 'detailFolderIndex'])->name('detail.folder.index');
     Route::get('/dashboard/folder/detail/{folder}', [ContentController::class, 'detailFolderIndex'])->whereNumber('folder')->name('detail.folder.show');
     Route::post('/dashboard/folder/detail/store', [ContentController::class, 'storeDetailFolder'])->name('detail.folder.store');
     Route::get('/dashboard/folder/detail/create', [ContentController::class, 'createDetailFolder'])->name('detail.folder.create');
 
     Route::get('/dashboard/folder/detail/content/create', [ContentController::class, 'createContentDetailFolder'])->name('content.detail.folder.create');
     Route::post('/dashboard/folder/detail/content/store', [ContentController::class, 'storeContentDetailFolder'])->name('content.detail.folder.store');
+
+    // Route::get('/dashboard/content/{content}/move', [ContentController::class, 'contentMoveForm'])->name('content.move.form');
+    Route::put('/dashboard/content/{content}/move', [ContentController::class, 'contentMove'])->name('content.move');
+    Route::put('/dashboard/folder/{folder}/move', [ContentController::class, 'folderMove'])->name('folder.move');
 });
 
 require __DIR__ . '/auth.php';

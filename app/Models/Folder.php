@@ -13,6 +13,7 @@ class Folder extends Model
         'id_parent',
         'folder_name',
         'folder_description',
+        'visibility_folder'
     ];
 
     public function user()
@@ -33,5 +34,20 @@ class Folder extends Model
     public function contents()
     {
         return $this->hasMany(Content::class, 'id_folder', 'id');
+    }
+
+    public function updateVisibilityRecursive(string $visibility): void
+    {
+        // Update Visibilitas Folder ini
+        $this->visibility_folder = $visibility;
+        $this->save();
+
+        // Update semua konten di folder ini
+        $this->contents()->update(['visibility_content' => $visibility,]);
+
+        // Rekursif ke seluruh subfolder
+        foreach ($this->children as $child) {
+            $child->updateVisibilityRecursive($visibility);
+        }
     }
 }

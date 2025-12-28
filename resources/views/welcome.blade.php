@@ -46,6 +46,10 @@
                             by: {{ $content->user->name }}
                         </p>
 
+                        <p class="card-text text-muted" style="font-size: 0.9rem;">
+                            Folder: {{ $content->folder->folder_name }}
+                        </p>
+
                         <p class="card-text mt-auto">
                             @foreach ($content->tags as $tag)
                                 <span class="badge bg-secondary">{{ $tag->name_tag }}</span>
@@ -62,7 +66,7 @@
         @endforelse
     </div>
 
-    <div class="mt-4 d-flex justify-content-center">
+    <div class="mt-4">
         {{ $contents->links() }}
     </div>
 @endsection

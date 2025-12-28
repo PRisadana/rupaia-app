@@ -15,6 +15,14 @@
                     aria-label="Search">
             </form> --}}
             @auth
+                {{-- <li class="list-unstyled">
+                    <a href="#" class="nav-link fs-5"><i class="fi fi-rr-circle-heart"></i></a>
+                </li> --}}
+
+                <li class="mx-3 list-unstyled">
+                    <a href="#" class="nav-link fs-5"><i class="fi fi-rr-shopping-cart"></i></a>
+                </li>
+
                 <li class="me-lg mb-2 mb-md-0 list-unstyled">
                     <span class="nav-link">Hi, {{ Auth::user()->name }}</span>
                 </li>
@@ -27,7 +35,6 @@
                     </a>
 
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-
                         <li>
                             <a class="dropdown-item" href="{{ route('content.index') }}">
                                 {{ __('Your Profile') }}

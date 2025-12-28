@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Pagination\Paginator;
 use App\Models\Content;
 use App\Models\Folder;
 use App\Policies\ContentPolicy;
@@ -26,5 +27,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Content::class, ContentPolicy::class);
         Gate::policy(Folder::class, FolderPolicy::class);
+        Paginator::useBootstrapFive();
     }
 }

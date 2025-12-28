@@ -32,7 +32,7 @@
                         <label for="password">Password</label>
 
                         @error('password')
-                            <div class="invalid-feedback mb-3">
+                            <div class="invalid-feedback">
                                 {{ $message }}
                             </div>
                         @enderror
