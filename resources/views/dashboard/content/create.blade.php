@@ -11,7 +11,7 @@
                         </h2>
                     </header>
 
-                    @if ($errors->any())
+                    {{-- @if ($errors->any())
                         <div class="alert alert-danger">
                             <strong>Terjadi kesalahan:</strong>
                             <ul class="mb-0">
@@ -20,7 +20,7 @@
                                 @endforeach
                             </ul>
                         </div>
-                    @endif
+                    @endif --}}
 
                     <form method="POST" action="{{ route('content.store') }}" enctype="multipart/form-data">
                         @csrf
@@ -59,19 +59,18 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="id_folder" class="form-label">Choose Folder</label>
+                            <label for="folder_id" class="form-label">Choose Folder</label>
                             <div class="input-group">
-                                <select class="form-select @error('id_folder') is-invalid @enderror" id="id_folder"
-                                    name="id_folder" required>
+                                <select class="form-select @error('folder_id') is-invalid @enderror" id="folder_id"
+                                    name="folder_id" required>
                                     <option value="" disabled selected>Must choose Folder</option>
                                     @foreach ($folders as $folder)
-                                        <option value="{{ $folder->id }}""
-                                            data-visibility="{{ $folder->visibility_folder }}">
-                                            {{ $folder->folder_name }} ({{ $folder->visibility_folder }})</option>
+                                        <option value="{{ $folder->id }}" data-visibility="{{ $folder->visibility }}">
+                                            {{ $folder->folder_name }} ({{ $folder->visibility }})</option>
                                     @endforeach
                                 </select>
 
-                                @error('id_folder')
+                                @error('folder_id')
                                     <div class="invalid-feedback">
                                         {{ $message }}
                                     </div>
@@ -83,25 +82,38 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="name_tag" class="form-label">
+                            <label for="price" :value="__('Price')" class="form-label">Content Price
+                                (IDR)</label>
+                            <input id="price" name="price" type="number"
+                                class="form-control @error('price') is-invalid @enderror">
+
+                            @error('price')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tag_name" class="form-label">
                                 Choose Tags
                             </label>
-                            <select class="form-select @error('name_tag') is-invalid @enderror" id="name_tag"
-                                name="name_tag[]" multiple size="8">
+                            <select class="form-select @error('tag_name') is-invalid @enderror" id="tag_name"
+                                name="tag_name[]" multiple size="8">
                                 @foreach ($tags as $tag)
-                                    <option value="{{ $tag->id }}">{{ $tag->name_tag }}</option>
+                                    <option value="{{ $tag->id }}">{{ $tag->tag_name }}</option>
                                 @endforeach
                             </select>
                             <div class="form-text">
                                 This is a list of tags that have been approved by the Admin.
                             </div>
-                            @error('name_tag')
+                            @error('tag_name')
                                 <div class="invalid-feedback d-block">
                                     {{ $message }}
                                 </div>
                             @enderror
 
-                            @error('name_tag.*')
+                            @error('tag_name.*')
                                 <div class="invalid-feedback d-block">
                                     {{ $message }}
                                 </div>

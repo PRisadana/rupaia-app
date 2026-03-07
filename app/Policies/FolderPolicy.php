@@ -21,7 +21,7 @@ class FolderPolicy
      */
     public function view(User $user, Folder $folder): bool
     {
-        return $user->id === $folder->id_users;
+        return $user->id === $folder->seller_id;
     }
 
     /**
@@ -37,7 +37,7 @@ class FolderPolicy
      */
     public function update(User $user, Folder $folder): bool
     {
-        return $user->id === $folder->id_users;
+        return $user->id === $folder->seller_id;
     }
 
     /**
@@ -45,7 +45,7 @@ class FolderPolicy
      */
     public function delete(User $user, Folder $folder): bool
     {
-        return $user->id === $folder->id_users;
+        return $user->id === $folder->seller_id;
     }
 
     /**

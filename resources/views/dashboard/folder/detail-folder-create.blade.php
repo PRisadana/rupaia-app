@@ -11,7 +11,7 @@
                         </h2>
                     </header>
 
-                    @if ($errors->any())
+                    {{-- @if ($errors->any())
                         <div class="alert alert-danger">
                             <strong>Terjadi kesalahan:</strong>
                             <ul class="mb-0">
@@ -20,13 +20,14 @@
                                 @endforeach
                             </ul>
                         </div>
-                    @endif
+                    @endif --}}
 
                     <form method="POST" action="{{ route('detail.folder.store') }}" enctype="multipart/form-data">
                         @csrf
 
-                        <input type="hidden" name="id_parent" value="{{ $parentFolder?->id }}">
-                        <input type="hidden" name="visibility_folder" value="{{ $parentFolder->visibility_folder }}">
+                        <input type="hidden" name="parent_id" value="{{ $parentFolder?->id }}">
+                        <input type="hidden" name="visibility" value="{{ $parentFolder->visibility }}">
+                        <input type="hidden" name="is_bundle" value="{{ $parentFolder->is_bundle }}">
 
                         <div class="mb-3">
                             <h3 class="form-label">{{ $parentFolder->folder_name }}</h3>
@@ -48,7 +49,8 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="folder_description" :value="__('Folder Description')" class="form-label">Folder
+                            <label for="folder_description" :value="__('Subfolder Description')"
+                                class="form-label">Subfolder
                                 Description</label>
                             <input id="folder_description" name="folder_description" type="text"
                                 class="form-control @error('folder_description') is-invalid @enderror">
@@ -61,32 +63,32 @@
                         </div>
 
                         <div class="mb-3">
-                            <h3 class="form-label">{{ $parentFolder->visibility_folder }}</h3>
+                            <h3 class="form-label">{{ $parentFolder->is_bundle ? 'Yes' : 'No' }}</h3>
                             <div class="form-text">
-                                Visibility above follows the folder in use.
+                                The folder above is the previous bundle folder.
                             </div>
                         </div>
 
-                        {{-- <div class="mb-3">
-                            <label for="visibility_folder" :value="__('Folder Visibility')" class="form-label">Folder
-                                Visibility</label>
-                            <select name="visibility_folder" id="visibility_folder"
-                                class="form-select @error('visibility_folder') is-invalid @enderror">
-                                <option value="private"
-                                    {{ old('visibility_folder', 'private') == 'private' ? 'selected' : '' }}>Private
-                                </option>
-                                <option value="public" {{ old('visibility_folder') == 'public' ? 'selected' : '' }}>Public
-                                </option>
-                                <option value="by_request" {{ old('visibility_folder') == 'by_request' ? 'selected' : '' }}>
-                                    By Request</option>
-                            </select>
+                        <div class="mb-3">
+                            <label for="bundle_price" :value="__('Bundle Price')" class="form-label">Bundle Price
+                                (IDR)</label>
+                            <input id="bundle_price" name="bundle_price" type="number"
+                                placeholder="Only fill if this folder is a bundle"
+                                class="form-control @error('bundle_price') is-invalid @enderror">
 
-                            @error('visibility_folder')
+                            @error('bundle_price')
                                 <div class="invalid-feedback">
                                     {{ $message }}
                                 </div>
                             @enderror
-                        </div> --}}
+                        </div>
+
+                        <div class="mb-3">
+                            <h3 class="form-label">{{ $parentFolder->visibility }}</h3>
+                            <div class="form-text">
+                                Visibility above follows the folder in use.
+                            </div>
+                        </div>
 
                         <button class="w-100 btn btn-lg btn-dark" type="submit">
                             Add Subfolder

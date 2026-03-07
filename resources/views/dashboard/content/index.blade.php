@@ -46,11 +46,12 @@
                         <h5 class="card-title">{{ $content->content_title }}</h5>
                         <p class="card-text">Description: {{ $content->content_description }}</p>
                         <p class="card-text">Folder: {{ $content->folder->folder_name }}</p>
-                        <p class="card-text">Visibility Content: {{ $content->visibility_content }}</p>
+                        <p class="card-text">Visibility Content: {{ $content->visibility }}</p>
+                        <p class="card-text">Rp {{ number_format($content->price, 0, ',', '.') }}</p>
                         <p class="card-text">
                             Tags:
                             @foreach ($content->tags as $tag)
-                                <span class="badge bg-secondary">{{ $tag->name_tag }}</span>
+                                <span class="badge bg-secondary">{{ $tag->tag_name }}</span>
                             @endforeach
                         </p>
                         <div col-4>
@@ -120,7 +121,7 @@
                                 <div class="mb-3">
                                     <label for="move-folder-{{ $content->id }}" class="form-label">Move to folder</label>
 
-                                    <select name="id_folder" id="move-folder-{{ $content->id }}" class="form-select">
+                                    <select name="folder_id" id="move-folder-{{ $content->id }}" class="form-select">
                                         {{-- <option value="">Root (tanpa folder)</option> --}}
 
                                         @php
@@ -134,7 +135,7 @@
                                                 &$printTree,
                                                 $content,
                                             ) {
-                                                $children = $folders->where('id_parent', $parentId);
+                                                $children = $folders->where('parent_id', $parentId);
                                                 foreach ($children as $f) {
                                                     // Jangan tampilkan folder tempat konten berada sekarang sebagai selected? boleh, tapi biasanya tetap boleh dipilih
                                                     echo '<option value="' .

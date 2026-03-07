@@ -28,13 +28,13 @@
 
         <div class="d-inline-flex gap-2 my-2">
             <button class="d-inline-flex align-items-center btn btn-primary btn-sm px-4" type="button">
-                <a href="{{ route('detail.folder.create', ['id_parent' => $currentFolder->id]) }}"
+                <a href="{{ route('detail.folder.create', ['parent_id' => $currentFolder->id]) }}"
                     class="text-white nav-link">
                     Add Subfolder
                 </a>
             </button>
             <button class="d-inline-flex align-items-center btn btn-outline-secondary btn-sm px-4" type="button">
-                <a href="{{ route('content.detail.folder.create', ['id_parent' => $currentFolder->id]) }}"
+                <a href="{{ route('content.detail.folder.create', ['parent_id' => $currentFolder->id]) }}"
                     class="text-dark nav-link">
                     Add Content
                 </a>
@@ -53,7 +53,10 @@
                                     class="card-title">{{ $folder->folder_name }}</a>
                             </h5>
                             <p class="card-text">Description: {{ $folder->folder_description }}</p>
-                            <p class="card-text">Visibility Folder: {{ $folder->visibility_folder }}</p>
+                            <p class="card-text">Visibility subolder: {{ $folder->visibility }}</p>
+                            <p class="card-text">Is Bundle: {{ $folder->is_bundle ? 'Yes' : 'No' }}</p>
+                            <p class="card-text">Rp {{ number_format($folder->bundle_price, 0, ',', '.') }}</p>
+                            <p class="card-text">Status: {{ $folder->status }}</p>
                             <div class="card">
                                 <div></div>
                             </div>
@@ -121,7 +124,7 @@
                                         <label for="move-folder-{{ $folder->id }}" class="form-label">Move to
                                             folder</label>
 
-                                        <select name="id_parent" id="move-folder-{{ $folder->id }}" class="form-select">
+                                        <select name="parent_id" id="move-folder-{{ $folder->id }}" class="form-select">
                                             <option value="">Root (main folder)</option>
 
                                             @php
@@ -134,7 +137,7 @@
                                                 $printTree = function ($folders, $parentId = null, $prefix = '') use (
                                                     &$printTree,
                                                 ) {
-                                                    $children = $folders->where('id_parent', $parentId);
+                                                    $children = $folders->where('parent_id', $parentId);
                                                     foreach ($children as $f) {
                                                         // Jangan tampilkan folder tempat konten berada sekarang sebagai selected? boleh, tapi biasanya tetap boleh dipilih
                                                         echo '<option value="' .
@@ -180,11 +183,12 @@
                             <h5 class="card-title">{{ $content->content_title }}</h5>
                             <p class="card-text">Description: {{ $content->content_description }}</p>
                             <p class="card-text">Folder: {{ $content->folder->folder_name }}</p>
-                            <p class="card-text">Visibility Content: {{ $content->visibility_content }}</p>
+                            <p class="card-text">Visibility Content: {{ $content->visibility }}</p>
+                            <p class="card-text">Rp {{ number_format($content->price, 0, ',', '.') }}</p>
                             <p class="card-text">
                                 Tags:
                                 @foreach ($content->tags as $tag)
-                                    <span class="badge bg-secondary">{{ $tag->name_tag }}</span>
+                                    <span class="badge bg-secondary">{{ $tag->tag_name }}</span>
                                 @endforeach
                             </p>
                             <div col-4>
@@ -256,7 +260,7 @@
                                         <label for="move-folder-{{ $content->id }}" class="form-label">Move to
                                             folder</label>
 
-                                        <select name="id_folder" id="move-folder-{{ $content->id }}"
+                                        <select name="folder_id" id="move-folder-{{ $content->id }}"
                                             class="form-select">
                                             {{-- <option value="">Root (tanpa folder)</option> --}}
 
@@ -271,7 +275,7 @@
                                                     &$printTree,
                                                     $content,
                                                 ) {
-                                                    $children = $folders->where('id_parent', $parentId);
+                                                    $children = $folders->where('parent_id', $parentId);
                                                     foreach ($children as $f) {
                                                         // Jangan tampilkan folder tempat konten berada sekarang sebagai selected? boleh, tapi biasanya tetap boleh dipilih
                                                         echo '<option value="' .

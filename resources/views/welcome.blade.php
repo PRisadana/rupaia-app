@@ -29,7 +29,7 @@
         </div>
     </div>
 
-    <div class="row">
+    {{-- <div class="container pb-5">
         @forelse ($contents as $content)
             <div class="col-md-4 mb-4">
                 <div class="card shadow-sm h-100">
@@ -52,7 +52,7 @@
 
                         <p class="card-text mt-auto">
                             @foreach ($content->tags as $tag)
-                                <span class="badge bg-secondary">{{ $tag->name_tag }}</span>
+                                <span class="badge bg-secondary">{{ $tag->tag_name }}</span>
                             @endforeach
                         </p>
                     </div>
@@ -64,9 +64,46 @@
                 <p class="text-center text-muted fs-4 mt-5">There is no public content available yet.</p>
             </div>
         @endforelse
+    </div> --}}
+    <div class="container pb-5">
+        <div class="row g-3">
+            @forelse ($contents as $content)
+                <div class="col-6 col-md-4 col-lg-3">
+                    <a href="{{ route('content.detail', $content->id) }}" class="text-decoration-none">
+                        <div class="content-clean-wrapper">
+                            <img src="{{ asset('storage/' . $content->path_low_res) }}" alt="{{ $content->content_title }}"
+                                class="img-fluid w-100 rounded-3 shadow-sm content-clean-image">
+                        </div>
+                    </a>
+                </div>
+            @empty
+                <div class="col-12">
+                    <p class="text-center text-muted fs-4 mt-5">
+                        There is no public content available yet.
+                    </p>
+                </div>
+            @endforelse
+        </div>
     </div>
 
     <div class="mt-4">
         {{ $contents->links() }}
     </div>
 @endsection
+
+<style>
+    .content-clean-wrapper {
+        overflow: hidden;
+        border-radius: 1rem;
+        background: #fff;
+    }
+
+    .content-clean-image {
+        display: block;
+        transition: transform 0.25s ease-in-out;
+    }
+
+    .content-clean-wrapper:hover .content-clean-image {
+        transform: scale(1.02);
+    }
+</style>

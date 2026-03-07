@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('tb_folder', function (Blueprint $table) {
-            $table->enum('visibility_folder', ['public', 'private', 'by_request'])
-                ->default('public')
-                ->after('folder_description');
+        Schema::create('tags', function (Blueprint $table) {
+            $table->id();
+            $table->string('tag_name');
+            $table->timestamps();
         });
     }
 
@@ -23,8 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tb_folder', function (Blueprint $table) {
-            $table->dropColumn('visibility_folder');
-        });
+        Schema::dropIfExists('tags');
     }
 };

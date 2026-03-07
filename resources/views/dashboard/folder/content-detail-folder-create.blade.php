@@ -25,8 +25,8 @@
                     <form method="POST" action="{{ route('content.detail.folder.store') }}" enctype="multipart/form-data">
                         @csrf
 
-                        <input type="hidden" name="id_folder" value="{{ $parentFolder?->id }}">
-                        <input type="hidden" name="visibility_content" value="{{ $parentFolder->visibility_folder }}">
+                        <input type="hidden" name="folder_id" value="{{ $parentFolder?->id }}">
+                        <input type="hidden" name="visibility" value="{{ $parentFolder->visibility }}">
 
                         <div class="mb-3">
                             <label for="content_title" :value="__('Content Title')" class="form-label">Content Title</label>
@@ -63,7 +63,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <h3 class="form-label">{{ $parentFolder->visibility_folder }}</h3>
+                            <h3 class="form-label">{{ $parentFolder->visibility }}</h3>
                             <div class="form-text">
                                 Visibilitas di atas mengikuti folder yang digunakan
                             </div>
@@ -77,25 +77,38 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="name_tag" class="form-label">
+                            <label for="price" :value="__('Price')" class="form-label">Content Price
+                                (IDR)</label>
+                            <input id="price" name="price" type="number"
+                                class="form-control @error('price') is-invalid @enderror">
+
+                            @error('price')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tag_name" class="form-label">
                                 Pilih Tags
                             </label>
-                            <select class="form-select @error('name_tag') is-invalid @enderror" id="name_tag"
-                                name="name_tag[]" multiple size="8">
+                            <select class="form-select @error('tag_name') is-invalid @enderror" id="tag_name"
+                                name="tag_name[]" multiple size="8">
                                 @foreach ($tags as $tag)
-                                    <option value="{{ $tag->id }}">{{ $tag->name_tag }}</option>
+                                    <option value="{{ $tag->id }}">{{ $tag->tag_name }}</option>
                                 @endforeach
                             </select>
                             <div class="form-text">
                                 Ini adalah daftar tag yang sudah disetujui Admin.
                             </div>
-                            @error('name_tag')
+                            @error('tag_name')
                                 <div class="invalid-feedback d-block">
                                     {{ $message }}
                                 </div>
                             @enderror
 
-                            @error('name_tag.*')
+                            @error('tag_name.*')
                                 <div class="invalid-feedback d-block">
                                     {{ $message }}
                                 </div>

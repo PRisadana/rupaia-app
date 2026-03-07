@@ -11,7 +11,7 @@
                         </h2>
                     </header>
 
-                    @if ($errors->any())
+                    {{-- @if ($errors->any())
                         <div class="alert alert-danger">
                             <strong>Terjadi kesalahan:</strong>
                             <ul class="mb-0">
@@ -20,13 +20,13 @@
                                 @endforeach
                             </ul>
                         </div>
-                    @endif
+                    @endif --}}
 
                     <form method="POST" action="{{ route('content.update', $content) }}" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 
-                        <input type="hidden" name="id_folder" value="{{ $currentFolder?->id }}">
+                        <input type="hidden" name="folder_id" value="{{ $currentFolder?->id }}">
 
                         <div class="mb-3 text-center">
                             <img src="{{ asset('storage/' . $content->path_low_res) }}" class="img-thumbnail"
@@ -63,7 +63,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Folder</label>
+                            <label class="form-label">
+                                <h4>Folder</h4>
+                            </label>
                             <div class="form-control-plaintext">
                                 {{ $currentFolder->folder_name }}
                             </div>
@@ -78,7 +80,7 @@
                                 @if ($content->folder)
                                     {{ $content->folder->visibility_folder }}
                                 @else
-                                    {{ $content->visibility_content }}
+                                    {{ $content->visibility }}
                                 @endif
                             </div>
                             <div class="form-text">
@@ -107,35 +109,47 @@
                         </div> --}}
 
                         <div class="mb-3">
-                            <label for="visibility_content" class="form-label">Visibility</label>
-                            <select class="form-select" id="visibility_content" name="visibility_content" required>
+                            <label for="visibility" class="form-label">Visibility</label>
+                            <select class="form-select" id="visibility" name="visibility" required>
                                 <option value="public"
-                                    {{ old('visibility_content', $content->visibility_content) == 'public' ? 'selected' : '' }}>
-                                    Public (Default, All people can see)</option>
+                                    {{ old('visibility', $content->visibility) == 'public' ? 'selected' : '' }}>
+                                    Public</option>
                                 <option value="private"
-                                    {{ old('visibility_content', $content->visibility_content) == 'private' ? 'selected' : '' }}>
-                                    Private (Just you can see)</option>
+                                    {{ old('visibility', $content->visibility) == 'private' ? 'selected' : '' }}>
+                                    Private</option>
                                 <option value="by_request"
-                                    {{ old('visibility_content', $content->visibility_content) == 'by_request' ? 'selected' : '' }}>
-                                    By Request (Other user must have permission)</option>
+                                    {{ old('visibility', $content->visibility) == 'by_request' ? 'selected' : '' }}>
+                                    By Request</option>
                             </select>
                         </div>
 
                         <div class="mb-3">
-                            <label for="name_tag" class="form-label">Choose Tags</label>
+                            <label for="price" :value="__('Content Price')" class="form-label">Content Price</label>
+                            <input id="price" name="price" type="number" value="{{ old('price', $content->price) }}"
+                                class="form-control @error('price') is-invalid @enderror">
+
+                            @error('price')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tag_name" class="form-label">Choose Tags</label>
                             @php
-                                $selectedTagIDs = old('name_tag', $content->tags->pluck('id')->all());
+                                $selectedTagIDs = old('tag_name', $content->tags->pluck('id')->all());
                             @endphp
-                            <select class="form-select @error('name_tag.*') is-invalid @enderror" id="name_tag"
-                                name="name_tag[]" multiple size="8">
+                            <select class="form-select @error('tag_name.*') is-invalid @enderror" id="tag_name"
+                                name="tag_name[]" multiple size="8">
                                 @foreach ($tags as $tag)
                                     <option value="{{ $tag->id }}"
                                         {{ in_array($tag->id, $selectedTagIDs) ? 'selected' : '' }}>
-                                        {{ $tag->name_tag }}
+                                        {{ $tag->tag_name }}
                                     </option>
                                 @endforeach
                             </select>
-                            @error('name_tag.*')
+                            @error('tag_name.*')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>

@@ -10,31 +10,33 @@ class Content extends Model
 {
     use HasFactory;
 
-    protected $table = 'tb_content';
+    // protected $table = 'tb_content';
 
     protected $fillable = [
-        'id_users',
-        'id_folder',
+        'seller_id',
+        'folder_id',
         'content_title',
         'content_description',
+        'price',
         'path_hi_res',
         'path_low_res',
-        'visibility_content'
+        'visibility',
+        'status'
     ];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'id_users', 'id');
+        return $this->belongsTo(User::class, 'seller_id');
     }
 
     public function folder()
     {
-        return $this->belongsTo(Folder::class, 'id_folder');
+        return $this->belongsTo(Folder::class, 'folder_id');
     }
 
     public function tags()
     {
-        return $this->belongsToMany(Tags::class, 'tb_content_tag', 'id_content', 'id_tag', 'id', 'id');
+        return $this->belongsToMany(Tags::class, 'content_tags', 'content_id', 'tag_id');
     }
 
     protected static function booted(): void

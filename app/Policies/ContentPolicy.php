@@ -38,8 +38,8 @@ class ContentPolicy
      */
     public function update(User $user, Content $content): bool
     {
-        // Izinkan update HANYA JIKA ID user yang login SAMA DENGAN 'id_users' di tabel content
-        return $user->id === $content->id_users;
+        // Izinkan update HANYA JIKA ID user yang login SAMA DENGAN 'seller_id' di tabel content
+        return $user->id === $content->seller_id;
     }
 
     /**
@@ -47,7 +47,7 @@ class ContentPolicy
      */
     public function delete(User $user, Content $content): bool
     {
-        return $user->id === $content->id_users;
+        return $user->id === $content->seller_id;
     }
 
     /**

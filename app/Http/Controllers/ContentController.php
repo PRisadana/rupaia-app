@@ -35,9 +35,9 @@ class ContentController extends Controller
     public function create(Request $request)
     {
         // Ambil semua folder milik pengguna yang sedang login
-        $folders = $request->user()->folders()->whereNull('id_parent')->orderBy('folder_name')->get();
+        $folders = $request->user()->folders()->whereNull('parent_id')->orderBy('folder_name')->get();
 
-        $tags = Tags::orderBy('name_tag')->get();
+        $tags = Tags::orderBy('tag_name')->get();
 
         return view('dashboard.content.create', compact('folders', 'tags'));
     }
@@ -46,29 +46,31 @@ class ContentController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
+        $sellerId = $user->id;
 
         $validated = $request->validate([
             'content_title' => 'required|string|max:255',
             'content_description' => 'nullable|string',
-            'id_folder' => [
+            'price' => 'nullable|numeric|min:0',
+            'folder_id' => [
                 'required',
-                Rule::exists('tb_folder', 'id')->where(function ($query) {
-                    return $query->where('id_users', Auth::id());
+                Rule::exists('folders', 'id')->where(function ($query) use ($sellerId) {
+                    return $query->where('seller_id', $sellerId);
                 })
             ],
-            'name_tag' => 'nullable|array',
-            'name_tag.*' => 'exists:tb_tag,id',
-            'path_hi_res' => 'required|image|mimes:jpg,jpeg,png|max:10240'
-            // 'visibility_content' => 'required|in:public,private,by_request',
+            'tag_name' => 'nullable|array',
+            'tag_name.*' => 'exists:tags,id',
+            'path_hi_res' => 'required|image|mimes:jpg,jpeg,png|max:10240',
+            // 'status' => 'required|in:active,deleted,banned',
         ]);
 
         //cari folder tujuan
-        $folder = Folder::where('id', $validated['id_folder'])
-            ->where('id_users', $user->id)
+        $folder = Folder::where('id', $validated['folder_id'])
+            ->where('seller_id', $user->id)
             ->firstOrFail();
 
         // pakai visibility folder untuk konten
-        $visibility = $folder->visibility_folder;
+        $visibility = $folder->visibility;
 
         $file = $request->file('path_hi_res');
         $fileName = time() . '_' . $file->getClientOriginalName();
@@ -82,7 +84,7 @@ class ContentController extends Controller
         $image = $manager->read($file->getRealPath());
 
         // Resize gambar untuk low-res
-        $image->scale(width: 720);
+        $image->scale(width: 360);
 
         // Tambahkan watermark
         $image->text('Rupaia ©', 10, 10, function ($font) {
@@ -98,31 +100,27 @@ class ContentController extends Controller
 
         // Simpan data konten ke database
         $content = Content::create([
-            'id_users' => $id_user,
-            'id_folder' => $validated['id_folder'],
+            'seller_id' => $id_user,
+            'folder_id' => $validated['folder_id'],
             'content_title' => $validated['content_title'],
             'content_description' => $validated['content_description'],
+            'price' => $validated['price'] ?? 0.00,
             'path_hi_res' => $path_hi_res,
             'path_low_res' => $path_low_res,
-            'visibility_content' => $visibility,
+            'visibility' => $visibility,
+            // 'status' => 'active',
         ]);
 
-        // if($id_folder){
-        //     $visibility = $folder->visibility_folder;
-        // } else {
-        //     $visibility = 'public';
-        // }
-
         // Proses dan hubungkan tags
-        if (!empty($validated['name_tag'])) {
+        if (!empty($validated['tag_name'])) {
 
             // Hubungkan konten ini dengan semua tag ID yang sudah diproses
             // 'sync()' adalah perintah Eloquent untuk relasi Many-to-Many
             // Ini akan otomatis menambah/menghapus data di tabel pivot 'tb_content_tag'
-            $content->tags()->sync($validated['name_tag']);
+            $content->tags()->sync($validated['tag_name']);
         }
 
-        return redirect()->route('content.index')->with('succes', 'Content uploaded successfully!');
+        return redirect()->route('content.index')->with('success', 'Content uploaded successfully!');
     }
 
     public function edit(Request $request, Content $content)
@@ -130,7 +128,7 @@ class ContentController extends Controller
         // OTORISASI: Cek apakah user ini boleh meng-update konten ini. Ini akan memanggil ContentPolicy@update
         $this->authorize('update', $content);
 
-        $tags = Tags::orderBy('name_tag')->get();
+        $tags = Tags::orderBy('tag_name')->get();
         $currentFolder = $content->folder;
 
         return view('dashboard.content.edit', compact('content', 'currentFolder', 'tags'));
@@ -144,26 +142,24 @@ class ContentController extends Controller
         $validated = $request->validate([
             'content_title' => 'required|string|max:255',
             'content_description' => 'nullable|string',
-            'id_folder' => [
+            'price' => 'nullable|numeric|min:0',
+            'folder_id' => [
                 'required',
-                Rule::exists('tb_folder', 'id')->where(function ($query) {
-                    return $query->where('id_users', Auth::id());
+                Rule::exists('folders', 'id')->where(function ($query) {
+                    return $query->where('seller_id', Auth::id());
                 })
             ],
-            'name_tag' => 'required|array',
-            'name_tag.*' => 'exists:tb_tag,id',
-            'visibility_content' => 'required|in:public,private,by_request',
+            'tag_name' => 'required|array',
+            'tag_name.*' => 'exists:tags,id',
+            'visibility' => 'required|in:public,private,by_request',
+            // 'status' => 'required|in:active,deleted,banned',
         ]);
-
-        // $content->content_title = $validated['content_title'];
-        // $content->content_description = $validated['content_description'];
-        // $content->visibility_content = $content->folder->visibility_folder;
 
         $content->fill($validated);
         $content->save();
 
         // 'sync' akan mencocokkan tags di database dengan array dari form
-        $content->tags()->sync($request->input('name_tag', [])); //'[]' untuk array kosong jika tidak ada yg dipilih
+        $content->tags()->sync($request->input('tag_name', [])); //'[]' untuk array kosong jika tidak ada yg dipilih
 
         return redirect()->route('content.index')->with('success', 'Content updated successfully!');
     }
@@ -188,7 +184,7 @@ class ContentController extends Controller
 
         // $this->authorize('view', $folder);
 
-        $folders = $user->folders()->whereNull('id_parent')->latest()->paginate(12);
+        $folders = $user->folders()->whereNull('parent_id')->latest()->paginate(12);
 
         return view('dashboard.folder.index', compact('folders'));
     }
@@ -205,12 +201,30 @@ class ContentController extends Controller
     // menyimpan folder root baru
     public function storeFolder(Request $request)
     {
+        $user = $request->user();
+
         $validated = $request->validate([
             'folder_name' => 'required|string|max:255',
             'folder_description' => 'nullable|string|max:1000',
-            'visibility_folder' => 'required|in:public,private,by_request',
-            'id_parent' => ['nullable', 'exists:tb_folder,id']
+            'visibility' => 'required|in:public,private,by_request',
+            'parent_id' => ['nullable', 'exists:folders,id'],
+            'is_bundle' => 'required|boolean',
+            'bundle_price' => 'nullable|numeric|min:0',
+            // 'status' => 'required|in:active,deleted,banned',
         ]);
+
+        // $validated['status'] = $validated['status'] ?? 'active';
+        // $validated['is_bundle'] = $validated['is_bundle'] ?? false;
+        // $validated['bundle_price'] = $validated['bundle_price'] ?? null;
+
+        if ($validated['is_bundle'] == 1 && blank($validated['bundle_price'])) {
+            return back()
+                ->withErrors(['bundle_price' => 'Bundle price must be provided when the folder is marked as a bundle.'])
+                ->withInput();
+        }
+
+        $bundlePrice = $validated['is_bundle'] == 1 ? $validated['bundle_price'] : null;
+        $validated['bundle_price'] = $bundlePrice;
 
         $request->user()->folders()->create($validated);
 
@@ -232,13 +246,17 @@ class ContentController extends Controller
         $validated = $request->validate([
             'folder_name' => 'required|string|max:255',
             'folder_description' => 'nullable|string|max:1000',
-            'visibility_folder' => 'required|in:public,private,by_request',
+            'visibility' => 'required|in:public,private,by_request',
+            'is_bundle' => 'required|boolean',
+            'bundle_price' => 'nullable|numeric|min:0'
         ]);
 
         $folderData = [
             'folder_name' => $validated['folder_name'],
             'folder_description' => $validated['folder_description'],
-            'visibility_folder' => $validated['visibility_folder']
+            'visibility' => $validated['visibility'],
+            'is_bundle' => $validated['is_bundle'],
+            'bundle_price' => $validated['bundle_price']
         ];
 
         // update data
@@ -272,7 +290,7 @@ class ContentController extends Controller
         }
 
         // ambil sub folder
-        // Jika di root (null), ambil folder utama (yang 'id_parent'-nya null)
+        // Jika di root (null), ambil folder utama (yang 'parent_id'-nya null)
         // Jika di dalam folder, ambil 'children' (anak) dari folder itu
         if ($currentFolder) {
             // di dalam folder ➜ ambil anak-anaknya
@@ -282,7 +300,7 @@ class ContentController extends Controller
         } else {
             // root ➜ ambil folder milik user yang parent_id null
             $folders = $user->folders()
-                ->whereNull('id_parent')
+                ->whereNull('parent_id')
                 ->orderBy('folder_name')
                 ->get();
         };
@@ -290,12 +308,12 @@ class ContentController extends Controller
         // $folders = $queryFolders->orderBy('folder_name')->get();
 
         //ambil konten
-        // Jika di root, ambil konten yang 'id_folder'-nya null
+        // Jika di root, ambil konten yang 'folder_id'-nya null
         // Jika di dalam folder, ambil 'contents' dari folder itu
         if ($currentFolder) {
             $queryContents = $currentFolder->contents();
         } else {
-            $queryContents = $user->contents()->whereNull('id_folder');
+            $queryContents = $user->contents();
         }
 
         $contents = $queryContents->with('tags')->latest()->paginate(10);
@@ -314,13 +332,13 @@ class ContentController extends Controller
     public function createDetailFolder(Request $request, ?Folder $folder)
     {
         $user = $request->user();
-        $parentId = $request->query('id_parent');
+        $parentId = $request->query('parent_id');
 
         $parentFolder = null;
 
         if ($parentId) {
             $parentFolder = Folder::where('id', $parentId)
-                ->where('id_users', $user->id)
+                ->where('seller_id', $user->id)
                 ->firstOrFail();
         }
 
@@ -334,16 +352,31 @@ class ContentController extends Controller
         $validated = $request->validate([
             'folder_name' => 'required|string|max:255',
             'folder_description' => 'nullable|string|max:1000',
-            'visibility_folder' => 'required|in:public,private,by_request',
-            'id_parent' => ['nullable', 'exists:tb_folder,id']
+            'visibility' => 'required|in:public,private,by_request',
+            'parent_id' => ['required', 'exists:folders,id'],
+            'is_bundle' => 'required|boolean',
+            'bundle_price' => 'nullable|numeric|min:0',
         ]);
+
+        $parentFolder = Folder::where('id', $validated['parent_id'])
+            ->where('seller_id', $user->id)
+            ->firstOrFail();
+
+        if ($parentFolder->is_bundle == 1 && blank($validated['bundle_price'])) {
+            return back()
+                ->withErrors(['bundle_price' => 'Bundle price must be provided when the folder is marked as a bundle.'])
+                ->withInput();
+        }
+
+        $bundlePrice = $validated['is_bundle'] == 1 ? $validated['bundle_price'] : null;
+        $validated['bundle_price'] = $bundlePrice;
 
         $user->folders()->create($validated);
 
         // Kalau ada parent, balik ke folder tersebut
-        if (!empty($validated['id_parent'])) {
+        if (!empty($validated['parent_id'])) {
             return redirect()
-                ->route('detail.folder.show', $validated['id_parent'])
+                ->route('detail.folder.show', $validated['parent_id'])
                 ->with('success', 'Subfolder berhasil dibuat.');
         }
 
@@ -357,17 +390,17 @@ class ContentController extends Controller
     {
 
         $user = $request->user();
-        $parentId = $request->query('id_parent');
+        $parentId = $request->query('parent_id');
 
         $parentFolder = null;
 
         if ($parentId) {
             $parentFolder = Folder::where('id', $parentId)
-                ->where('id_users', $user->id)
+                ->where('seller_id', $user->id)
                 ->firstOrFail();
         }
 
-        $tags = Tags::orderBy('name_tag')->get();
+        $tags = Tags::orderBy('tag_name')->get();
 
         return view('dashboard.folder.content-detail-folder-create', compact('parentFolder', 'tags'));
     }
@@ -377,28 +410,29 @@ class ContentController extends Controller
         $validated = $request->validate([
             'content_title' => 'required|string|max:255',
             'content_description' => 'nullable|string',
-            'id_folder' => [
+            'price' => 'nullable|numeric|min:0',
+            'folder_id' => [
                 'required',
-                Rule::exists('tb_folder', 'id')->where(function ($query) {
-                    return $query->where('id_users', Auth::id());
+                Rule::exists('folders', 'id')->where(function ($query) {
+                    return $query->where('seller_id', Auth::id());
                 })
             ],
-            'name_tag' => 'nullable|array',
-            'name_tag.*' => 'exists:tb_tag,id',
+            'tag_name' => 'nullable|array',
+            'tag_name.*' => 'exists:tags,id',
             'path_hi_res' => 'required|image|mimes:jpg,jpeg,png|max:10240',
-            'visibility_content' => 'required|in:public,private,by_request',
+            'visibility' => 'required|in:public,private,by_request',
         ]);
 
         $id_user = $request->user()->id;
-        $id_folder = $validated['id_folder'];
+        $folder_id = $validated['folder_id'];
 
         //cari folder tujuan
-        $folder = Folder::where('id', $id_folder)
-            ->where('id_users', $id_user)
+        $folder = Folder::where('id', $folder_id)
+            ->where('seller_id', $id_user)
             ->firstOrFail();
 
         // pakai visibility folder untuk konten
-        $visibility = $folder->visibility_folder;
+        $visibility = $folder->visibility;
 
         $file = $request->file('path_hi_res');
         $fileName = time() . '_' . $file->getClientOriginalName();
@@ -411,7 +445,7 @@ class ContentController extends Controller
         $image = $manager->read($file->getRealPath());
 
         // Resize gambar untuk low-res
-        $image->scale(width: 720);
+        $image->scale(width: 360);
 
         // Tambahkan watermark
         $image->text('Rupaia ©', 10, 10, function ($font) {
@@ -427,25 +461,26 @@ class ContentController extends Controller
 
         // Simpan data konten ke database
         $content = Content::create([
-            'id_users' => $id_user,
-            'id_folder' => $validated['id_folder'],
+            'seller_id' => $id_user,
+            'folder_id' => $validated['folder_id'],
             'content_title' => $validated['content_title'],
             'content_description' => $validated['content_description'],
+            'price' => $validated['price'] ?? 0.00,
             'path_hi_res' => $path_hi_res,
             'path_low_res' => $path_low_res,
-            'visibility_content' => $visibility,
+            'visibility' => $visibility,
         ]);
 
         // Proses dan hubungkan tags
-        if (!empty($validated['name_tag'])) {
+        if (!empty($validated['tag_name'])) {
 
             // Hubungkan konten ini dengan semua tag ID yang sudah diproses
             // 'sync()' adalah perintah Eloquent untuk relasi Many-to-Many
             // Ini akan otomatis menambah/menghapus data di tabel pivot 'tb_content_tag'
-            $content->tags()->sync($validated['name_tag']);
+            $content->tags()->sync($validated['tag_name']);
         }
 
-        return redirect()->route('detail.folder.show', $validated['id_folder'])->with('succes', 'Content uploaded successfully!');
+        return redirect()->route('detail.folder.show', $validated['folder_id'])->with('succes', 'Content uploaded successfully!');
     }
 
     public function contentMove(Request $request, Content $content)
@@ -455,30 +490,30 @@ class ContentController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'id_folder' => [
+            'folder_id' => [
                 'required',
-                Rule::exists('tb_folder', 'id')->where(function ($query) use ($user) {
+                Rule::exists('folders', 'id')->where(function ($query) use ($user) {
                     // pastikan folder tujuan milik user yang sama
-                    return $query->where('id_users', $user->id);
+                    return $query->where('seller_id', $user->id);
                 }),
             ],
         ]);
 
-        $destinationFolderId = $validated['id_folder'];
+        $destinationFolderId = $validated['folder_id'];
 
         if ($destinationFolderId) {
             $folder = Folder::where('id', $destinationFolderId)
-                ->where('id_users', $user->id)
+                ->where('seller_id', $user->id)
                 ->firstOrFail();
 
-            $content->id_folder = $destinationFolderId;
-            $content->visibility_content = $folder->visibility_folder;
+            $content->folder_id = $destinationFolderId;
+            $content->visibility = $folder->visibility;
         } else {
-            $content->id_folder = null;
-            $content->visibility_content = 'public';
+            $content->folder_id = null;
+            $content->visibility = 'public';
         }
 
-        // $content->id_folder = $destinationFolderId;
+        // $content->folder_id = $destinationFolderId;
 
         $content->save();
 
@@ -500,40 +535,40 @@ class ContentController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'id_parent' => [
+            'parent_id' => [
                 'nullable',
-                Rule::exists('tb_folder', 'id')->where(function ($query) use ($user) {
+                Rule::exists('folders', 'id')->where(function ($query) use ($user) {
                     // pastikan folder tujuan milik user yang sama
-                    return $query->where('id_users', $user->id);
+                    return $query->where('seller_id', $user->id);
                 }),
             ],
         ]);
 
-        $destinationFolderId = $validated['id_parent'] ?? null;
+        $destinationFolderId = $validated['parent_id'] ?? null;
 
         // Cegah folder jadi parent dirinya sendiri
         if ($destinationFolderId && $destinationFolderId == $folder->id) {
             return back()->withErrors([
-                'id_parent' => 'Folder tidak boleh menjadi parent dirinya sendiri'
+                'parent_id' => 'Folder tidak boleh menjadi parent dirinya sendiri'
             ]);
         }
 
         if ($destinationFolderId) {
             $parentFolder = Folder::where('id', $destinationFolderId)
-                ->where('id_users', $user->id)
+                ->where('seller_id', $user->id)
                 ->firstOrFail();
 
-            $folder->id_parent = $parentFolder->id;
+            $folder->parent_id = $parentFolder->id;
             $folder->save();
 
             // samakan visibilitas folder, subfolder, dan content
-            $folder->updateVisibilityRecursive($parentFolder->visibility_folder);
+            $folder->updateVisibilityRecursive($parentFolder->visibility);
         } else {
-            $folder->id_parent = null;
+            $folder->parent_id = null;
             $folder->save();
         }
 
-        // $folder->id_parent = $destinationFolderId;
+        // $folder->parent_id = $destinationFolderId;
 
         if ($destinationFolderId) {
             return redirect()

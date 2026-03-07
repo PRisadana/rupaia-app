@@ -8,6 +8,7 @@ use App\Models\Folder;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('dashboard');
+Route::get('/content/{content}', [HomeController::class, 'showDetailContent'])->name('content.detail');
 
 Route::get('/about', function () {
     return view('about');

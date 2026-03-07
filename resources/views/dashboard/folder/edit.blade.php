@@ -44,21 +44,53 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="visibility_folder" :value="__('Folder Visibility')" class="form-label">Folder
+                            <label for="visibility" :value="__('Folder Visibility')" class="form-label">Folder
                                 Visibility</label>
-                            <select name="visibility_folder" id="visibility_folder"
-                                class="form-select @error('visibility_folder') is-invalid @enderror">
-                                <option value="public" {{ old('visibility_folder') == 'public' ? 'selected' : '' }}>Public
-                                    (default)
+                            <select name="visibility" id="visibility"
+                                class="form-select @error('visibility') is-invalid @enderror">
+                                <option value="public" {{ old('visibility') == 'public' ? 'selected' : '' }}>Public
                                 </option>
-                                <option value="private"
-                                    {{ old('visibility_folder', 'private') == 'private' ? 'selected' : '' }}>Private
+                                <option value="private" {{ old('visibility', 'private') == 'private' ? 'selected' : '' }}>
+                                    Private
                                 </option>
-                                <option value="by_request" {{ old('visibility_folder') == 'by_request' ? 'selected' : '' }}>
+                                <option value="by_request" {{ old('visibility') == 'by_request' ? 'selected' : '' }}>
                                     By Request</option>
                             </select>
 
-                            @error('visibility_folder')
+                            @error('visibility')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="is_bundle" :value="__('Is Bundle')" class="form-label">Is this folder a
+                                bundle?</label>
+                            <select name="is_bundle" id="is_bundle"
+                                class="form-select @error('is_bundle') is-invalid @enderror">
+                                <option value="1" {{ old('is_bundle') == '1' ? 'selected' : '' }}>Yes
+                                </option>
+                                <option value="0" {{ old('is_bundle', '0') == '0' ? 'selected' : '' }}>
+                                    No
+                                </option>
+                            </select>
+
+                            @error('is_bundle')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="bundle_price" :value="__('Bundle Price')" class="form-label">Bundle Price
+                                (IDR)</label>
+                            <input id="bundle_price" name="bundle_price" type="number"
+                                value="{{ old('bundle_price', $folder->bundle_price) }}"
+                                class="form-control @error('bundle_price') is-invalid @enderror">
+
+                            @error('bundle_price')
                                 <div class="invalid-feedback">
                                     {{ $message }}
                                 </div>
