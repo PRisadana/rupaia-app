@@ -41,12 +41,17 @@ class Content extends Model
 
     protected static function booted(): void
     {
-        // Ini akan berjalan OTOMATIS setiap kali $content->delete() dipanggil
+        // berjalan OTOMATIS setiap kali $content->delete() dipanggil
         static::deleting(function (Content $content) {
             Storage::disk('public')->delete([$content->path_hi_res, $content->path_low_res]);
 
             // Hapus relasi tags ketika konten dihapus
             $content->tags()->detach();
         });
+    }
+
+    public function showcaseItems()
+    {
+        return $this->hasMany(ShowcaseItem::class, 'content_id');
     }
 }

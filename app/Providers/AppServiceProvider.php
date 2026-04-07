@@ -7,8 +7,10 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Pagination\Paginator;
 use App\Models\Content;
 use App\Models\Folder;
+use App\Models\ShowcaseItem;
 use App\Policies\ContentPolicy;
 use App\Policies\FolderPolicy;
+use App\Policies\ShowcasePolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Content::class, ContentPolicy::class);
         Gate::policy(Folder::class, FolderPolicy::class);
+        Gate::policy(ShowcaseItem::class, ShowcasePolicy::class);
         Paginator::useBootstrapFive();
     }
 }

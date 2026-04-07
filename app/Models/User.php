@@ -59,4 +59,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Content::class, 'seller_id');
     }
+
+    public function showcaseItems()
+    {
+        return $this->hasMany(ShowcaseItem::class, 'seller_id');
+    }
 }

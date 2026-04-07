@@ -3,12 +3,16 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ContentController;
 use App\Http\Controllers\HomeController;
-use App\Models\Content;
-use App\Models\Folder;
+use App\Http\Controllers\AuthorController;
+use App\Http\Controllers\ShowcaseController;
 use Illuminate\Support\Facades\Route;
+use PharIo\Manifest\Author;
 
 Route::get('/', [HomeController::class, 'index'])->name('dashboard');
 Route::get('/content/{content}', [HomeController::class, 'showDetailContent'])->name('content.detail');
+Route::get('/content/{user}/showcase', [HomeController::class, 'showShowcase'])->name('authors.show');
+Route::get('/showcase/{showcaseItem}', [HomeController::class, 'showDetailShowcase'])->name('authors.show.detail');
+Route::get('/content/{user}/published', [HomeController::class, 'showPublishedContent'])->name('authors.show.published');
 
 Route::get('/about', function () {
     return view('about');
@@ -48,6 +52,15 @@ Route::middleware('auth')->group(function () {
     // Route::get('/dashboard/content/{content}/move', [ContentController::class, 'contentMoveForm'])->name('content.move.form');
     Route::put('/dashboard/content/{content}/move', [ContentController::class, 'contentMove'])->name('content.move');
     Route::put('/dashboard/folder/{folder}/move', [ContentController::class, 'folderMove'])->name('folder.move');
+
+    Route::get('/dashboard/showcase/', [ShowcaseController::class, 'showcaseIndex'])->name('showcase.index');
+    Route::post('/dashboard/showcase/store', [ShowcaseController::class, 'showcaseStore'])->name('showcase.store');
+    Route::get('/dashboard/showcase/create', [ShowcaseController::class, 'showcaseCreate'])->name('showcase.create');
+    Route::get('/dashboard/showcase/{showcaseItem}/edit', [ShowcaseController::class, 'showcaseEdit'])->name('showcase.edit');
+    Route::put('/dashboard/showcase/{showcaseItem}', [ShowcaseController::class, 'showcaseUpdate'])->name('showcase.update');
+    Route::delete('/dashboard/showcase/{showcaseItem}', [ShowcaseController::class, 'showcaseDestroy'])->name('showcase.destroy');
+    Route::post('/dashboard/showcase/store-from-content', [ShowcaseController::class, 'showcaseFromContentStore'])->name('showcase.from.content.store');
+    Route::get('/dashboard/showcase/create-from-content', [ShowcaseController::class, 'showcaseFromContentCreate'])->name('showcase.from.content.create');
 });
 
 require __DIR__ . '/auth.php';

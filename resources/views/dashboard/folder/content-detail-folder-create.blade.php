@@ -11,7 +11,7 @@
                         </h2>
                     </header>
 
-                    @if ($errors->any())
+                    {{-- @if ($errors->any())
                         <div class="alert alert-danger">
                             <strong>Terjadi kesalahan:</strong>
                             <ul class="mb-0">
@@ -20,7 +20,7 @@
                                 @endforeach
                             </ul>
                         </div>
-                    @endif
+                    @endif --}}
 
                     <form method="POST" action="{{ route('content.detail.folder.store') }}" enctype="multipart/form-data">
                         @csrf
@@ -65,14 +65,14 @@
                         <div class="mb-3">
                             <h3 class="form-label">{{ $parentFolder->visibility }}</h3>
                             <div class="form-text">
-                                Visibilitas di atas mengikuti folder yang digunakan
+                                The visibility of the content will follow the visibility of the folder
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <h3 class="form-label">{{ $parentFolder->folder_name }}</h3>
                             <div class="form-text">
-                                Folder di atas adalah folder yang dipakai
+                                The folder above is the folder that is used
                             </div>
                         </div>
 
@@ -100,7 +100,7 @@
                                 @endforeach
                             </select>
                             <div class="form-text">
-                                Ini adalah daftar tag yang sudah disetujui Admin.
+                                This is a list of tags that have been approved by the Admin
                             </div>
                             @error('tag_name')
                                 <div class="invalid-feedback d-block">

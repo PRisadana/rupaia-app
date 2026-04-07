@@ -16,7 +16,7 @@
                 {{ Auth::user()->bio ?? 'This user has not set a bio yet.' }}
             </p>
             <div class="d-inline-flex gap-2 my-3">
-                <button class="d-inline-flex align-items-center btn btn-primary px-4 rounded-pill" type="button">
+                <button class="d-inline-flex align-items-center btn btn-dark px-4 rounded-pill" type="button">
                     <a class="text-white nav-link" href="{{ route('profile.edit') }}">{{ __('Profile Setting') }}</a>
                 </button>
                 <button class="d-inline-flex align-items-center btn btn-outline-secondary px-4 rounded-pill" type="button">
@@ -27,6 +27,9 @@
     </div>
 
     <ul class="nav nav-underline justify-content-center">
+        <li class="nav-item">
+            <a class="nav-link" aria-current="page" href="{{ route('showcase.index') }}">Showcases</a>
+        </li>
         <li class="nav-item">
             <a class="nav-link" href="{{ route('content.index') }}">Contents</a>
         </li>
@@ -49,26 +52,24 @@
                         <p class="card-text">Description: {{ $folder->folder_description }}</p>
                         <p class="card-text">Visibility Folder: {{ $folder->visibility }}</p>
                         <p class="card-text">Is Bundle: {{ $folder->is_bundle ? 'Yes' : 'No' }}</p>
-                        <p class="card-text">Rp {{ number_format($folder->bundle_price, 0, ',', '.') }}</p>
+                        <p class="card-text"> <strong>Rp {{ number_format($folder->bundle_price, 0, ',', '.') }}</strong>
+                        </p>
                         <p class="card-text">Status: {{ $folder->status }}</p>
-                        <div class="card">
-                            <div></div>
-                        </div>
+
                         <div class="d-flex flex-row mb-2 my-3">
-                            <a href="{{ route('folder.edit', $folder) }}"
-                                class="btn btn-sm btn-outline-primary mx-1">Edit</a>
+                            <a href="{{ route('folder.edit', $folder) }}" class="btn btn-sm btn-secondary mx-1">Edit</a>
+
+                            <button type="button" class="btn btn-sm btn-outline-dark mx-1" data-bs-toggle="modal"
+                                data-bs-target="#moveFolderModal-{{ $folder->id }}">
+                                Move
+                            </button>
 
                             <form action="{{ route('folder.destroy', $folder) }} " method="POST"
                                 onsubmit="return confirm ('Are you sure for delete this folder?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                <button type="submit" class="btn btn-sm btn-danger mx-1">Delete</button>
                             </form>
-
-                            <button type="button" class="btn btn-sm btn-outline-secondary mx-1" data-bs-toggle="modal"
-                                data-bs-target="#moveFolderModal-{{ $folder->id }}">
-                                Move
-                            </button>
                         </div>
                     </div>
                 </div>
