@@ -15,14 +15,16 @@
                     <div class="mb-3">
                         <h1 class="h3 fw-bold mb-2">{{ $content->content_title }}</h1>
 
-                        <p class="text-muted mb-2">
-                            Folder <strong>{{ $content->folder->folder_name ?? '-' }}
-                            </strong> </p>
+                        <a href="{{ route('folder.show', $content->folder->id) }}" class=" text-decoration-none">
+                            <p class="text-muted mb-2">
+                                Folder <strong>{{ $content->folder->folder_name ?? '-' }}
+                                </strong> </p>
+                        </a>
 
                         <a href="{{ route('authors.show', $content->user->id) }}"
                             class="d-inline-flex align-items-center text-decoration-none">
                             <img src="{{ $content->user->profile_photo_path ? asset('storage/' . $content->user->profile_photo_path) : asset('aset/rupaia_logo.png') }}"
-                                alt="Profile" class="rounded-circle" width="30" height="30"
+                                alt="Profile" class="rounded-circle flex-shrink-0" width="30" height="30"
                                 style="object-fit: cover;">
                             <p class="text-muted m-2">
                                 by <strong>{{ $content->user->name ?? 'Unknown Author' }}</strong>
@@ -96,5 +98,52 @@
             </div>
         </div>
     </div>
+
+    <h1 class="h3 fw-bold mb-2">More from the same folder</h1>
+    <hr>
+    <div class="container pb-5">
+        <div class="row g-3">
+            @forelse ($relatedContents as $relatedContent)
+                <div class="col-6 col-md-4 col-lg-3">
+                    <a href="{{ route('content.detail', $relatedContent->id) }}" class="text-decoration-none">
+                        <div class="content-clean-wrapper">
+                            <img src="{{ asset('storage/' . $relatedContent->path_low_res) }}"
+                                alt="{{ $relatedContent->content_title }}"
+                                class="img-fluid w-100 rounded-3 shadow-sm content-clean-image">
+                        </div>
+                    </a>
+                </div>
+            @empty
+                <div class="col-12">
+                    <p class="text-center text-muted fs-4 mt-5">
+                        There is no content related from same folder.
+                    </p>
+                </div>
+            @endforelse
+        </div>
+    </div>
+
+    <h1 class="h3 fw-bold mb-2">More related content</h1>
+    <hr>
+    <div class="container pb-5">
+        <div class="row g-3">
+            @forelse ($relatedByTags as $relatedByTag)
+                <div class="col-6 col-md-4 col-lg-3">
+                    <a href="{{ route('content.detail', $relatedByTag->id) }}" class="text-decoration-none">
+                        <div class="content-clean-wrapper">
+                            <img src="{{ asset('storage/' . $relatedByTag->path_low_res) }}"
+                                alt="{{ $relatedByTag->content_title }}"
+                                class="img-fluid w-100 rounded-3 shadow-sm content-clean-image">
+                        </div>
+                    </a>
+                </div>
+            @empty
+                <div class="col-12">
+                    <p class="text-center text-muted fs-4 mt-5">
+                        There is no content related from same tag.
+                    </p>
+                </div>
+            @endforelse
+        </div>
     </div>
 @endsection
