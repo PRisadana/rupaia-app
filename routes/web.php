@@ -69,7 +69,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/presets', [PresetController::class, 'index'])->name('presets.index');
+    Route::get('/presets', [PresetController::class, 'index'])->name('preset.index');
     Route::post('/presets/store', [PresetController::class, 'storePreset'])->name('preset.store');
     Route::get('/presets/create', [PresetController::class, 'createPreset'])->name('preset.create');
     Route::get('/presets/{preset}/edit', [PresetController::class, 'editPreset'])->name('preset.edit');

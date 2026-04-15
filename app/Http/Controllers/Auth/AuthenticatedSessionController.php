@@ -47,7 +47,7 @@ class AuthenticatedSessionController extends Controller
 
         if (!$userExists) {
             throw ValidationException::withMessages([
-                'email' => __('Email tidak terdaftar.'),
+                'email' => __('Email not found'),
             ]);
         }
 
@@ -56,11 +56,17 @@ class AuthenticatedSessionController extends Controller
 
         if (!Auth::attempt($request->only('email', 'password'), $remember)) {
             throw ValidationException::withMessages([
-                'password' => __('Password salah.'),
+                'password' => __('Password is incorrect'),
             ]);
         }
 
         $request->session()->regenerate();
+
+        $user = Auth::user();
+
+        if ($user->role === 'admin') {
+            return redirect()->intended(route('admin.dashboard', absolute: false));
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

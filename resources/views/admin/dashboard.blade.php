@@ -4,9 +4,6 @@
     <div class="container-fluid px-4">
         <h1 class="my-4">Dashboard</h1>
         <hr>
-        {{-- <ol class="breadcrumb mb-4">
-            <li class="breadcrumb-item active">Dashboard</li>
-        </ol> --}}
         <div class="row my-4">
             <div class="col-xl-3 col-md-6">
                 <div class="card text-bg-light mb-4" style="max-width: 18rem;">

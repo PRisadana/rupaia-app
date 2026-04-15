@@ -13,23 +13,29 @@ class PresetController extends Controller
     {
         $presets = Preset::latest()->paginate(10);
 
-        return view('admin.presets.index', compact('presets'));
+        return view('admin.preset.index', compact('presets'));
     }
 
-    public function create()
+    public function createPreset()
     {
-        return view('admin.presets.create');
+        return view('admin.preset.create');
     }
 
-    public function store(Request $request)
+    public function storePreset(Request $request)
     {
         $validated = $request->validate([
             'preset_name' => 'required|string|max:255',
-            'preset_file_path' => 'required|file|mimes:.cube',
+            'preset_file_path' => 'required|file',
             'is_active' => 'required|boolean',
         ]);
 
         $file = $request->file('preset_file_path');
+        if ($file->getClientOriginalExtension() !== 'cube') {
+            return back()
+                ->withErrors(['preset_file_path' => 'File must be a .cube file'])
+                ->withInput();
+        }
+
         $fileName = time() . '_' . $file->getClientOriginalName();
         $path = $file->storeAs('presets', $fileName, 'public');
 
@@ -39,20 +45,20 @@ class PresetController extends Controller
             'is_active' => $validated['is_active'],
         ]);
 
-        return redirect()->route('admin.presets.index')->with('success', 'Preset created successfully.');
+        return redirect()->route('admin.preset.index')->with('success', 'Preset created successfully.');
     }
 
-    public function edit(Preset $preset)
+    public function editPreset(Preset $preset)
     {
-        return view('admin.presets.edit', compact('preset'));
+        return view('admin.preset.edit', compact('preset'));
     }
 
-    public function update(Request $request, Preset $preset)
+    public function updatePreset(Request $request, Preset $preset)
     {
         $validated = $request->validate([
             'preset_name' => 'required|string|max:255',
-            'preset_file_path' => 'required|file|mimes:.cube',
-            // 'is_active' => 'required|boolean',
+            // 'preset_file_path' => 'required|file|mimes:.cube',
+            'is_active' => 'required|boolean',
         ]);
 
         $data = [
@@ -74,10 +80,10 @@ class PresetController extends Controller
 
         $preset->update($data);
 
-        return redirect()->route('admin.presets.index')->with('success', 'Preset updated successfully.');
+        return redirect()->route('admin.preset.index')->with('success', 'Preset updated successfully.');
     }
 
-    public function destroy(Preset $preset)
+    public function destroyPreset(Preset $preset)
     {
         if ($preset->preset_file_path) {
             Storage::disk('public')->delete($preset->preset_file_path);
@@ -85,6 +91,6 @@ class PresetController extends Controller
 
         $preset->delete();
 
-        return redirect()->route('admin.presets.index')->with('success', 'Preset deleted successfully.');
+        return redirect()->route('admin.preset.index')->with('success', 'Preset deleted successfully.');
     }
 }
