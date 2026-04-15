@@ -1,0 +1,90 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Preset;
+
+class PresetController extends Controller
+{
+    public function index()
+    {
+        $presets = Preset::latest()->paginate(10);
+
+        return view('admin.presets.index', compact('presets'));
+    }
+
+    public function create()
+    {
+        return view('admin.presets.create');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'preset_name' => 'required|string|max:255',
+            'preset_file_path' => 'required|file|mimes:.cube',
+            'is_active' => 'required|boolean',
+        ]);
+
+        $file = $request->file('preset_file_path');
+        $fileName = time() . '_' . $file->getClientOriginalName();
+        $path = $file->storeAs('presets', $fileName, 'public');
+
+        Preset::create([
+            'preset_name' => $validated['preset_name'],
+            'preset_file_path' => $path,
+            'is_active' => $validated['is_active'],
+        ]);
+
+        return redirect()->route('admin.presets.index')->with('success', 'Preset created successfully.');
+    }
+
+    public function edit(Preset $preset)
+    {
+        return view('admin.presets.edit', compact('preset'));
+    }
+
+    public function update(Request $request, Preset $preset)
+    {
+        $validated = $request->validate([
+            'preset_name' => 'required|string|max:255',
+            'preset_file_path' => 'required|file|mimes:.cube',
+            // 'is_active' => 'required|boolean',
+        ]);
+
+        $data = [
+            'preset_name' => $validated['preset_name'],
+            'is_active' => $validated['is_active'],
+        ];
+
+        // if ($request->hasFile('preset_file_path')) {
+        //     if ($preset->preset_file_path) {
+        //         Storage::disk('public')->delete($preset->preset_file_path);
+        //     }
+
+        //     $file = $request->file('preset_file_path');
+        //     $fileName = time() . '_' . $file->getClientOriginalName();
+        //     $path = $file->storeAs('presets', $fileName, 'public');
+
+        //     $data['preset_file_path'] = $path;
+        // }
+
+        $preset->update($data);
+
+        return redirect()->route('admin.presets.index')->with('success', 'Preset updated successfully.');
+    }
+
+    public function destroy(Preset $preset)
+    {
+        if ($preset->preset_file_path) {
+            Storage::disk('public')->delete($preset->preset_file_path);
+        }
+
+        $preset->delete();
+
+        return redirect()->route('admin.presets.index')->with('success', 'Preset deleted successfully.');
+    }
+}

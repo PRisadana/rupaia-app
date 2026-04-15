@@ -31,7 +31,8 @@
                     <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
                         <img src="{{ Auth::user()->profile_photo_path ? asset('storage/' . Auth::user()->profile_photo_path) : asset('aset/rupaia_logo.png') }}"
-                            alt="Profile" class="rounded-circle" width="30" height="30" style="object-fit: cover;">
+                            alt="Profile" class="rounded-circle border border-secondary" width="30" height="30"
+                            style="object-fit: cover;">
                     </a>
 
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
@@ -45,6 +46,16 @@
                             <a class="dropdown-item" href="{{ route('profile.edit') }}">
                                 {{ __('Setting') }}
                             </a>
+                        </li>
+
+                        <li>
+                            @auth
+                                @if (auth()->user()->role === 'admin')
+                                    <a class="dropdown-item" href="{{ route('admin.dashboard') }}">
+                                        {{ __('Admin Panel') }}
+                                    </a>
+                                @endif
+                            @endauth
                         </li>
 
                         <li>

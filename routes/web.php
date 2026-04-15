@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\PresetController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ContentController;
 use App\Http\Controllers\HomeController;
@@ -62,6 +64,17 @@ Route::middleware('auth')->group(function () {
     Route::delete('/dashboard/showcase/{showcaseItem}', [ShowcaseController::class, 'showcaseDestroy'])->name('showcase.destroy');
     Route::post('/dashboard/showcase/store-from-content', [ShowcaseController::class, 'showcaseFromContentStore'])->name('showcase.from.content.store');
     Route::get('/dashboard/showcase/create-from-content', [ShowcaseController::class, 'showcaseFromContentCreate'])->name('showcase.from.content.create');
+});
+
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/presets', [PresetController::class, 'index'])->name('presets.index');
+    Route::post('/presets/store', [PresetController::class, 'storePreset'])->name('preset.store');
+    Route::get('/presets/create', [PresetController::class, 'createPreset'])->name('preset.create');
+    Route::get('/presets/{preset}/edit', [PresetController::class, 'editPreset'])->name('preset.edit');
+    Route::put('/presets/{preset}', [PresetController::class, 'updatePreset'])->name('preset.update');
+    Route::delete('/presets/{preset}', [PresetController::class, 'destroyPreset'])->name('preset.destroy');
 });
 
 require __DIR__ . '/auth.php';
