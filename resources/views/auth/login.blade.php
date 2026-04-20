@@ -44,11 +44,11 @@
 
                     <a href="{{ route('register') }}" class="nav-link px-2 text-dark mb-3 mt-3 ">Register new account</a>
 
-                    {{-- @if (Route::has('password.request'))
+                    @if (Route::has('password.request'))
                         <a href="{{ route('password.request') }}" class="nav-link px-2 text-dark mb-3 mt-3">
                             {{ __('Forgot your password?') }}
                         </a>
-                    @endif --}}
+                    @endif
                 </form>
             </div>
         </div>

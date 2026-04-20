@@ -67,12 +67,11 @@
                             <span>Add to Cart</span>
                         </button>
 
-                        <button
-                            class="btn btn-outline-dark flex-grow-1 d-flex align-items-center justify-content-center gap-2"
-                            type="submit">
+                        <a href="{{ route('editing.preview', $content->id) }}"
+                            class="btn btn-outline-dark flex-grow-1 d-flex align-items-center justify-content-center gap-2 text-decoration-none">
                             <i class="fi fi-rr-pencil"></i>
                             <span>Try Editing</span>
-                        </button>
+                        </a>
 
                         <div class="d-flex justify-content-end">
                             <button

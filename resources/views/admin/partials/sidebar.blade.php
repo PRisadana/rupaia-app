@@ -5,7 +5,7 @@
                 <div class="nav">
                     <div class="sb-sidenav-menu-heading">General Information</div>
                     <a class="nav-link active" href="{{ route('admin.dashboard') }}">
-                        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                        <div class="sb-nav-link-icon"><i class="fi fi-rr-chart-histogram"></i></i></div>
                         Dashboard
                     </a>
                     {{-- <div class="sb-sidenav-menu-heading">Interface</div>
@@ -63,31 +63,31 @@
                     </div> --}}
                     <div class="sb-sidenav-menu-heading">Addons</div>
                     <a class="nav-link" href="#">
-                        <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
+                        <div class="sb-nav-link-icon"><i class="fi fi-rr-user"></i></div>
                         Users
                     </a>
                     <a class="nav-link" href="#">
-                        <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                        <div class="sb-nav-link-icon"><i class="fi fi-rr-picture"></i></div>
                         Contents
                     </a>
                     <a class="nav-link" href="#">
-                        <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                        <div class="sb-nav-link-icon"><i class="fi fi-rr-assept-document"></i></div>
                         KYC Verification
                     </a>
                     <a class="nav-link" href="#">
-                        <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                        <div class="sb-nav-link-icon"><i class="fi fi-rr-exchange"></i></div>
                         Transaction
                     </a>
                     <a class="nav-link" href="#">
-                        <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                        <div class="sb-nav-link-icon"><i class="fi fi-rr-wallet"></i></i></div>
                         Payout
                     </a>
                     <a class="nav-link" href="#">
-                        <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                        <div class="sb-nav-link-icon"><i class="fi fi-rr-flag"></i></div>
                         Reported Content
                     </a>
                     <a class="nav-link" href="{{ route('admin.preset.index') }}">
-                        <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                        <div class="sb-nav-link-icon"><i class="fi fi-rr-picture"></i></div>
                         Presets
                     </a>
                 </div>
