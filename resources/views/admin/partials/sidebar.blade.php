@@ -4,8 +4,10 @@
             <div class="sb-sidenav-menu">
                 <div class="nav">
                     <div class="sb-sidenav-menu-heading">General Information</div>
-                    <a class="nav-link active" href="{{ route('admin.dashboard') }}">
-                        <div class="sb-nav-link-icon"><i class="fi fi-rr-chart-histogram"></i></i></div>
+                    <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
+                        href="{{ route('admin.dashboard') }}">
+                        <div class="sb-nav-link-icon d-inline-flex align-items-center"><i
+                                class="fi fi-rr-chart-histogram mt-1"></i></div>
                         Dashboard
                     </a>
                     {{-- <div class="sb-sidenav-menu-heading">Interface</div>
@@ -61,34 +63,56 @@
                             </div>
                         </nav>
                     </div> --}}
-                    <div class="sb-sidenav-menu-heading">Addons</div>
-                    <a class="nav-link" href="#">
-                        <div class="sb-nav-link-icon"><i class="fi fi-rr-user"></i></div>
+                    <div class="sb-sidenav-menu-heading">Others</div>
+                    <a class="nav-link {{ request()->routeIs('admin.user.*') ? 'active' : '' }}"
+                        href="{{ route('admin.user.index') }}">
+                        <div class="sb-nav-link-icon d-inline-flex align-items-center"><i
+                                class="fi fi-rr-user mt-1"></i></div>
                         Users
                     </a>
-                    <a class="nav-link" href="#">
-                        <div class="sb-nav-link-icon"><i class="fi fi-rr-picture"></i></div>
+                    <a class="nav-link {{ request()->routeIs('admin.content.*') ? 'active' : '' }}"
+                        href="{{ route('admin.content.index') }}">
+                        <div class="sb-nav-link-icon d-inline-flex align-items-center"><i
+                                class="fi fi-rr-picture mt-1"></i></div>
                         Contents
                     </a>
+                    <a class="nav-link {{ request()->routeIs('admin.showcase.*') ? 'active' : '' }}"
+                        href="{{ route('admin.showcase.index') }}">
+                        <div class="sb-nav-link-icon d-inline-flex align-items-center"><i
+                                class="fi fi-rr-file-image mt-1"></i></div>
+                        Showcases
+                    </a>
                     <a class="nav-link" href="#">
-                        <div class="sb-nav-link-icon"><i class="fi fi-rr-assept-document"></i></div>
+                        <div class="sb-nav-link-icon d-inline-flex align-items-center"><i
+                                class="fi fi-rr-assept-document mt-1"></i></div>
                         KYC Verification
                     </a>
                     <a class="nav-link" href="#">
-                        <div class="sb-nav-link-icon"><i class="fi fi-rr-exchange"></i></div>
+                        <div class="sb-nav-link-icon d-inline-flex align-items-center"><i
+                                class="fi fi-rr-exchange mt-1"></i></div>
                         Transaction
                     </a>
                     <a class="nav-link" href="#">
-                        <div class="sb-nav-link-icon"><i class="fi fi-rr-wallet"></i></i></div>
+                        <div class="sb-nav-link-icon d-inline-flex align-items-center"><i
+                                class="fi fi-rr-wallet mt-1"></i></div>
                         Payout
                     </a>
                     <a class="nav-link" href="#">
-                        <div class="sb-nav-link-icon"><i class="fi fi-rr-flag"></i></div>
+                        <div class="sb-nav-link-icon d-inline-flex align-items-center"><i
+                                class="fi fi-rr-flag mt-1"></i></div>
                         Reported Content
                     </a>
-                    <a class="nav-link" href="{{ route('admin.preset.index') }}">
-                        <div class="sb-nav-link-icon"><i class="fi fi-rr-picture"></i></div>
+                    <a class="nav-link {{ request()->routeIs('admin.preset.*') ? 'active' : '' }}"
+                        href="{{ route('admin.preset.index') }}">
+                        <div class="sb-nav-link-icon d-inline-flex align-items-center"><i
+                                class="fi fi-rr-palette mt-1"></i></div>
                         Presets
+                    </a>
+                    <a class="nav-link {{ request()->routeIs('admin.tag.*') ? 'active' : '' }}"
+                        href="{{ route('admin.tag.index') }}">
+                        <div class="sb-nav-link-icon d-inline-flex align-items-center"><i
+                                class="fi fi-rr-tags mt-1"></i></div>
+                        Tags
                     </a>
                 </div>
             </div>
@@ -109,17 +133,22 @@
                             <li>
                                 <h6 class="dropdown-header">Admin Menu</h6>
                             </li>
-                            <li><a class="dropdown-item py-2" href="{{ route('profile.edit') }}"><i
-                                        class="fas fa-cog fa-fw text-muted me-2"></i>
-                                    Settings</a></li>
+                            <li>
+                                <a class="dropdown-item py-2 d-flex align-items-center gap-2"
+                                    href="{{ route('profile.edit') }}">
+                                    <i class="fi fi-rr-settings mt-1"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
                             <hr class="dropdown-divider my-1" />
                     </li>
 
                     <li>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="dropdown-item py-2 text-danger fw-semibold">
-                                <i class="fas fa-sign-out-alt fa-fw me-2"></i> Logout
+                            <button type="submit"
+                                class="dropdown-item py-2 d-flex align-items-center gap-2 text-danger fw-semibold">
+                                <i class="fi fi-rr-sign-out-alt mt-1"></i> Logout
                             </button>
                         </form>
                     </li>

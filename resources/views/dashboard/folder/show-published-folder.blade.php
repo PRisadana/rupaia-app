@@ -61,7 +61,31 @@
             @endforeach
         </div>
 
-        <div class="row my-4">
+        @php
+            $itemCount = $contents->count();
+            $masonryClass = $itemCount < 4 ? 'masonry-gallery-few items-' . $itemCount : 'masonry-gallery';
+        @endphp
+        <div class="{{ $masonryClass }} my-4">
+            @forelse ($contents as $content)
+                <div class="masonry-item">
+                    <a href="{{ route('content.detail', $content->id) }}" class="text-decoration-none">
+                        <div class="content-clean-wrapper shadow-sm">
+                            <img src="{{ asset('storage/' . $content->path_low_res) }}"
+                                alt="{{ $content->content_title }}" class="img-fluid w-100 content-clean-image"
+                                loading="lazy">
+                        </div>
+                    </a>
+                </div>
+            @empty
+                <div class="w-100 text-center py-5" style="column-span: all;">
+                    <p class="text-muted fs-5 mt-3">
+                        There is no content available yet.
+                    </p>
+                </div>
+            @endforelse
+        </div>
+
+        {{-- <div class="row my-4">
             @foreach ($contents as $content)
                 <div class="col-md-4 mb-4">
                     <div class="card">
@@ -72,27 +96,12 @@
                                     class="img-fluid w-100 rounded-3 shadow-sm content-clean-image">
                             </div>
                         </a>
-
-                        {{-- <div class="card-body">
-                            <h5 class="card-title">{{ $content->content_title }}</h5>
-                            <p class="card-text">Description: {{ $content->content_description }}</p>
-                            <p class="card-text">Folder: {{ $content->folder->folder_name }}</p>
-                            <p class="card-text">Visibility Content: {{ $content->visibility }}</p>
-                            <p class="card-text"> <strong>Rp {{ number_format($content->price, 0, ',', '.') }}</strong>
-                            </p>
-                            <p class="card-text">
-                                Tags:
-                                @foreach ($content->tags as $tag)
-                                    <span class="badge bg-secondary">{{ $tag->tag_name }}</span>
-                                @endforeach
-                            </p>
-                            <p class="card-text">Status: {{ $content->status }}</p>
-                        </div> --}}
                     </div>
                 </div>
             @endforeach
-        </div>
+        </div> --}}
         {{-- <div class="mt-4 d-flex justify-content-center">
             {{ $folders->links() }}
         </div> --}}
-    @endsection
+    </div>
+@endsection

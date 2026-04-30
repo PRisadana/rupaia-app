@@ -7,6 +7,7 @@ use App\Models\Content;
 use App\Models\ShowcaseItem;
 use App\Models\User;
 use App\Models\Preset;
+use App\Models\Tags;
 
 use Illuminate\Http\Request;
 
@@ -18,7 +19,8 @@ class AdminDashboardController extends Controller
         $totalContents = Content::count();
         $totalShowcaseItems = ShowcaseItem::count();
         $totalPresets = Preset::count();
+        $totalTags = Tags::count();
 
-        return view('admin.dashboard', compact('totalUsers', 'totalContents', 'totalShowcaseItems', 'totalPresets'));
+        return view('admin.dashboard', compact('totalUsers', 'totalContents', 'totalShowcaseItems', 'totalPresets', 'totalTags'));
     }
 }

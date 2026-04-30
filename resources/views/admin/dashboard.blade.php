@@ -13,7 +13,7 @@
                         <p class="card-text">Total number of users in the system.</p>
                     </div>
                     <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-dark stretched-link" href="#">View Details</a>
+                        <a class="small text-dark stretched-link" href="{{ route('admin.user.index') }}">View Details</a>
                         <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
                     </div>
                 </div>
@@ -27,7 +27,8 @@
                         <p class="card-text">Total number of contents in the system.</p>
                     </div>
                     <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-dark stretched-link" href="#">View Details</a>
+                        <a class="small text-dark stretched-link" href="{{ route('admin.content.index') }}">View
+                            Details</a>
                         <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
                     </div>
                 </div>
@@ -41,7 +42,8 @@
                         <p class="card-text">Total number of showcases in the system.</p>
                     </div>
                     <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-dark stretched-link" href="#">View Details</a>
+                        <a class="small text-dark stretched-link" href="{{ route('admin.showcase.index') }}">View
+                            Details</a>
                         <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
                     </div>
                 </div>
@@ -55,7 +57,21 @@
                         <p class="card-text">Total number of presets in the system.</p>
                     </div>
                     <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-dark stretched-link" href="#">View Details</a>
+                        <a class="small text-dark stretched-link" href="{{ route('admin.preset.index') }}">View Details</a>
+                        <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card text-bg-light mb-4" style="max-width: 18rem;">
+                    <div class="card-header">Total Tags</div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ $totalTags }}</h5>
+                        <p class="card-text">Total number of tags in the system.</p>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a class="small text-dark stretched-link" href="{{ route('admin.tag.index') }}">View Details</a>
                         <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
                     </div>
                 </div>

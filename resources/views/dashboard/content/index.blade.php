@@ -28,13 +28,13 @@
 
     <ul class="nav nav-underline justify-content-center">
         <li class="nav-item">
-            <a class="nav-link" aria-current="page" href="{{ route('showcase.index') }}">Showcases</a>
+            <a class="nav-link text-secondary" aria-current="page" href="{{ route('showcase.index') }}">Showcases</a>
         </li>
         <li class="nav-item">
             <a class="nav-link active" aria-current="page" href="{{ route('content.index') }}">Contents</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="{{ route('folder.index') }}">Folders</a>
+            <a class="nav-link text-secondary" href="{{ route('folder.index') }}">Folders</a>
         </li>
     </ul>
 
@@ -65,18 +65,20 @@
                             <div></div>
                         </div>
                         <div class="d-flex flex-row mb-2 my-3">
-                            <a href="{{ route('content.edit', $content) }}" class="btn btn-sm btn-secondary mx-1">Edit</a>
+                            <a href="{{ route('content.edit', $content) }}" class="btn btn-sm btn-secondary mx-1"><i
+                                    class="fi fi-rr-edit"></i></a>
 
                             <button type="button" class="btn btn-sm btn-outline-dark mx-1" data-bs-toggle="modal"
                                 data-bs-target="#moveContentModal-{{ $content->id }}">
-                                Move
+                                <i class="fi fi-rr-move-to-folder-2"></i>
                             </button>
 
                             <form action="{{ route('content.destroy', $content) }}" method="POST"
                                 onsubmit="return confirm ('Are you sure for delete this content?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger mx-1">Delete</button>
+                                <button type="submit" class="btn btn-sm btn-danger mx-1"><i
+                                        class="fi fi-rr-trash"></i></button>
                             </form>
                         </div>
                     </div>

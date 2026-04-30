@@ -9,9 +9,8 @@
     </a>
 
     <a href="/" class="d-flex align-items-center ms-auto text-decoration-none" title="Back to Homepage">
-        <img src="{{ asset('aset/rupaia_logo.png') }}" alt="Logo Rupaia"
-            class="rounded-circle border border-2 border-secondary" width="36" height="36"
-            style="object-fit: cover; transition: transform 0.2s ease;">
+        <img src="{{ asset('aset/rupaia_logo.png') }}" alt="Logo Rupaia" class="rounded-circle" width="36"
+            height="36" style="object-fit: cover; transition: transform 0.2s ease;">
     </a>
 
 </nav>

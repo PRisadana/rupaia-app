@@ -29,56 +29,20 @@
         </div>
     </div>
 
-    {{-- <div class="container pb-5">
-        @forelse ($contents as $content)
-            <div class="col-md-4 mb-4">
-                <div class="card shadow-sm h-100">
-
-                    <a href="#">
-                        <img src="{{ asset('storage/' . $content->path_low_res) }}" class="card-img-top"
-                            alt="{{ $content->content_title }}" style="height: 220px; object-fit: cover;">
-                    </a>
-
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title text-truncate">{{ $content->content_title }}</h5>
-
-                        <p class="card-text text-muted" style="font-size: 0.9rem;">
-                            by: {{ $content->user->name }}
-                        </p>
-
-                        <p class="card-text text-muted" style="font-size: 0.9rem;">
-                            Folder: {{ $content->folder->folder_name }}
-                        </p>
-
-                        <p class="card-text mt-auto">
-                            @foreach ($content->tags as $tag)
-                                <span class="badge bg-secondary">{{ $tag->tag_name }}</span>
-                            @endforeach
-                        </p>
-                    </div>
-
-                </div>
-            </div>
-        @empty
-            <div class="col-12">
-                <p class="text-center text-muted fs-4 mt-5">There is no public content available yet.</p>
-            </div>
-        @endforelse
-    </div> --}}
     <div class="container pb-5">
-        <div class="row g-3">
+        <div class="masonry-gallery">
             @forelse ($contents as $content)
-                <div class="col-6 col-md-4 col-lg-3">
+                <div class="masonry-item">
                     <a href="{{ route('content.detail', $content->id) }}" class="text-decoration-none">
-                        <div class="content-clean-wrapper">
+                        <div class="content-clean-wrapper shadow-sm">
                             <img src="{{ asset('storage/' . $content->path_low_res) }}" alt="{{ $content->content_title }}"
-                                class="img-fluid w-100 rounded-3 shadow-sm content-clean-image">
+                                class="img-fluid w-100 content-clean-image" loading="lazy">
                         </div>
                     </a>
                 </div>
             @empty
-                <div class="col-12">
-                    <p class="text-center text-muted fs-4 mt-5">
+                <div class="w-100 text-center py-5" style="column-span: all;">
+                    <p class="text-muted fs-4 mt-5">
                         There is no public content available yet.
                     </p>
                 </div>
@@ -86,24 +50,115 @@
         </div>
     </div>
 
-    <div class="mt-4">
+    <div class="container d-flex justify-content-center mt-2 mb-5">
         {{ $contents->links() }}
     </div>
 @endsection
 
-<style>
+{{-- <style>
+    /* Mengatur jumlah kolom berdasarkan ukuran layar (Responsif) */
+    .masonry-gallery {
+        column-count: 2;
+        /* Default untuk HP */
+        column-gap: 1rem;
+        /* Jarak antar kolom horizontal */
+    }
+
+    @media (min-width: 768px) {
+        .masonry-gallery {
+            column-count: 3;
+            /* Untuk Tablet */
+        }
+    }
+
+    @media (min-width: 992px) {
+        .masonry-gallery {
+            column-count: 4;
+            /* Untuk Layar Laptop/Desktop */
+            column-gap: 1.25rem;
+        }
+    }
+
+    /* Memastikan gambar tidak terpotong ke kolom sebelahnya */
+    .masonry-item {
+        break-inside: avoid;
+        -webkit-column-break-inside: avoid;
+        page-break-inside: avoid;
+        margin-bottom: 1.25rem;
+        /* Jarak vertikal antar gambar */
+        display: inline-block;
+        width: 100%;
+    }
+
+    /* Efek visual agar terlihat lebih elegan */
     .content-clean-wrapper {
         overflow: hidden;
-        border-radius: 1rem;
-        background: #fff;
+        border-radius: 0.75rem;
+        /* Radius yang sedikit lebih modern */
+        background: #f8f9fa;
+        /* Background saat gambar belum termuat */
     }
 
     .content-clean-image {
         display: block;
-        transition: transform 0.25s ease-in-out;
+        transition: transform 0.35s ease;
+        /* Transisi diperhalus */
     }
 
     .content-clean-wrapper:hover .content-clean-image {
-        transform: scale(1.02);
+        transform: scale(1.05);
+        /* Sedikit diperbesar saat hover */
     }
-</style>
+
+    /* --- Kustomisasi Paginasi Minimalis --- */
+    .pagination {
+        gap: 0.35rem;
+        /* Memberikan jarak antar tombol agar tidak menempel */
+    }
+
+    .page-item:first-child .page-link,
+    .page-item:last-child .page-link {
+        border-radius: 50px;
+        /* Membulatkan tombol panah Prev/Next */
+    }
+
+    .page-item .page-link {
+        border-radius: 50px;
+        /* Mengubah kotak menjadi bulat/pil */
+        border: 1px solid transparent;
+        /* Menghilangkan garis tepi bawaan */
+        color: #495057;
+        /* Warna teks abu-abu gelap */
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        background-color: transparent;
+        transition: all 0.3s ease;
+    }
+
+    /* Efek saat cursor diarahkan ke angka (Hover) */
+    .page-item:not(.active):not(.disabled) .page-link:hover {
+        background-color: #f8f9fa;
+        color: #000;
+        border-color: #e9ecef;
+    }
+
+    /* Efek halaman yang sedang aktif (Hitam Elegan) */
+    .page-item.active .page-link {
+        background-color: #212529;
+        border-color: #212529;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        /* Bayangan halus */
+    }
+
+    /* Efek saat tombol tidak bisa diklik (misal di halaman pertama/terakhir) */
+    .page-item.disabled .page-link {
+        color: #ced4da;
+        background-color: transparent;
+    }
+
+    /* Menghilangkan efek outline biru saat diklik */
+    .page-link:focus {
+        box-shadow: none;
+    }
+</style> --}}

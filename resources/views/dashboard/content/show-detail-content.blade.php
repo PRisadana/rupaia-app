@@ -101,6 +101,64 @@
     <h1 class="h3 fw-bold mb-2">More from the same folder</h1>
     <hr>
     <div class="container pb-5">
+        @php
+            $folderCount = $relatedContents->count();
+            $folderMasonryClass = $folderCount < 4 ? 'masonry-gallery-few items-' . $folderCount : 'masonry-gallery';
+        @endphp
+
+        <div class="{{ $folderMasonryClass }}">
+            @forelse ($relatedContents as $relatedContent)
+                <div class="masonry-item">
+                    <a href="{{ route('content.detail', $relatedContent->id) }}" class="text-decoration-none">
+                        <div class="content-clean-wrapper shadow-sm">
+                            <img src="{{ asset('storage/' . $relatedContent->path_low_res) }}"
+                                alt="{{ $relatedContent->content_title }}" class="img-fluid w-100 content-clean-image"
+                                loading="lazy">
+                        </div>
+                    </a>
+                </div>
+            @empty
+                <div class="w-100 text-center py-5" style="column-span: all;">
+                    <p class="text-muted fs-4 mt-3">
+                        There is no content related from same folder.
+                    </p>
+                </div>
+            @endforelse
+        </div>
+    </div>
+
+    <h1 class="h3 fw-bold mb-2">More related content</h1>
+    <hr>
+    <div class="container pb-5">
+        @php
+            $tagCount = $relatedByTags->count();
+            $tagMasonryClass = $tagCount < 4 ? 'masonry-gallery-few items-' . $tagCount : 'masonry-gallery';
+        @endphp
+
+        <div class="{{ $tagMasonryClass }}">
+            @forelse ($relatedByTags as $relatedByTag)
+                <div class="masonry-item">
+                    <a href="{{ route('content.detail', $relatedByTag->id) }}" class="text-decoration-none">
+                        <div class="content-clean-wrapper shadow-sm">
+                            <img src="{{ asset('storage/' . $relatedByTag->path_low_res) }}"
+                                alt="{{ $relatedByTag->content_title }}" class="img-fluid w-100 content-clean-image"
+                                loading="lazy">
+                        </div>
+                    </a>
+                </div>
+            @empty
+                <div class="w-100 text-center py-5" style="column-span: all;">
+                    <p class="text-muted fs-4 mt-3">
+                        There is no content related from same tag.
+                    </p>
+                </div>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- <h1 class="h3 fw-bold mb-2">More from the same folder</h1>
+    <hr>
+    <div class="container pb-5">
         <div class="row g-3">
             @forelse ($relatedContents as $relatedContent)
                 <div class="col-6 col-md-4 col-lg-3">
@@ -144,5 +202,89 @@
                 </div>
             @endforelse
         </div>
-    </div>
+    </div> --}}
 @endsection
+
+{{-- <style>
+    /* --- CSS Masonry Gallery --- */
+    .masonry-gallery,
+    .masonry-gallery-few {
+        column-gap: 1.25rem;
+        column-fill: balance;
+        width: 100%;
+    }
+
+    .masonry-gallery {
+        column-count: 2;
+    }
+
+    .masonry-gallery-few {
+        column-count: 2;
+    }
+
+    @media (min-width: 768px) {
+        .masonry-gallery {
+            column-count: 3;
+        }
+
+        .masonry-gallery-few.items-2 {
+            column-count: 2;
+        }
+
+        .masonry-gallery-few.items-3 {
+            column-count: 3;
+        }
+    }
+
+    @media (min-width: 992px) {
+        .masonry-gallery {
+            column-count: 4;
+        }
+
+        .masonry-gallery-few.items-1 {
+            column-count: 1;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .masonry-gallery-few.items-2 {
+            column-count: 2;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .masonry-gallery-few.items-3 {
+            column-count: 3;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+    }
+
+    .masonry-item {
+        break-inside: avoid;
+        -webkit-column-break-inside: avoid;
+        page-break-inside: avoid;
+        margin-bottom: 1.25rem;
+        display: block;
+        width: 100%;
+    }
+
+    /* --- Efek Hover & Wrapper --- */
+    .content-clean-wrapper {
+        overflow: hidden;
+        border-radius: 0.75rem;
+        background: #f8f9fa;
+        display: block;
+    }
+
+    .content-clean-image {
+        display: block;
+        width: 100%;
+        height: auto;
+        transition: transform 0.35s ease;
+    }
+
+    .content-clean-wrapper:hover .content-clean-image {
+        transform: scale(1.05);
+    }
+</style> --}}

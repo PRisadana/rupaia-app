@@ -1,7 +1,11 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminContentController;
+use App\Http\Controllers\Admin\AdminShowcaseController;
+use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\PresetController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ContentController;
 use App\Http\Controllers\HomeController;
@@ -79,6 +83,28 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/presets/{preset}/edit', [PresetController::class, 'editPreset'])->name('preset.edit');
     Route::put('/presets/{preset}', [PresetController::class, 'updatePreset'])->name('preset.update');
     Route::delete('/presets/{preset}', [PresetController::class, 'destroyPreset'])->name('preset.destroy');
+
+    Route::get('/users', [UserController::class, 'index'])->name('user.index');
+    Route::post('/users/store', [UserController::class, 'storeUser'])->name('user.store');
+    Route::get('/users/create', [UserController::class, 'createUser'])->name('user.create');
+    Route::get('/users/{user}/edit', [UserController::class, 'editUser'])->name('user.edit');
+    Route::put('/users/{user}', [UserController::class, 'updateUser'])->name('user.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroyUser'])->name('user.destroy');
+
+    Route::get('/contents', [AdminContentController::class, 'index'])->name('content.index');
+    Route::get('/contents/{content}/edit', [AdminContentController::class, 'editStatusContent'])->name('content.status.edit');
+    Route::put('/contents/{content}', [AdminContentController::class, 'updateStatusContent'])->name('content.status.update');
+
+    Route::get('/showcases', [AdminShowcaseController::class, 'index'])->name('showcase.index');
+    Route::get('/showcases/{showcaseItem}/edit', [AdminShowcaseController::class, 'editStatusShowcase'])->name('showcase.status.edit');
+    Route::put('/showcases/{showcaseItem}', [AdminShowcaseController::class, 'updateStatusShowcase'])->name('showcase.status.update');
+
+    Route::get('/tags', [TagController::class, 'index'])->name('tag.index');
+    Route::post('/tags/store', [TagController::class, 'storeTag'])->name('tag.store');
+    Route::get('/tags/create', [TagController::class, 'createTag'])->name('tag.create');
+    Route::get('/tags/{tag}/edit', [TagController::class, 'editTag'])->name('tag.edit');
+    Route::put('/tags/{tag}', [TagController::class, 'updateTag'])->name('tag.update');
+    Route::delete('/tags/{tag}', [TagController::class, 'destroyTag'])->name('tag.destroy');
 });
 
 require __DIR__ . '/auth.php';

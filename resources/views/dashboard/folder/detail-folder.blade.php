@@ -12,14 +12,15 @@
         <nav aria-label="breadcrumb" class="mb-3">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="{{ route('folder.index') }}">Folder</a>
+                    <a href="{{ route('folder.index') }}" class="text-decoration-none text-dark">Folder</a>
                 </li>
                 @foreach ($breadcrumbs as $crumb)
                     <li class="breadcrumb-item {{ $loop->last ? 'active' : '' }}">
                         @if ($loop->last)
                             {{ $crumb->folder_name }}
                         @else
-                            <a href="{{ route('detail.folder.show', $crumb) }}">{{ $crumb->folder_name }}</a>
+                            <a href="{{ route('detail.folder.show', $crumb) }}"
+                                class="text-decoration-none text-dark">{{ $crumb->folder_name }}</a>
                         @endif
                     </li>
                 @endforeach
@@ -63,19 +64,20 @@
                                 <div></div>
                             </div>
                             <div class="d-flex flex-row mb-2 my-3">
-                                <a href="{{ route('folder.edit', $folder) }}"
-                                    class="btn btn-sm btn-secondary mx-1">Edit</a>
+                                <a href="{{ route('folder.edit', $folder) }}" class="btn btn-sm btn-secondary mx-1"><i
+                                        class="fi fi-rr-edit"></i></a>
 
                                 <button type="button" class="btn btn-sm btn-outline-dark mx-1" data-bs-toggle="modal"
                                     data-bs-target="#moveFolderModal-{{ $folder->id }}">
-                                    Move
+                                    <i class="fi fi-rr-move-to-folder-2"></i>
                                 </button>
 
                                 <form action="{{ route('folder.destroy', $folder) }} " method="POST"
                                     onsubmit="return confirm ('Are you sure for delete this folder?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger mx-1">Delete</button>
+                                    <button type="submit" class="btn btn-sm btn-danger mx-1"><i
+                                            class="fi fi-rr-trash"></i></button>
                                 </form>
                             </div>
                         </div>
@@ -203,18 +205,21 @@
                             </div>
                             <div class="d-flex flex-row mb-2 my-3">
                                 <a href="{{ route('content.edit', $content) }}"
-                                    class="btn btn-sm btn-outline-primary mx-1">Edit</a>
+                                    class="btn btn-sm btn-outline-primary mx-1"><i class="fi fi-rr-edit"></i></a>
+
+                                <button type="button" class="btn btn-sm btn-outline-dark mx-1" data-bs-toggle="modal"
+                                    data-bs-target="#moveContentModal-{{ $content->id }}">
+                                    <i class="fi fi-rr-move-to-folder-2"></i>
+                                </button>
 
                                 <form action="{{ route('content.destroy', $content) }}" method="POST"
                                     onsubmit="return confirm ('Are you sure for delete this content?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    <button type="submit" class="btn btn-sm btn-danger mx-1"><i
+                                            class="fi fi-rr-trash"></i></button>
                                 </form>
-                                <button type="button" class="btn btn-sm btn-outline-secondary mx-1"
-                                    data-bs-toggle="modal" data-bs-target="#moveContentModal-{{ $content->id }}">
-                                    Move
-                                </button>
+
                             </div>
                         </div>
                     </div>

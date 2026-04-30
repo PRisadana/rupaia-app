@@ -10,12 +10,12 @@
         @endif
 
         <div class="d-flex justify-content-between align-items-center my-4">
-            <h1 class="m-0">Presets</h1>
+            <h1 class="m-0">Tags</h1>
 
-            <a href="{{ route('admin.preset.create') }}"
-                class="btn btn-outline-secondary px-4 py-2 d-inline-flex align-items-center align-items-center gap-2"><i
+            <a href="{{ route('admin.tag.create') }}"
+                class="btn btn-outline-secondary px-4 py-2 d-inline-flex align-items-center gap-2"><i
                     class="fi fi-rr-square-plus mt-1"></i>
-                <span>Add Preset</span>
+                <span>Add Tag</span>
             </a>
         </div>
         <hr>
@@ -23,40 +23,36 @@
             <thead>
                 <tr>
                     <th scope="col">No</th>
-                    <th scope="col">Preset Name</th>
-                    <th scope="col">Preset File Path</th>
-                    <th scope="col">Is Active</th>
+                    <th scope="col">Tag Name</th>
                     <th scope="col">Action</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse ($presets as $preset)
+                @forelse ($tags as $tag)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td>{{ $preset->preset_name }}</td>
-                        <td>{{ $preset->preset_file_path }}</td>
-                        <td>{{ $preset->is_active ? 'Yes' : 'No' }}</td>
+                        <td>{{ $tag->tag_name }}</td>
                         <td>
-                            <a href="{{ route('admin.preset.edit', $preset) }}" class="btn btn-sm btn-outline-primary"><i
+                            <a href="{{ route('admin.tag.edit', $tag) }}" class="btn btn-sm btn-outline-primary"><i
                                     class="fi fi-rr-edit"></i></a>
-                            <form action="{{ route('admin.preset.destroy', $preset) }}" method="POST" class="d-inline">
+                            <form action="{{ route('admin.tag.destroy', $tag) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline-danger"
-                                    onclick="return confirm('Are you sure you want to delete this preset?')"><i
+                                    onclick="return confirm('Are you sure you want to delete this tag?')"><i
                                         class="fi fi-rr-trash"></i></button></button>
                             </form>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center">No presets found.</td>
+                        <td colspan="5" class="text-center">No tags found.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
         <div class="my-2">
-            {{ $presets->links() }}
+            {{ $tags->links() }}
         </div>
     </div>
 @endsection
