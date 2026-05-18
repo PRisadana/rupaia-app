@@ -36,6 +36,21 @@
 
             <div class="col-xl-3 col-md-6">
                 <div class="card text-bg-light mb-4" style="max-width: 18rem;">
+                    <div class="card-header">Total Folders</div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ $totalFolders }}</h5>
+                        <p class="card-text">Total number of folders in the system.</p>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a class="small text-dark stretched-link" href="{{ route('admin.folder.index') }}">View
+                            Details</a>
+                        <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card text-bg-light mb-4" style="max-width: 18rem;">
                     <div class="card-header">Total Showcases</div>
                     <div class="card-body">
                         <h5 class="card-title">{{ $totalShowcaseItems }}</h5>
@@ -72,6 +87,20 @@
                     </div>
                     <div class="card-footer d-flex align-items-center justify-content-between">
                         <a class="small text-dark stretched-link" href="{{ route('admin.tag.index') }}">View Details</a>
+                        <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card text-bg-light mb-4" style="max-width: 18rem;">
+                    <div class="card-header">Total Reports</div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ $totalReports }}</h5>
+                        <p class="card-text">Total number of reports in the system.</p>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a class="small text-dark stretched-link" href="{{ route('admin.report.index') }}">View Details</a>
                         <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
                     </div>
                 </div>

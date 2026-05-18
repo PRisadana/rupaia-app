@@ -65,4 +65,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(ShowcaseItem::class, 'seller_id');
     }
+
+    public function reports()
+    {
+        return $this->hasMany(Report::class, 'reporter_id');
+    }
+
+    public function processedReports()
+    {
+        return $this->hasMany(Report::class, 'processed_by');
+    }
 }

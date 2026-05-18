@@ -18,6 +18,8 @@ class Content extends Model
         'content_title',
         'content_description',
         'price',
+        'sale_type',
+        'sale_status',
         'path_hi_res',
         'path_low_res',
         'visibility',
@@ -53,5 +55,10 @@ class Content extends Model
     public function showcaseItems()
     {
         return $this->hasMany(ShowcaseItem::class, 'content_id');
+    }
+
+    public function reports()
+    {
+        return $this->hasMany(Report::class, 'content_id');
     }
 }

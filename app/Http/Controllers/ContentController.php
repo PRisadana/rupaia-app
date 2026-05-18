@@ -52,6 +52,8 @@ class ContentController extends Controller
             'content_title' => 'required|string|max:255',
             'content_description' => 'nullable|string',
             'price' => 'nullable|numeric|min:0',
+            'sale_type' => 'required|in:multi_sale,single_sale',
+            'sale_status' => 'required|in:available,inactive',
             'folder_id' => [
                 'required',
                 Rule::exists('folders', 'id')->where(function ($query) use ($sellerId) {
@@ -68,6 +70,14 @@ class ContentController extends Controller
         $folder = Folder::where('id', $validated['folder_id'])
             ->where('seller_id', $user->id)
             ->firstOrFail();
+
+        if ($folder->is_bundle && $validated['sale_type'] === 'single_sale') {
+            return back()
+                ->withErrors([
+                    'sale_type' => 'Single-sale content cannot be uploaded into a bundle folder.',
+                ])
+                ->withInput();
+        }
 
         // pakai visibility folder untuk konten
         $visibility = $folder->visibility;
@@ -105,6 +115,8 @@ class ContentController extends Controller
             'content_title' => $validated['content_title'],
             'content_description' => $validated['content_description'],
             'price' => $validated['price'] ?? 0.00,
+            'sale_type' => $validated['sale_type'],
+            'sale_status' => $validated['sale_status'],
             'path_hi_res' => $path_hi_res,
             'path_low_res' => $path_low_res,
             'visibility' => $visibility,
@@ -143,6 +155,9 @@ class ContentController extends Controller
             'content_title' => 'required|string|max:255',
             'content_description' => 'nullable|string',
             'price' => 'nullable|numeric|min:0',
+            'sale_type' => 'required|in:multi_sale,single_sale',
+            'sale_status' => 'required|in:available,inactive,sold_out',
+
             'folder_id' => [
                 'required',
                 Rule::exists('folders', 'id')->where(function ($query) {
@@ -154,6 +169,26 @@ class ContentController extends Controller
             'visibility' => 'required|in:public,private,by_request',
             // 'status' => 'required|in:active,deleted,banned',
         ]);
+
+        if ($content->sale_type === 'single_sale' && $content->sale_status === 'sold_out') {
+            return back()
+                ->withErrors([
+                    'sale_status' => 'This single sale content has been sold and cannot be sold again.'
+                ])
+                ->withInput();
+        }
+
+        $folder = Folder::where('id', $validated['folder_id'])
+            ->where('seller_id', Auth::id())
+            ->firstOrFail();
+
+        if ($folder->is_bundle && $validated['sale_type'] === 'single_sale') {
+            return back()
+                ->withErrors([
+                    'sale_type' => 'Single-sale content cannot be placed inside a bundle folder.',
+                ])
+                ->withInput();
+        }
 
         $content->fill($validated);
         $content->save();
@@ -213,18 +248,19 @@ class ContentController extends Controller
             // 'status' => 'required|in:active,deleted,banned',
         ]);
 
-        // $validated['status'] = $validated['status'] ?? 'active';
-        // $validated['is_bundle'] = $validated['is_bundle'] ?? false;
-        // $validated['bundle_price'] = $validated['bundle_price'] ?? null;
+        $requestedIsBundle = (int) $validated['is_bundle'] === 1;
 
-        if ($validated['is_bundle'] == 1 && blank($validated['bundle_price'])) {
+        if ($requestedIsBundle && blank($validated['bundle_price'])) {
             return back()
-                ->withErrors(['bundle_price' => 'Bundle price must be provided when the folder is marked as a bundle.'])
+                ->withErrors([
+                    'bundle_price' => 'Bundle price is required when folder is marked as bundle.',
+                ])
                 ->withInput();
         }
 
-        $bundlePrice = $validated['is_bundle'] == 1 ? $validated['bundle_price'] : null;
-        $validated['bundle_price'] = $bundlePrice;
+        $validated['bundle_price'] = $requestedIsBundle
+            ? $validated['bundle_price']
+            : null;
 
         $request->user()->folders()->create($validated);
 
@@ -251,12 +287,30 @@ class ContentController extends Controller
             'bundle_price' => 'nullable|numeric|min:0'
         ]);
 
+        $requestedIsBundle = (int) $validated['is_bundle'] === 1;
+
+        if ($requestedIsBundle && $folder->hasDirectSingleSaleContent()) {
+            return back()
+                ->withErrors([
+                    'is_bundle' => 'This folder cannot be changed into a bundle because it contains single-sale content.',
+                ])
+                ->withInput();
+        }
+
+        if ($requestedIsBundle && blank($validated['bundle_price'])) {
+            return back()
+                ->withErrors([
+                    'bundle_price' => 'Bundle price is required when folder is marked as bundle.',
+                ])
+                ->withInput();
+        }
+
         $folderData = [
             'folder_name' => $validated['folder_name'],
             'folder_description' => $validated['folder_description'],
             'visibility' => $validated['visibility'],
             'is_bundle' => $validated['is_bundle'],
-            'bundle_price' => $validated['bundle_price']
+            'bundle_price' => $requestedIsBundle ? $validated['bundle_price'] : null
         ];
 
         // update data
@@ -358,18 +412,32 @@ class ContentController extends Controller
             'bundle_price' => 'nullable|numeric|min:0',
         ]);
 
-        $parentFolder = Folder::where('id', $validated['parent_id'])
-            ->where('seller_id', $user->id)
-            ->firstOrFail();
+        $requestedIsBundle = (int) $validated['is_bundle'] === 1;
 
-        if ($parentFolder->is_bundle == 1 && blank($validated['bundle_price'])) {
+        if ($requestedIsBundle && blank($validated['bundle_price'])) {
             return back()
-                ->withErrors(['bundle_price' => 'Bundle price must be provided when the folder is marked as a bundle.'])
+                ->withErrors([
+                    'bundle_price' => 'Bundle price is required when folder is marked as bundle.',
+                ])
                 ->withInput();
         }
 
-        $bundlePrice = $validated['is_bundle'] == 1 ? $validated['bundle_price'] : null;
-        $validated['bundle_price'] = $bundlePrice;
+        $validated['bundle_price'] = $requestedIsBundle
+            ? $validated['bundle_price']
+            : null;
+
+        // $parentFolder = Folder::where('id', $validated['parent_id'])
+        //     ->where('seller_id', $user->id)
+        //     ->firstOrFail();
+
+        // if ($parentFolder->is_bundle == 1 && blank($validated['bundle_price'])) {
+        //     return back()
+        //         ->withErrors(['bundle_price' => 'Bundle price must be provided when the folder is marked as a bundle.'])
+        //         ->withInput();
+        // }
+
+        // $bundlePrice = $validated['is_bundle'] == 1 ? $validated['bundle_price'] : null;
+        // $validated['bundle_price'] = $bundlePrice;
 
         $user->folders()->create($validated);
 
@@ -411,6 +479,8 @@ class ContentController extends Controller
             'content_title' => 'required|string|max:255',
             'content_description' => 'nullable|string',
             'price' => 'nullable|numeric|min:0',
+            'sale_type' => 'required|in:multi_sale,single_sale',
+            'sale_status' => 'required|in:available,inactive',
             'folder_id' => [
                 'required',
                 Rule::exists('folders', 'id')->where(function ($query) {
@@ -430,6 +500,14 @@ class ContentController extends Controller
         $folder = Folder::where('id', $folder_id)
             ->where('seller_id', $id_user)
             ->firstOrFail();
+
+        if ($folder->is_bundle && $validated['sale_type'] === 'single_sale') {
+            return back()
+                ->withErrors([
+                    'sale_type' => 'Single-sale content cannot be uploaded into a bundle folder.',
+                ])
+                ->withInput();
+        }
 
         // pakai visibility folder untuk konten
         $visibility = $folder->visibility;
@@ -469,6 +547,8 @@ class ContentController extends Controller
             'path_hi_res' => $path_hi_res,
             'path_low_res' => $path_low_res,
             'visibility' => $visibility,
+            'sale_type' => $validated['sale_type'],
+            'sale_status' => $validated['sale_status'],
         ]);
 
         // Proses dan hubungkan tags
@@ -480,7 +560,7 @@ class ContentController extends Controller
             $content->tags()->sync($validated['tag_name']);
         }
 
-        return redirect()->route('detail.folder.show', $validated['folder_id'])->with('succes', 'Content uploaded successfully!');
+        return redirect()->route('detail.folder.show', $validated['folder_id'])->with('success', 'Content uploaded successfully!');
     }
 
     public function contentMove(Request $request, Content $content)
@@ -506,14 +586,19 @@ class ContentController extends Controller
                 ->where('seller_id', $user->id)
                 ->firstOrFail();
 
+            if ($folder->is_bundle && $content->sale_type === 'single_sale') {
+                return back()
+                    ->withErrors([
+                        'folder_id' => 'Single-sale content cannot be moved into a bundle folder.',
+                    ]);
+            }
+
             $content->folder_id = $destinationFolderId;
             $content->visibility = $folder->visibility;
         } else {
             $content->folder_id = null;
             $content->visibility = 'public';
         }
-
-        // $content->folder_id = $destinationFolderId;
 
         $content->save();
 

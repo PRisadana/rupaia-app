@@ -136,6 +136,33 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="sale_type" class="form-label">Sale Type</label>
+                            <select class="form-select" id="sale_type" name="sale_type" required>
+                                <option value="single_sale"
+                                    {{ old('sale_type', $content->sale_type) == 'single_sale' ? 'selected' : '' }}>
+                                    Single Sale</option>
+                                <option value="multi_sale"
+                                    {{ old('sale_type', $content->sale_type) == 'multi_sale' ? 'selected' : '' }}>
+                                    Multi Sale</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="sale_status" class="form-label">Sale Status</label>
+                            <select class="form-select" id="sale_status" name="sale_status" required>
+                                <option value="available"
+                                    {{ old('sale_status', $content->sale_status) == 'available' ? 'selected' : '' }}>
+                                    Available</option>
+                                <option value="inactive"
+                                    {{ old('sale_status', $content->sale_status) == 'inactive' ? 'selected' : '' }}>
+                                    Inactive</option>
+                                {{-- <option value="sold_out"
+                                    {{ old('sale_status', $content->sale_status) == 'sold_out' ? 'selected' : '' }}>
+                                    Sold Out</option> --}}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="tag_name" class="form-label">Choose Tags</label>
                             @php
                                 $selectedTagIDs = old('tag_name', $content->tags->pluck('id')->all());

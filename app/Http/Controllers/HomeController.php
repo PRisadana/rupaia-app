@@ -14,6 +14,7 @@ class HomeController extends Controller
     {
         $contents = Content::where('visibility', 'public')
             ->where('status', 'active')
+            ->where('sale_status', 'available')
             ->with('user', 'tags', 'folder')
             ->latest()
             ->paginate(99);
@@ -23,7 +24,7 @@ class HomeController extends Controller
 
     public function showDetailContent(Content $content)
     {
-        if ($content->visibility !== 'public' || $content->status !== 'active') {
+        if ($content->visibility !== 'public' || $content->status !== 'active' || $content->sale_status !== 'available') {
             abort(404);
         }
 
@@ -87,6 +88,7 @@ class HomeController extends Controller
     {
         $contents = $user->contents()
             ->where('visibility', 'public')
+            ->where('sale_status', 'available')
             ->where('status', 'active')
             ->with('tags', 'folder')
             ->latest()
@@ -123,9 +125,14 @@ class HomeController extends Controller
         $contents = $folder->contents()
             ->where('visibility', 'public')
             ->where('status', 'active')
+            ->where('sale_status', 'available')
             ->with('user', 'tags')
             ->latest()
             ->paginate(12);
+
+        $hasPurchasableBundleContents = $folder->is_bundle
+            ? $folder->hasPurchasableBundleContents()
+            : false;
 
         $breadcrumbs = collect();
         $tempFolder = $folder;
@@ -137,56 +144,6 @@ class HomeController extends Controller
             $tempFolder = $tempFolder->parent;
         }
 
-        return view('dashboard.folder.show-published-folder', compact('folder', 'subfolders', 'contents', 'breadcrumbs'));
+        return view('dashboard.folder.show-published-folder', compact('folder', 'subfolders', 'contents', 'breadcrumbs', 'hasPurchasableBundleContents'));
     }
-
-    // public function showPublishedFolder(Folder $folder)
-    // {
-    //     if ($folder->visibility !== 'public' || $folder->status !== 'active') {
-    //         abort(404);
-    //     }
-
-    //     $folder->load('user', 'parent', 'children');
-
-    //     $currentFolder = $folder;
-
-    //     // ambil sub folder
-    //     // Jika di root (null), ambil folder utama (yang 'parent_id'-nya null)
-    //     // Jika di dalam folder, ambil 'children' (anak) dari folder itu
-    //     if ($currentFolder) {
-    //         // di dalam folder ➜ ambil anak-anaknya
-    //         $folders = $currentFolder->children()
-    //             ->orderBy('folder_name')
-    //             ->get();
-    //     } else {
-    //         // root ➜ ambil folder milik user yang parent_id null
-    //         $folders = $user->folders()
-    //             ->whereNull('parent_id')
-    //             ->orderBy('folder_name')
-    //             ->get();
-    //     };
-
-    //     // $folders = $queryFolders->orderBy('folder_name')->get();
-
-    //     //ambil konten
-    //     // Jika di root, ambil konten yang 'folder_id'-nya null
-    //     // Jika di dalam folder, ambil 'contents' dari folder itu
-    //     if ($currentFolder) {
-    //         $queryContents = $currentFolder->contents();
-    //     } else {
-    //         $queryContents = $user->contents();
-    //     }
-
-    //     $contents = $queryContents->with('tags')->latest()->paginate(10);
-
-    //     // Bangun Breadcrumbs
-    //     $breadcrumbs = collect();
-    //     $tempFolder = $currentFolder;
-    //     while ($tempFolder) {
-    //         $breadcrumbs->prepend($tempFolder); // tambahkan ke depan
-    //         $tempFolder = $tempFolder->parent; // mundur satu langkah
-    //     }
-
-    //     return view('dashboard.folder.detail-folder', compact('contents', 'folders', 'currentFolder', 'breadcrumbs'));
-    // }
 }

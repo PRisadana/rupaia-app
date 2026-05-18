@@ -36,6 +36,10 @@
         <li class="nav-item">
             <a class="nav-link text-secondary" href="{{ route('folder.index') }}">Folders</a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link text-secondary" aria-current="page" href="{{ route('seller.report.index') }}">Reported
+                Items</a>
+        </li>
     </ul>
 
     <div class="row my-4">
@@ -51,6 +55,30 @@
                         <p class="card-text">Folder: {{ $content->folder->folder_name }}</p>
                         <p class="card-text">Visibility Content: {{ $content->visibility }}</p>
                         <p class="card-text"> <strong>Rp {{ number_format($content->price, 0, ',', '.') }}</strong> </p>
+                        <p class="card-text">
+                            Sale Type:
+                            @if ($content->sale_type === 'single_sale')
+                                <span class="badge bg-warning text-dark ">
+                                    premium
+                                </span>
+                            @else
+                                <span class="badge text-bg-light border">
+                                    multi sale
+                                </span>
+                            @endif
+                        </p>
+                        <p class="card-text">
+                            Sale Status:
+                            @if ($content->sale_status === 'available')
+                                <span class="badge bg-success">available</span>
+                            @elseif ($content->sale_status === 'inactive')
+                                <span class="badge bg-dark">inactive</span>
+                            @elseif ($content->sale_status === 'sold_out')
+                                <span class="badge bg-secondary">sold out</span>
+                            @else
+                                <span class="badge bg-light text-dark border">{{ $content->sale_status }}</span>
+                            @endif
+                        </p>
                         <p class="card-text">
                             Tags:
                             @foreach ($content->tags as $tag)
@@ -124,7 +152,8 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="move-folder-{{ $content->id }}" class="form-label">Move to folder</label>
+                                    <label for="move-folder-{{ $content->id }}" class="form-label">Move to
+                                        folder</label>
 
                                     <select name="folder_id" id="move-folder-{{ $content->id }}" class="form-select">
                                         {{-- <option value="">Root (tanpa folder)</option> --}}

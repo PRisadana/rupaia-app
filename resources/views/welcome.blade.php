@@ -34,9 +34,15 @@
             @forelse ($contents as $content)
                 <div class="masonry-item">
                     <a href="{{ route('content.detail', $content->id) }}" class="text-decoration-none">
-                        <div class="content-clean-wrapper shadow-sm">
+                        <div class=" position-relative content-clean-wrapper shadow-sm overflow-hidden">
                             <img src="{{ asset('storage/' . $content->path_low_res) }}" alt="{{ $content->content_title }}"
                                 class="img-fluid w-100 content-clean-image" loading="lazy">
+                            @if ($content->sale_type === 'single_sale' && $content->sale_status === 'available')
+                                <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2"
+                                    style="z-index: 10;">
+                                    Premium
+                                </span>
+                            @endif
                         </div>
                     </a>
                 </div>

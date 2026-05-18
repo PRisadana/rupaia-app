@@ -95,6 +95,40 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="sale_type" class="form-label">Sale Type</label>
+                            <div class="input-group">
+                                <select class="form-select @error('sale_type') is-invalid @enderror" id="sale_type"
+                                    name="sale_type" required>
+                                    <option value="multi_sale">Multi Sale (content can be sold multiple times)</option>
+                                    <option value="single_sale">Single Sale (content can only be sold once)</option>
+                                </select>
+
+                                @error('sale_type')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="sale_status" class="form-label">Sale Status</label>
+                            <div class="input-group">
+                                <select class="form-select @error('sale_status') is-invalid @enderror" id="sale_status"
+                                    name="sale_status" required>
+                                    <option value="available">Available</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+
+                                @error('sale_status')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="tag_name" class="form-label">
                                 Choose Tags
                             </label>

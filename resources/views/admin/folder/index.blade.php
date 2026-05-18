@@ -10,7 +10,7 @@
         @endif
 
         <div class="d-flex justify-content-between align-items-center my-4">
-            <h1 class="m-0">Contents</h1>
+            <h1 class="m-0">Folders</h1>
 
             {{-- <a href="{{ route('admin.user.create') }}"
                 class="btn btn-outline-secondary px-4 d-inline-flex align-items-center fw-semibold">
@@ -24,35 +24,41 @@
                     <th scope="col">No</th>
                     <th scope="col">Author</th>
                     {{-- <th scope="col">Folder</th> --}}
-                    <th scope="col">Content Title</th>
-                    <th scope="col">Content Description</th>
-                    <th scope="col">Price (Rp)</th>
-                    <th scope="col">Sale Type</th>
-                    <th scope="col">Sale Status</th>
+                    <th scope="col">Parent</th>
+                    <th scope="col">Folder Name</th>
+                    <th scope="col">Folder Description</th>
                     <th scope="col">Visibility</th>
+                    <th scope="col">Is Bundle</th>
+                    <th scope="col">Bundle Price (Rp)</th>
                     <th scope="col">Status</th>
                     <th scope="col">Action</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse ($contents as $content)
+                @forelse ($folders as $folder)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        {{-- <td>{{ $content->user->name }}</td>
-                        <td>{{ $content->content_title }}</td> --}}
-                        <td><a href="{{ route('authors.show', $content->user->id) }}"
-                                class="text-dark fw-semibold">{{ $content->user->name }}</a></td>
-                        <td><a
-                                href="{{ route('content.detail', $content->id) }}"class="text-dark fw-semibold text-color-dark">{{ $content->content_title }}</a>
-                        </td>
-                        <td>{{ $content->content_description }}</td>
-                        <td>{{ number_format($content->price, 0, ',', '.') }}</td>
-                        <td>{{ $content->sale_type }}</td>
-                        <td>{{ $content->sale_status }}</td>
-                        <td>{{ $content->visibility }}</td>
-                        <td>{{ $content->status }}</td>
+                        <td><a href="{{ route('authors.show', $folder->user->id) }}"
+                                class="text-dark fw-semibold">{{ $folder->user->name }}</a></td>
                         <td>
-                            <a href="{{ route('admin.content.status.edit', $content) }}"
+                            @if ($folder->parent_id)
+                                <a href="{{ route('folder.show', $folder->parent->id) }}" class="text-dark fw-semibold">
+                                    {{ $folder->parent->folder_name }}
+                                </a>
+                            @else
+                                <span class="text-muted fst-italic">Null</span>
+                            @endif
+                        </td>
+                        <td><a
+                                href="{{ route('folder.show', $folder->id) }}"class="text-dark fw-semibold text-color-dark">{{ $folder->folder_name }}</a>
+                        </td>
+                        <td>{{ $folder->folder_description }}</td>
+                        <td>{{ $folder->visibility }}</td>
+                        <td>{{ $folder->is_bundle ? 'Yes' : 'No' }}</td>
+                        <td>{{ number_format($folder->bundle_price, 0, ',', '.') }}</td>
+                        <td>{{ $folder->status }}</td>
+                        <td>
+                            <a href="{{ route('admin.folder.status.edit', $folder) }}"
                                 class="btn btn-sm btn-outline-primary"><i class="fi fi-rr-edit"></i></a>
                             {{-- <form action="#" method="POST" class="d-inline">
                                 @csrf
@@ -71,7 +77,7 @@
             </tbody>
         </table>
         <div class="my-2">
-            {{ $contents->links() }}
+            {{ $folders->links() }}
         </div>
     </div>
 @endsection

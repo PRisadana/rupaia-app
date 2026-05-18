@@ -53,4 +53,49 @@ class Folder extends Model
             $child->updateVisibilityRecursive($visibility);
         }
     }
+
+    public function updateStatusRecursive(string $status): void
+    {
+        // update folder saat ini
+        $this->update([
+            'status' => $status,
+        ]);
+
+        // update semua content di folder ini
+        $this->contents()->update([
+            'status' => $status,
+        ]);
+
+        // update semua subfolder dan isinya
+        foreach ($this->children as $child) {
+            $child->updateStatusRecursive($status);
+        }
+    }
+
+    public function hasDirectSingleSaleContent(): bool
+    {
+        return $this->contents()
+            ->where('sale_type', 'single_sale')
+            ->exists();
+    }
+
+    public function hasPurchasableBundleContents(): bool
+    {
+        return $this->contents()
+            ->where('status', 'active')
+            ->where('visibility', 'public')
+            ->where('sale_type', 'multi_sale')
+            ->where('sale_status', 'available')
+            ->exists();
+    }
+
+    public function getBundleContents()
+    {
+        return $this->contents()
+            ->where('status', 'active')
+            ->where('visibility', 'public')
+            ->where('sale_type', 'multi_sale')
+            ->where('sale_status', 'available')
+            ->get();
+    }
 }

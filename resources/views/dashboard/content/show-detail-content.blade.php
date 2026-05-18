@@ -2,6 +2,25 @@
 
 @section('content')
     <div class="container py-5">
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>There was a problem:</strong>
+                <ul class="mb-0 mt-2">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
         <div class="row g-4">
             <div class="col-lg-7">
                 <div class="bg-white rounded-4 shadow-sm p-3">
@@ -14,6 +33,12 @@
                 <div class="bg-white rounded-4 shadow-sm p-4 h-100">
                     <div class="mb-3">
                         <h1 class="h3 fw-bold mb-2">{{ $content->content_title }}</h1>
+
+                        @if ($content->sale_type === 'single_sale')
+                            <span class="badge bg-warning text-dark mb-2">
+                                Premium
+                            </span>
+                        @endif
 
                         <a href="{{ route('folder.show', $content->folder->id) }}" class=" text-decoration-none">
                             <p class="text-muted mb-2">
@@ -76,7 +101,8 @@
                         <div class="d-flex justify-content-end">
                             <button
                                 class="btn btn-outline-danger d-flex align-items-center justify-content-center flex-shrink-0"
-                                type="submit" style="width: 42px; height: 42px;" title="Report this content">
+                                data-bs-toggle="modal" data-bs-target="#reportContentModal" type="submit"
+                                style="width: 42px; height: 42px;" title="Report this content">
                                 <i class="fi fi-rr-flag-alt m-0"></i>
                             </button>
                         </div>
@@ -110,10 +136,16 @@
             @forelse ($relatedContents as $relatedContent)
                 <div class="masonry-item">
                     <a href="{{ route('content.detail', $relatedContent->id) }}" class="text-decoration-none">
-                        <div class="content-clean-wrapper shadow-sm">
+                        <div class="position-relative content-clean-wrapper shadow-sm overflow-hidden">
                             <img src="{{ asset('storage/' . $relatedContent->path_low_res) }}"
                                 alt="{{ $relatedContent->content_title }}" class="img-fluid w-100 content-clean-image"
                                 loading="lazy">
+                            @if ($relatedContent->sale_type === 'single_sale' && $relatedContent->sale_status === 'available')
+                                <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2"
+                                    style="z-index: 10;">
+                                    Premium
+                                </span>
+                            @endif
                         </div>
                     </a>
                 </div>
@@ -139,10 +171,16 @@
             @forelse ($relatedByTags as $relatedByTag)
                 <div class="masonry-item">
                     <a href="{{ route('content.detail', $relatedByTag->id) }}" class="text-decoration-none">
-                        <div class="content-clean-wrapper shadow-sm">
+                        <div class="position-relative content-clean-wrapper shadow-sm overflow-hidden">
                             <img src="{{ asset('storage/' . $relatedByTag->path_low_res) }}"
                                 alt="{{ $relatedByTag->content_title }}" class="img-fluid w-100 content-clean-image"
                                 loading="lazy">
+                            @if ($relatedByTag->sale_type === 'single_sale' && $relatedByTag->sale_status === 'available')
+                                <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2"
+                                    style="z-index: 10;">
+                                    Premium
+                                </span>
+                            @endif
                         </div>
                     </a>
                 </div>
@@ -154,55 +192,78 @@
                 </div>
             @endforelse
         </div>
-    </div>
 
-    {{-- <h1 class="h3 fw-bold mb-2">More from the same folder</h1>
-    <hr>
-    <div class="container pb-5">
-        <div class="row g-3">
-            @forelse ($relatedContents as $relatedContent)
-                <div class="col-6 col-md-4 col-lg-3">
-                    <a href="{{ route('content.detail', $relatedContent->id) }}" class="text-decoration-none">
-                        <div class="content-clean-wrapper">
-                            <img src="{{ asset('storage/' . $relatedContent->path_low_res) }}"
-                                alt="{{ $relatedContent->content_title }}"
-                                class="img-fluid w-100 rounded-3 shadow-sm content-clean-image">
+        <div class="modal fade" id="reportContentModal" tabindex="-1" aria-labelledby="reportContentModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <form action="{{ route('content.report', $content->id) }}" method="POST" class="modal-content">
+                    @csrf
+
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="reportContentModalLabel">Report Content</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        @if ($errors->has('report'))
+                            <div class="alert alert-danger">
+                                {{ $errors->first('report') }}
+                            </div>
+                        @endif
+
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">Reason</label>
+                            <select name="reason" id="reason"
+                                class="form-select @error('reason') is-invalid @enderror" required>
+                                <option value="">Select Reason</option>
+                                <option value="copyright" {{ old('reason') === 'copyright' ? 'selected' : '' }}>
+                                    Copyright infringement
+                                </option>
+                                <option value="inappropriate" {{ old('reason') === 'inappropriate' ? 'selected' : '' }}>
+                                    Inappropriate content
+                                </option>
+                                <option value="misleading" {{ old('reason') === 'misleading' ? 'selected' : '' }}>
+                                    Misleading content
+                                </option>
+                                <option value="spam" {{ old('reason') === 'spam' ? 'selected' : '' }}>
+                                    Spam or scam
+                                </option>
+                                <option value="privacy" {{ old('reason') === 'privacy' ? 'selected' : '' }}>
+                                    Privacy violation
+                                </option>
+                                <option value="other" {{ old('reason') === 'other' ? 'selected' : '' }}>
+                                    Other
+                                </option>
+                            </select>
+
+                            @error('reason')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
-                    </a>
-                </div>
-            @empty
-                <div class="col-12">
-                    <p class="text-center text-muted fs-4 mt-5">
-                        There is no content related from same folder.
-                    </p>
-                </div>
-            @endforelse
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror"
+                                rows="4" placeholder="Describe the issue. Required if you choose Other.">{{ old('description') }}</textarea>
+
+                            @error('description')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+
+                            <div class="form-text">
+                                Please provide enough information for admin review.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Submit Report</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-
-    <h1 class="h3 fw-bold mb-2">More related content</h1>
-    <hr>
-    <div class="container pb-5">
-        <div class="row g-3">
-            @forelse ($relatedByTags as $relatedByTag)
-                <div class="col-6 col-md-4 col-lg-3">
-                    <a href="{{ route('content.detail', $relatedByTag->id) }}" class="text-decoration-none">
-                        <div class="content-clean-wrapper">
-                            <img src="{{ asset('storage/' . $relatedByTag->path_low_res) }}"
-                                alt="{{ $relatedByTag->content_title }}"
-                                class="img-fluid w-100 rounded-3 shadow-sm content-clean-image">
-                        </div>
-                    </a>
-                </div>
-            @empty
-                <div class="col-12">
-                    <p class="text-center text-muted fs-4 mt-5">
-                        There is no content related from same tag.
-                    </p>
-                </div>
-            @endforelse
-        </div>
-    </div> --}}
 @endsection
 
 {{-- <style>

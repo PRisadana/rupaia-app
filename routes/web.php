@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminContentController;
+use App\Http\Controllers\Admin\AdminFolderController;
 use App\Http\Controllers\Admin\AdminShowcaseController;
+use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\PresetController;
 use App\Http\Controllers\Admin\UserController;
@@ -12,6 +14,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\ShowcaseController;
 use App\Http\Controllers\EditingController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SellerReportController;
 use Illuminate\Support\Facades\Route;
 use PharIo\Manifest\Author;
 
@@ -72,6 +76,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/contents/{content}/edit-preview', [EditingController::class, 'showPreviewPage'])->name('editing.preview');
     Route::get('/contents/{content}/image-preview', [EditingController::class, 'imagePreview'])->name('content.image-preview');
+
+    Route::post('/contents/{content}/report', [ReportController::class, 'storeContentReport'])->name('content.report');
+    Route::post('/showcases/{showcaseItem}/report', [ReportController::class, 'storeShowcaseReport'])->name('showcase.report');
+
+    Route::get('/dashboard/reports', [SellerReportController::class, 'index'])->name('seller.report.index');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -95,6 +104,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/contents/{content}/edit', [AdminContentController::class, 'editStatusContent'])->name('content.status.edit');
     Route::put('/contents/{content}', [AdminContentController::class, 'updateStatusContent'])->name('content.status.update');
 
+    Route::get('/folders', [AdminFolderController::class, 'index'])->name('folder.index');
+    Route::get('/folders/{folder}/edit', [AdminFolderController::class, 'editStatusFolder'])->name('folder.status.edit');
+    Route::put('/folders/{folder}', [AdminFolderController::class, 'updateStatusFolder'])->name('folder.status.update');
+
+
     Route::get('/showcases', [AdminShowcaseController::class, 'index'])->name('showcase.index');
     Route::get('/showcases/{showcaseItem}/edit', [AdminShowcaseController::class, 'editStatusShowcase'])->name('showcase.status.edit');
     Route::put('/showcases/{showcaseItem}', [AdminShowcaseController::class, 'updateStatusShowcase'])->name('showcase.status.update');
@@ -105,6 +119,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/tags/{tag}/edit', [TagController::class, 'editTag'])->name('tag.edit');
     Route::put('/tags/{tag}', [TagController::class, 'updateTag'])->name('tag.update');
     Route::delete('/tags/{tag}', [TagController::class, 'destroyTag'])->name('tag.destroy');
+
+    Route::get('/reports', [AdminReportController::class, 'index'])->name('report.index');
+    Route::get('/reports/contents/{content}', [AdminReportController::class, 'show'])->name('report.show');
+    Route::patch('/reports/contents/{content}/process', [AdminReportController::class, 'processContentReports'])->name('report.process');
+
+    Route::get('/reports/showcases', [AdminReportController::class, 'indexShowcase'])->name('report.showcase.index');
+    Route::get('/reports/showcases/{showcaseItem}', [AdminReportController::class, 'showcaseShow'])->name('report.showcase.show');
+    Route::patch('/reports/showcases/{showcaseItem}/process', [AdminReportController::class, 'processShowcaseReports'])->name('report.showcase.process');
 });
 
 require __DIR__ . '/auth.php';

@@ -36,6 +36,10 @@
         <li class="nav-item">
             <a class="nav-link active" aria-current="page" href="{{ route('folder.index') }}">Folders</a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link text-secondary" aria-current="page" href="{{ route('seller.report.index') }}">Reported
+                Items</a>
+        </li>
     </ul>
 
     <div class="row my-4">

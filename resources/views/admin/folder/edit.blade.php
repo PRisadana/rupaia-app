@@ -7,11 +7,11 @@
                 <div class="card-body p-4 p-md-5">
                     <header>
                         <h2 class="card-title mb-3 text-center">
-                            {{ __('Edit Content') }}
+                            {{ __('Edit Folder') }}
                         </h2>
                     </header>
 
-                    <form method="POST" action="{{ route('admin.content.status.update', $content) }}"
+                    <form method="POST" action="{{ route('admin.folder.status.update', $folder) }}"
                         enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
@@ -21,16 +21,16 @@
                                 <h4>Author</h4>
                             </label>
                             <div class="form-control-plaintext">
-                                {{ $content->user->name }}
+                                {{ $folder->user->name }}
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">
-                                <h4>Content Title</h4>
+                                <h4>Folder Name</h4>
                             </label>
                             <div class="form-control-plaintext">
-                                {{ $content->content_title }}
+                                {{ $folder->folder_name }}
                             </div>
                         </div>
 
@@ -55,7 +55,7 @@
                         </div>
 
                         <button class="w-100 btn btn-lg btn-dark" type="submit">
-                            Update Content Status
+                            Update Folder Status
                         </button>
                     </form>
                 </div>

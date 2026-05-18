@@ -27,7 +27,7 @@
 
                         <input type="hidden" name="parent_id" value="{{ $parentFolder?->id }}">
                         <input type="hidden" name="visibility" value="{{ $parentFolder->visibility }}">
-                        <input type="hidden" name="is_bundle" value="{{ $parentFolder->is_bundle }}">
+                        {{-- <input type="hidden" name="is_bundle" value="{{ $parentFolder->is_bundle }}"> --}}
 
                         <div class="mb-3">
                             <h3 class="form-label">{{ $parentFolder->folder_name }}</h3>
@@ -63,10 +63,22 @@
                         </div>
 
                         <div class="mb-3">
-                            <h3 class="form-label">{{ $parentFolder->is_bundle ? 'Yes' : 'No' }}</h3>
-                            <div class="form-text">
-                                The folder above is the previous bundle folder.
-                            </div>
+                            <label for="is_bundle" :value="__('Is Bundle')" class="form-label">Is this folder a
+                                bundle?</label>
+                            <select name="is_bundle" id="is_bundle"
+                                class="form-select @error('is_bundle') is-invalid @enderror">
+                                <option value="1" {{ old('is_bundle') == '1' ? 'selected' : '' }}>Yes
+                                </option>
+                                <option value="0" {{ old('is_bundle', '0') == '0' ? 'selected' : '' }}>
+                                    No
+                                </option>
+                            </select>
+
+                            @error('is_bundle')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
                         </div>
 
                         <div class="mb-3">

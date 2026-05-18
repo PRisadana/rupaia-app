@@ -24,4 +24,9 @@ class ShowcaseItem extends Model
     {
         return $this->belongsTo(Content::class, 'content_id');
     }
+
+    public function reports()
+    {
+        return $this->hasMany(Report::class, 'showcase_id');
+    }
 }

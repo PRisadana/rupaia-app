@@ -8,6 +8,18 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>Something went wrong:</strong>
+                <ul class="mb-0 mt-2">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
         <h1>Detail Folder {{ $currentFolder->folder_name }}</h1>
         <nav aria-label="breadcrumb" class="mb-3">
             <ol class="breadcrumb">
@@ -189,6 +201,30 @@
                             <p class="card-text">Folder: {{ $content->folder->folder_name }}</p>
                             <p class="card-text">Visibility Content: {{ $content->visibility }}</p>
                             <p class="card-text"> <strong>Rp {{ number_format($content->price, 0, ',', '.') }}</strong>
+                            </p>
+                            <p class="card-text">
+                                Sale Type:
+                                @if ($content->sale_type === 'single_sale')
+                                    <span class="badge bg-warning text-dark ">
+                                        premium
+                                    </span>
+                                @else
+                                    <span class="badge text-bg-light border">
+                                        multi sale
+                                    </span>
+                                @endif
+                            </p>
+                            <p class="card-text">
+                                Sale Status:
+                                @if ($content->sale_status === 'available')
+                                    <span class="badge bg-success">available</span>
+                                @elseif ($content->sale_status === 'inactive')
+                                    <span class="badge bg-dark">inactive</span>
+                                @elseif ($content->sale_status === 'sold_out')
+                                    <span class="badge bg-secondary">sold out</span>
+                                @else
+                                    <span class="badge bg-light text-dark border">{{ $content->sale_status }}</span>
+                                @endif
                             </p>
                             <p class="card-text">
                                 Tags:

@@ -76,6 +76,12 @@
                                 class="fi fi-rr-picture mt-1"></i></div>
                         Contents
                     </a>
+                    <a class="nav-link {{ request()->routeIs('admin.folder.*') ? 'active' : '' }}"
+                        href="{{ route('admin.folder.index') }}">
+                        <div class="sb-nav-link-icon d-inline-flex align-items-center"><i
+                                class="fi fi-rr-folder mt-1"></i></div>
+                        Folders
+                    </a>
                     <a class="nav-link {{ request()->routeIs('admin.showcase.*') ? 'active' : '' }}"
                         href="{{ route('admin.showcase.index') }}">
                         <div class="sb-nav-link-icon d-inline-flex align-items-center"><i
@@ -97,10 +103,17 @@
                                 class="fi fi-rr-wallet mt-1"></i></div>
                         Payout
                     </a>
-                    <a class="nav-link" href="#">
+                    <a class="nav-link {{ request()->routeIs('admin.report.index') ? 'active' : '' }}"
+                        href="{{ route('admin.report.index') }}">
                         <div class="sb-nav-link-icon d-inline-flex align-items-center"><i
                                 class="fi fi-rr-flag mt-1"></i></div>
                         Reported Content
+                    </a>
+                    <a class="nav-link {{ request()->routeIs('admin.report.showcase*') ? 'active' : '' }}"
+                        href="{{ route('admin.report.showcase.index') }}">
+                        <div class="sb-nav-link-icon d-inline-flex align-items-center"><i
+                                class="fi fi-rr-flag mt-1"></i></div>
+                        Reported Showcase
                     </a>
                     <a class="nav-link {{ request()->routeIs('admin.preset.*') ? 'active' : '' }}"
                         href="{{ route('admin.preset.index') }}">
