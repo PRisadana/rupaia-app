@@ -1,80 +1,96 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="container-fluid px-4">
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <div class="container-fluid px-4 admin-page-wrapper">
+        <div class="d-flex justify-content-between align-items-center my-4 admin-page-title">
+            <div>
+                <h1 class="m-0">Contents</h1>
+                <p class="text-muted mb-0">Manage and review content status.</p>
             </div>
-        @endif
-
-        <div class="d-flex justify-content-between align-items-center my-4">
-            <h1 class="m-0">Contents</h1>
-
-            {{-- <a href="{{ route('admin.user.create') }}"
-                class="btn btn-outline-secondary px-4 d-inline-flex align-items-center fw-semibold">
-                {{ __('Add User') }}
-            </a> --}}
         </div>
-        <hr>
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th scope="col">No</th>
-                    <th scope="col">Author</th>
-                    {{-- <th scope="col">Folder</th> --}}
-                    <th scope="col">Content Title</th>
-                    <th scope="col">Content Description</th>
-                    <th scope="col">Price (Rp)</th>
-                    <th scope="col">Sale Type</th>
-                    <th scope="col">Sale Status</th>
-                    <th scope="col">Visibility</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($contents as $content)
-                    <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        {{-- <td>{{ $content->user->name }}</td>
-                        <td>{{ $content->content_title }}</td> --}}
-                        <td><a href="{{ route('authors.show', $content->user->id) }}"
-                                class="text-dark fw-semibold">{{ $content->user->name }}</a></td>
-                        <td><a
-                                href="{{ route('content.detail', $content->id) }}"class="text-dark fw-semibold text-color-dark">{{ $content->content_title }}</a>
-                        </td>
-                        <td>{{ $content->content_description }}</td>
-                        <td>{{ number_format($content->price, 0, ',', '.') }}</td>
-                        <td>{{ $content->sale_type }}</td>
-                        <td>{{ $content->sale_status }}</td>
-                        <td>{{ $content->visibility }}</td>
-                        <td>{{ $content->status }}</td>
-                        <td>
-                            <a href="{{ route('admin.content.status.edit', $content) }}"
-                                class="btn btn-sm btn-outline-primary"><i class="fi fi-rr-edit"></i></a>
-                            {{-- <form action="#" method="POST" class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                    onclick="return confirm('Are you sure you want to delete this content?')"><i
-                                        class="fi fi-rr-trash"></i></button>
-                            </form> --}}
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="text-center">No contents found.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-        <div class="my-2">
-            {{ $contents->links() }}
+
+        <div class="admin-table-wrapper">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">No</th>
+                            <th scope="col">Author</th>
+                            {{-- <th scope="col">Folder</th> --}}
+                            <th scope="col">Content Title</th>
+                            <th scope="col">Content Description</th>
+                            <th scope="col">Price (Rp)</th>
+                            <th scope="col">Sale Type</th>
+                            <th scope="col">Sale Status</th>
+                            <th scope="col">Visibility</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($contents as $content)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td><a href="{{ route('authors.show', $content->user->id) }}"
+                                        class="text-dark fw-semibold">{{ $content->user->name }}</a></td>
+                                <td><a
+                                        href="{{ route('content.detail', $content->id) }}"class="text-dark fw-semibold text-color-dark">{{ $content->content_title }}</a>
+                                </td>
+                                <td>{{ $content->content_description }}</td>
+                                <td>{{ number_format($content->price, 0, ',', '.') }}</td>
+                                <td>
+                                    @if ($content->sale_type === 'single_sale')
+                                        <span class="badge bg-warning text-black">Premium</span>
+                                    @elseif ($content->sale_type === 'multi_sale')
+                                        <span class="badge bg-secondary">Multi Sale</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($content->sale_status === 'available')
+                                        <span class="badge bg-success">Available</span>
+                                    @elseif ($content->sale_status === 'inactive')
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    @elseif ($content->sale_status === 'sold_out')
+                                        <span class="badge bg-danger">Sold Out</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($content->visibility === 'public')
+                                        <span class="badge bg-success">public</span>
+                                    @elseif ($content->visibility === 'private')
+                                        <span class="badge bg-secondary">private</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($content->status === 'active')
+                                        <span class="badge bg-success">Active</span>
+                                    @elseif ($content->status === 'banned')
+                                        <span class="badge bg-danger">Banned</span>
+                                    @else
+                                        <span class="badge bg-secondary">{{ ucfirst($content->status) }}</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <a href="{{ route('admin.content.status.edit', $content) }}"
+                                        class="btn btn-sm btn-outline-primary"><i class="fi fi-rr-edit"></i></a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center">No contents found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-3">
+                {{ $contents->links() }}
+            </div>
         </div>
     </div>
 @endsection
+
 
 {{-- <style>
     /* --- Kustomisasi Paginasi Minimalis --- */

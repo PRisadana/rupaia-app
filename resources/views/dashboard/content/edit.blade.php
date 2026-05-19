@@ -11,7 +11,7 @@
                         </h2>
                     </header>
 
-                    {{-- @if ($errors->any())
+                    @if ($errors->any())
                         <div class="alert alert-danger">
                             <strong>Terjadi kesalahan:</strong>
                             <ul class="mb-0">
@@ -20,7 +20,7 @@
                                 @endforeach
                             </ul>
                         </div>
-                    @endif --}}
+                    @endif
 
                     <form method="POST" action="{{ route('content.update', $content) }}" enctype="multipart/form-data">
                         @csrf
@@ -145,6 +145,11 @@
                                     {{ old('sale_type', $content->sale_type) == 'multi_sale' ? 'selected' : '' }}>
                                     Multi Sale</option>
                             </select>
+                            @error('sale_type')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
                         </div>
 
                         <div class="mb-3">
@@ -160,6 +165,11 @@
                                     {{ old('sale_status', $content->sale_status) == 'sold_out' ? 'selected' : '' }}>
                                     Sold Out</option> --}}
                             </select>
+                            @error('sale_status')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
                         </div>
 
                         <div class="mb-3">

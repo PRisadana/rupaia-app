@@ -48,17 +48,6 @@
                                 {{ $content->user->name }}
                             </a>
                         </td>
-
-                        {{-- <td>
-                            @if ($latestReport->content_id)
-                                <span>Published Content</span>
-                            @elseif ($latestReport->showcase_id)
-                                <span>Showcase Content</span>
-                            @else
-                                <span class="text-muted"> Null </span>
-                            @endif
-                        </td> --}}
-
                         <td>
                             @if ($latestReport)
                                 @if ($latestReport->status === 'pending')
