@@ -27,7 +27,8 @@ class SellerReportController extends Controller
                         $showcaseQuery->where('seller_id', $sellerId);
                     });
             })
-            ->latest('processed_at')
+            ->orderByDesc('processed_at')
+            ->orderByDesc('created_at')
             ->get();
 
         $groupedReports = $reports

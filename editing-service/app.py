@@ -64,8 +64,7 @@ def apply_lut_preview():
         apply_lut_to_image(
             input_path=input_path,
             lut_path=lut_path,
-            output_path=output_path,
-            resize_width=1080,
+            output_path=output_path
         )
 
         return send_file(output_path, mimetype="image/jpeg")
@@ -74,7 +73,9 @@ def apply_lut_preview():
     finally:
         if input_path.exists():
             input_path.unlink(missing_ok=True)
-
+        
+        # if output_path.exists():
+        #     output_path.unlink(missing_ok=True)
 
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5001)

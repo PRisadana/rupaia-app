@@ -21,6 +21,13 @@
             </div>
         @endif
 
+        @php
+            $isBundleOnlyContent =
+                $content->folder && $content->folder->is_bundle && !$content->folder->allow_individual_sale;
+
+            $contentLicense = $isBundleOnlyContent ? $content->folder?->license : $content->license;
+        @endphp
+
         <div class="row g-4">
             <div class="col-lg-7">
                 <div class="bg-white rounded-4 shadow-sm p-3">
@@ -34,9 +41,27 @@
                     <div class="mb-3">
                         <h1 class="h3 fw-bold mb-2">{{ $content->content_title }}</h1>
 
-                        @if ($content->sale_type === 'single_sale')
+                        @if ($isBundleOnlyContent)
+                            <span class="badge bg-dark mb-2">
+                                Bundle Only
+                            </span>
+                        @elseif ($content->sale_type === 'single_sale')
                             <span class="badge bg-warning text-dark mb-2">
                                 Premium
+                            </span>
+                        @else
+                            <span class="badge bg-secondary mb-2">
+                                Multi Sale
+                            </span>
+                        @endif
+
+                        @if ($contentLicense)
+                            <span class="badge bg-info text-dark mb-2">
+                                {{ $contentLicense->name }}
+                            </span>
+                        @else
+                            <span class="badge bg-light text-dark mb-2">
+                                N/A
                             </span>
                         @endif
 
@@ -64,6 +89,21 @@
                         </p>
                     </div>
 
+                    @if ($isBundleOnlyContent)
+                        <div class="alert alert-warning border-0 mb-4">
+                            <h6 class="fw-bold mb-1">Available in Bundle Only</h6>
+                            <p class="mb-2">
+                                This content is part of a bundle folder and cannot be purchased individually.
+                            </p>
+
+                            {{-- @if ($content->folder)
+                                <a href="{{ route('folder.show', $content->folder) }}" class="btn btn-sm btn-dark">
+                                    View Bundle Folder
+                                </a>
+                            @endif --}}
+                        </div>
+                    @endif
+
                     <div class="mb-4">
                         <h6 class="fw-semibold">Tags</h6>
                         @if ($content->tags->count())
@@ -80,17 +120,34 @@
                     </div>
 
                     <div class="mb-4">
-                        <h3 class="fw-bold text-dark mb-0">
-                            Rp {{ number_format($content->price ?? 0, 0, ',', '.') }}
-                        </h3>
+                        @if ($isBundleOnlyContent && $content->folder?->bundle_price)
+                            <p class="text-muted mb-1">Bundle Price</p>
+                            <h3 class="fw-bold text-dark mb-0">
+                                Rp {{ number_format($content->folder->bundle_price ?? 0, 0, ',', '.') }}
+                            </h3>
+                        @else
+                            <p class="text-muted mb-1">Content Price</p>
+                            <h3 class="fw-bold text-dark mb-0">
+                                Rp {{ number_format($content->price ?? 0, 0, ',', '.') }}
+                            </h3>
+                        @endif
                     </div>
 
                     <div class="d-flex flex-column flex-md-row gap-2">
-                        <button class="btn btn-dark flex-grow-1 d-flex align-items-center justify-content-center gap-2"
-                            type="submit">
-                            <i class="fi fi-rr-shopping-cart-add"></i>
-                            <span>Add to Cart</span>
-                        </button>
+                        @if ($isBundleOnlyContent)
+                            <button
+                                class="btn btn-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                                type="button" disabled>
+                                <i class="fi fi-rr-shopping-cart-add"></i>
+                                <span>Available in Bundle Only</span>
+                            </button>
+                        @else
+                            <button class="btn btn-dark flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                                type="button">
+                                <i class="fi fi-rr-shopping-cart-add"></i>
+                                <span>Add to Cart</span>
+                            </button>
+                        @endif
 
                         <a href="{{ route('editing.preview', $content->id) }}"
                             class="btn btn-outline-dark flex-grow-1 d-flex align-items-center justify-content-center gap-2 text-decoration-none">
@@ -134,13 +191,23 @@
 
         <div class="{{ $folderMasonryClass }}">
             @forelse ($relatedContents as $relatedContent)
+                @php
+                    $relatedIsBundleOnly =
+                        $relatedContent->folder &&
+                        $relatedContent->folder->is_bundle &&
+                        !$relatedContent->folder->allow_individual_sale;
+                @endphp
                 <div class="masonry-item">
                     <a href="{{ route('content.detail', $relatedContent->id) }}" class="text-decoration-none">
                         <div class="position-relative content-clean-wrapper shadow-sm overflow-hidden">
                             <img src="{{ asset('storage/' . $relatedContent->path_low_res) }}"
                                 alt="{{ $relatedContent->content_title }}" class="img-fluid w-100 content-clean-image"
                                 loading="lazy">
-                            @if ($relatedContent->sale_type === 'single_sale' && $relatedContent->sale_status === 'available')
+                            @if ($relatedIsBundleOnly)
+                                <span class="badge bg-dark position-absolute top-0 end-0 m-2" style="z-index: 10;">
+                                    Bundle Only
+                                </span>
+                            @elseif ($relatedContent->sale_type === 'single_sale' && $relatedContent->sale_status === 'available')
                                 <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2"
                                     style="z-index: 10;">
                                     Premium
@@ -169,13 +236,23 @@
 
         <div class="{{ $tagMasonryClass }}">
             @forelse ($relatedByTags as $relatedByTag)
+                @php
+                    $tagRelatedIsBundleOnly =
+                        $relatedByTag->folder &&
+                        $relatedByTag->folder->is_bundle &&
+                        !$relatedByTag->folder->allow_individual_sale;
+                @endphp
                 <div class="masonry-item">
                     <a href="{{ route('content.detail', $relatedByTag->id) }}" class="text-decoration-none">
                         <div class="position-relative content-clean-wrapper shadow-sm overflow-hidden">
                             <img src="{{ asset('storage/' . $relatedByTag->path_low_res) }}"
                                 alt="{{ $relatedByTag->content_title }}" class="img-fluid w-100 content-clean-image"
                                 loading="lazy">
-                            @if ($relatedByTag->sale_type === 'single_sale' && $relatedByTag->sale_status === 'available')
+                            @if ($tagRelatedIsBundleOnly)
+                                <span class="badge bg-dark position-absolute top-0 end-0 m-2" style="z-index: 10;">
+                                    Bundle Only
+                                </span>
+                            @elseif ($relatedByTag->sale_type === 'single_sale' && $relatedByTag->sale_status === 'available')
                                 <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2"
                                     style="z-index: 10;">
                                     Premium

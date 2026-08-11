@@ -7,8 +7,6 @@ use Illuminate\Http\Request;
 use App\Models\Content;
 use App\Models\Report;
 use App\Models\ShowcaseItem;
-use App\Models\User;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
@@ -115,7 +113,7 @@ class AdminReportController extends Controller
         });
 
         return redirect()
-            ->route('admin.report.showcase.index')
+            ->route('admin.report.index')
             ->with('success', 'Reports processed successfully.');
     }
 

@@ -74,15 +74,21 @@ class EditingController extends Controller
         }
 
         $lutFilename = basename($lutPath);
-        copy($lutPath, $pythonLutDir . DIRECTORY_SEPARATOR . $lutFilename);
+        $targetLutPath = $pythonLutDir . DIRECTORY_SEPARATOR . $lutFilename;
 
-        $response = Http::attach(
-            'image',
-            file_get_contents($imagePath),
-            basename($imagePath)
-        )->post('http://127.0.0.1:5001/apply-lut-preview', [
-            'lut_filename' => $lutFilename,
-        ]);
+        if (! file_exists($targetLutPath)) {
+            copy($lutPath, $targetLutPath);
+        }
+
+        $response = Http::timeout(10)
+            ->attach(
+                'image',
+                file_get_contents($imagePath),
+                basename($imagePath)
+            )
+            ->post('http://127.0.0.1:5001/apply-lut-preview', [
+                'lut_filename' => $lutFilename,
+            ]);
 
         if (! $response->successful()) {
             abort(500, 'Failed to generate preview. Response: ' . $response->body());

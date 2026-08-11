@@ -136,6 +136,25 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="license_id" class="form-label">License</label>
+                            <select class="form-select @error('license_id') is-invalid @enderror" id="license_id"
+                                name="license_id" required>
+                                @foreach ($licenses as $license)
+                                    <option value="{{ $license->id }}"
+                                        {{ old('license_id', $content->license_id) == $license->id ? 'selected' : '' }}>
+                                        {{ $license->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            @error('license_id')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
                             <label for="sale_type" class="form-label">Sale Type</label>
                             <select class="form-select" id="sale_type" name="sale_type" required>
                                 <option value="single_sale"
@@ -186,6 +205,9 @@
                                     </option>
                                 @endforeach
                             </select>
+                            <div class="form-text">
+                                Choose at least one tag. Tags are required to help buyers discover related content.
+                            </div>
                             @error('tag_name.*')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror

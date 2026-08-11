@@ -7,17 +7,18 @@ use App\Http\Controllers\Admin\AdminShowcaseController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\PresetController;
+use App\Http\Controllers\Admin\LicenseController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ContentController;
+use App\Http\Controllers\FolderController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\ShowcaseController;
 use App\Http\Controllers\EditingController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SellerReportController;
+use App\Http\Controllers\PolicyController;
 use Illuminate\Support\Facades\Route;
-use PharIo\Manifest\Author;
 
 Route::get('/', [HomeController::class, 'index'])->name('dashboard');
 Route::get('/content/{content}', [HomeController::class, 'showDetailContent'])->name('content.detail');
@@ -25,6 +26,8 @@ Route::get('/content/{user}/showcase', [HomeController::class, 'showShowcase'])-
 Route::get('/showcase/{showcaseItem}', [HomeController::class, 'showDetailShowcase'])->name('authors.show.detail');
 Route::get('/showcase/{user}/published', [HomeController::class, 'showPublishedContent'])->name('authors.show.published');
 Route::get('/folder/{folder}', [HomeController::class, 'showPublishedFolder'])->name('folder.show');
+
+Route::get('/policies', [PolicyController::class, 'index'])->name('policies.index');
 
 Route::get('/about', function () {
     return view('about');
@@ -39,6 +42,14 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    Route::get('/contents/{content}/edit-preview', [EditingController::class, 'showPreviewPage'])->name('editing.preview');
+    Route::get('/contents/{content}/image-preview', [EditingController::class, 'imagePreview'])->name('content.image-preview');
+
+    Route::post('/contents/{content}/report', [ReportController::class, 'storeContentReport'])->name('content.report');
+    Route::post('/showcases/{showcaseItem}/report', [ReportController::class, 'storeShowcaseReport'])->name('showcase.report');
+});
+
+Route::middleware(['auth', 'seller'])->group(function () {
     Route::get('/dashboard/content', [ContentController::class, 'index'])->name('content.index');
     Route::post('/dashboard/content/store', [ContentController::class, 'store'])->name('content.store');
     Route::get('/dashboard/content/create', [ContentController::class, 'create'])->name('content.create');
@@ -46,24 +57,30 @@ Route::middleware('auth')->group(function () {
     Route::put('/dashboard/content/{content}', [ContentController::class, 'update'])->name('content.update');
     Route::delete('/dashboard/content/{content}', [ContentController::class, 'destroy'])->name('content.destroy');
 
-    Route::get('/dashboard/folder/', [ContentController::class, 'folderIndex'])->name('folder.index');
-    Route::post('/dashboard/folder/store', [ContentController::class, 'storeFolder'])->name('folder.store');
-    Route::get('/dashboard/folder/create', [ContentController::class, 'createFolder'])->name('folder.create');
-    Route::get('/dashboard/folder/{folder}/edit', [ContentController::class, 'editFolder'])->name('folder.edit');
-    Route::put('/dashboard/folder/{folder}', [ContentController::class, 'updateFolder'])->name('folder.update');
-    Route::delete('/dashboard/folder/{folder}', [ContentController::class, 'destroyFolder'])->name('folder.destroy');
+    Route::get('/dashboard/content/batch/create', [ContentController::class, 'createBatch'])->name('content.batch.create');
+    Route::post('/dashboard/content/batch/store', [ContentController::class, 'storeBatch'])->name('content.batch.store');
+
+    Route::get('/dashboard/folder/', [FolderController::class, 'index'])->name('folder.index');
+    Route::post('/dashboard/folder/store', [FolderController::class, 'store'])->name('folder.store');
+    Route::get('/dashboard/folder/create', [FolderController::class, 'create'])->name('folder.create');
+    Route::get('/dashboard/folder/{folder}/edit', [FolderController::class, 'edit'])->name('folder.edit');
+    Route::put('/dashboard/folder/{folder}', [FolderController::class, 'update'])->name('folder.update');
+    Route::delete('/dashboard/folder/{folder}', [FolderController::class, 'destroy'])->name('folder.destroy');
 
     // Route::get('/dashboard/folder/detail/', [ContentController::class, 'detailFolderIndex'])->name('detail.folder.index');
-    Route::get('/dashboard/folder/detail/{folder}', [ContentController::class, 'detailFolderIndex'])->whereNumber('folder')->name('detail.folder.show');
-    Route::post('/dashboard/folder/detail/store', [ContentController::class, 'storeDetailFolder'])->name('detail.folder.store');
-    Route::get('/dashboard/folder/detail/create', [ContentController::class, 'createDetailFolder'])->name('detail.folder.create');
+    Route::get('/dashboard/folder/detail/{folder}', [FolderController::class, 'detailFolderIndex'])->whereNumber('folder')->name('detail.folder.show');
+    Route::post('/dashboard/folder/detail/store', [FolderController::class, 'storeDetailFolder'])->name('detail.folder.store');
+    Route::get('/dashboard/folder/detail/create', [FolderController::class, 'createDetailFolder'])->name('detail.folder.create');
 
     Route::get('/dashboard/folder/detail/content/create', [ContentController::class, 'createContentDetailFolder'])->name('content.detail.folder.create');
     Route::post('/dashboard/folder/detail/content/store', [ContentController::class, 'storeContentDetailFolder'])->name('content.detail.folder.store');
 
+    Route::get('/dashboard/folder/{folder}/content/batch/create', [ContentController::class, 'createBatchFromFolder'])->name('content.folder.batch.create');
+    Route::post('/dashboard/folder/{folder}/content/batch/store', [ContentController::class, 'storeBatchFromFolder'])->name('content.folder.batch.store');
+
     // Route::get('/dashboard/content/{content}/move', [ContentController::class, 'contentMoveForm'])->name('content.move.form');
     Route::put('/dashboard/content/{content}/move', [ContentController::class, 'contentMove'])->name('content.move');
-    Route::put('/dashboard/folder/{folder}/move', [ContentController::class, 'folderMove'])->name('folder.move');
+    Route::put('/dashboard/folder/{folder}/move', [FolderController::class, 'folderMove'])->name('folder.move');
 
     Route::get('/dashboard/showcase/', [ShowcaseController::class, 'showcaseIndex'])->name('showcase.index');
     Route::post('/dashboard/showcase/store', [ShowcaseController::class, 'showcaseStore'])->name('showcase.store');
@@ -74,14 +91,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/dashboard/showcase/store-from-content', [ShowcaseController::class, 'showcaseFromContentStore'])->name('showcase.from.content.store');
     Route::get('/dashboard/showcase/create-from-content', [ShowcaseController::class, 'showcaseFromContentCreate'])->name('showcase.from.content.create');
 
-    Route::get('/contents/{content}/edit-preview', [EditingController::class, 'showPreviewPage'])->name('editing.preview');
-    Route::get('/contents/{content}/image-preview', [EditingController::class, 'imagePreview'])->name('content.image-preview');
-
-    Route::post('/contents/{content}/report', [ReportController::class, 'storeContentReport'])->name('content.report');
-    Route::post('/showcases/{showcaseItem}/report', [ReportController::class, 'storeShowcaseReport'])->name('showcase.report');
-
     Route::get('/dashboard/reports', [SellerReportController::class, 'index'])->name('seller.report.index');
 });
+
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
@@ -108,7 +120,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/folders/{folder}/edit', [AdminFolderController::class, 'editStatusFolder'])->name('folder.status.edit');
     Route::put('/folders/{folder}', [AdminFolderController::class, 'updateStatusFolder'])->name('folder.status.update');
 
-
     Route::get('/showcases', [AdminShowcaseController::class, 'index'])->name('showcase.index');
     Route::get('/showcases/{showcaseItem}/edit', [AdminShowcaseController::class, 'editStatusShowcase'])->name('showcase.status.edit');
     Route::put('/showcases/{showcaseItem}', [AdminShowcaseController::class, 'updateStatusShowcase'])->name('showcase.status.update');
@@ -127,6 +138,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/reports/showcases', [AdminReportController::class, 'indexShowcase'])->name('report.showcase.index');
     Route::get('/reports/showcases/{showcaseItem}', [AdminReportController::class, 'showcaseShow'])->name('report.showcase.show');
     Route::patch('/reports/showcases/{showcaseItem}/process', [AdminReportController::class, 'processShowcaseReports'])->name('report.showcase.process');
+
+    Route::get('/licenses', [LicenseController::class, 'index'])->name('license.index');
+    Route::post('/licenses/store', [LicenseController::class, 'store'])->name('license.store');
+    Route::get('/licenses/create', [LicenseController::class, 'create'])->name('license.create');
+    Route::get('/licenses/{license}/edit', [LicenseController::class, 'edit'])->name('license.edit');
+    Route::put('/licenses/{license}', [LicenseController::class, 'update'])->name('license.update');
+    Route::delete('/licenses/{license}', [LicenseController::class, 'destroy'])->name('license.destroy');
 });
 
 require __DIR__ . '/auth.php';

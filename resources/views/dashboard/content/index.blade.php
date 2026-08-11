@@ -22,6 +22,9 @@
                 <button class="d-inline-flex align-items-center btn btn-outline-secondary px-4 rounded-pill" type="button">
                     <a class="text-dark nav-link" href="{{ route('content.create') }}">{{ __('Upload Content') }}</a>
                 </button>
+                <button class="d-inline-flex align-items-center btn btn-outline-secondary px-4 rounded-pill" type="button">
+                    <a class="text-dark nav-link" href="{{ route('content.batch.create') }}">{{ __('Batch Upload') }}</a>
+                </button>
             </div>
         </div>
     </div>
@@ -85,6 +88,14 @@
                                 <span class="badge text-bg-light border">{{ $tag->tag_name }}</span>
                             @endforeach
                         </p>
+                        <p class="card-text">
+                            Content License:
+                            @if ($content->license_id)
+                                <span class="badge bg-info text-dark border">{{ $content->license->name }}</span>
+                            @else
+                                <span class="badge bg-light text-dark border">N/A</span>
+                            @endif
+                        </p>
                         <p class="card-text">Status: {{ $content->status }}</p>
                         <div col-4>
 
@@ -120,6 +131,13 @@
                         <form method="POST" action="{{ route('content.move', $content) }}">
                             @csrf
                             @method('PUT')
+
+                            <div class="alert alert-warning">
+                                <strong>Important:</strong>
+                                If this content is moved into a bundle folder, its license will automatically follow the
+                                bundle folder license.
+                                Single-sale content cannot be moved into a bundle folder.
+                            </div>
 
                             <div class="modal-header">
                                 <h5 class="modal-title" id="moveContentModalLabel-{{ $content->id }}">

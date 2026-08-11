@@ -11,13 +11,24 @@ class Folder extends Model
     protected $fillable = [
         'seller_id',
         'parent_id',
+        'license_id',
         'folder_name',
         'folder_description',
         'visibility',
         'is_bundle',
         'bundle_price',
+        'allow_individual_sale',
         'status'
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_bundle' => 'boolean',
+            'allow_individual_sale' => 'boolean',
+            'bundle_price' => 'decimal:2',
+        ];
+    }
 
     public function user()
     {
@@ -27,6 +38,11 @@ class Folder extends Model
     public function parent()
     {
         return $this->belongsTo(Folder::class, 'parent_id');
+    }
+
+    public function license()
+    {
+        return $this->belongsTo(License::class, 'license_id');
     }
 
     public function children()
@@ -97,5 +113,16 @@ class Folder extends Model
             ->where('sale_type', 'multi_sale')
             ->where('sale_status', 'available')
             ->get();
+    }
+
+    public function syncDirectContentLicenses(): void
+    {
+        if (! $this->is_bundle || ! $this->license_id) {
+            return;
+        }
+
+        $this->contents()->update([
+            'license_id' => $this->license_id,
+        ]);
     }
 }

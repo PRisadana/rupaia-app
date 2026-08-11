@@ -15,7 +15,7 @@ class HomeController extends Controller
         $contents = Content::where('visibility', 'public')
             ->where('status', 'active')
             ->where('sale_status', 'available')
-            ->with('user', 'tags', 'folder')
+            ->with('user', 'tags', 'folder', 'license')
             ->latest()
             ->paginate(99);
 
@@ -28,10 +28,10 @@ class HomeController extends Controller
             abort(404);
         }
 
-        $content->load('user', 'tags', 'folder');
+        $content->load('user', 'tags', 'folder', 'license', 'folder.license');
 
         // konten terkait berdasarkan folder yang sama
-        $relatedContents = collect();
+        $relatedContents = Content::with(['folder']);
 
         if ($content->folder_id) {
             $relatedContents = Content::where('folder_id', $content->folder_id)
@@ -44,7 +44,7 @@ class HomeController extends Controller
         }
 
         // konten berdasarkan tag yang sama
-        $relatedByTags = collect();
+        $relatedByTags = Content::with(['folder']);
 
         if ($content->tags->isNotEmpty()) {
             $tagIds = $content->tags->pluck('id'); //Ambil semua ID tag dari konten ini
@@ -90,7 +90,7 @@ class HomeController extends Controller
             ->where('visibility', 'public')
             ->where('sale_status', 'available')
             ->where('status', 'active')
-            ->with('tags', 'folder')
+            ->with('tags', 'folder', 'license')
             ->latest()
             ->paginate(99);
 
@@ -114,11 +114,12 @@ class HomeController extends Controller
             abort(404);
         }
 
-        $folder->load('user', 'parent');
+        $folder->load('user', 'parent', 'license');
 
         $subfolders = $folder->children()
             ->where('visibility', 'public')
             ->where('status', 'active')
+            ->with('license')
             ->latest()
             ->get();
 
@@ -126,7 +127,7 @@ class HomeController extends Controller
             ->where('visibility', 'public')
             ->where('status', 'active')
             ->where('sale_status', 'available')
-            ->with('user', 'tags')
+            ->with('user', 'tags', 'license')
             ->latest()
             ->paginate(12);
 

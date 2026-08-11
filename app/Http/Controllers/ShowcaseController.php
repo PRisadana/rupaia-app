@@ -38,6 +38,7 @@ class ShowcaseController extends Controller
             'custom_path' => 'required|image|mimes:jpg,jpeg,png|max:10240',
             // 'item_source' => 'required|in:custom,content',
             'description' => 'nullable|string|max:255',
+            'policy_agreement' => ['accepted'],
 
         ]);
 
@@ -58,7 +59,7 @@ class ShowcaseController extends Controller
             'custom_path' => $path,
             'item_source' => 'custom',
             'description' => $validated['description'] ?? null,
-            // 'status' => 'active',
+            'status' => 'active',
         ]);
 
         return redirect()->route('showcase.index')->with('success', 'Showcase item created successfully!');
@@ -102,6 +103,7 @@ class ShowcaseController extends Controller
         $user = $request->user();
         $contents = $user->contents()
             ->where('status', 'active')
+            ->where('visibility', 'public')
             ->latest()
             ->paginate(12);
 

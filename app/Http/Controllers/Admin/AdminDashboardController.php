@@ -9,6 +9,7 @@ use App\Models\ShowcaseItem;
 use App\Models\User;
 use App\Models\Preset;
 use App\Models\Tags;
+use App\Models\License;
 use App\Models\Report;
 
 use Illuminate\Http\Request;
@@ -23,8 +24,9 @@ class AdminDashboardController extends Controller
         $totalPresets = Preset::count();
         $totalTags = Tags::count();
         $totalFolders = Folder::count();
+        $totalLicenses = License::count();
         $totalReports = Report::count();
 
-        return view('admin.dashboard', compact('totalUsers', 'totalContents', 'totalShowcaseItems', 'totalPresets', 'totalTags', 'totalFolders', 'totalReports'));
+        return view('admin.dashboard', compact('totalUsers', 'totalContents', 'totalShowcaseItems', 'totalPresets', 'totalTags', 'totalFolders', 'totalLicenses', 'totalReports'));
     }
 }

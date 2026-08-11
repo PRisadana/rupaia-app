@@ -8,16 +8,13 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 
 use App\Models\Content;
 use App\Models\Folder;
 use App\Models\Tags;
-use App\Models\User;
-use Illuminate\Auth\Events\Validated;
+use App\Models\License;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
-use phpDocumentor\Reflection\Types\Null_;
 
 class ContentController extends Controller
 {
@@ -25,7 +22,7 @@ class ContentController extends Controller
     {
         $user = $request->user();
 
-        $contents = $user->contents()->with('folder', 'tags')->latest()->paginate(12);
+        $contents = $user->contents()->with('folder', 'tags', 'license')->latest()->paginate(12);
 
         // Kirim data ke view
         return view('dashboard.content.index', compact('contents'));
@@ -35,11 +32,13 @@ class ContentController extends Controller
     public function create(Request $request)
     {
         // Ambil semua folder milik pengguna yang sedang login
-        $folders = $request->user()->folders()->whereNull('parent_id')->orderBy('folder_name')->get();
+        $folders = $request->user()->folders()->with('license')->whereNull('parent_id')->orderBy('folder_name')->get();
 
         $tags = Tags::orderBy('tag_name')->get();
 
-        return view('dashboard.content.create', compact('folders', 'tags'));
+        $licenses = License::where('is_active', true)->orderBy('name')->get();
+
+        return view('dashboard.content.create', compact('folders', 'tags', 'licenses'));
     }
 
     // menyimpan konten baru (upload)
@@ -52,6 +51,12 @@ class ContentController extends Controller
             'content_title' => 'required|string|max:255',
             'content_description' => 'nullable|string',
             'price' => 'nullable|numeric|min:0',
+            'license_id' => [
+                'required',
+                Rule::exists('licenses', 'id')->where(function ($query) {
+                    return $query->where('is_active', true);
+                }),
+            ],
             'sale_type' => 'required|in:multi_sale,single_sale',
             'sale_status' => 'required|in:available,inactive',
             'folder_id' => [
@@ -60,9 +65,10 @@ class ContentController extends Controller
                     return $query->where('seller_id', $sellerId);
                 })
             ],
-            'tag_name' => 'nullable|array',
+            'tag_name' => 'required|array',
             'tag_name.*' => 'exists:tags,id',
             'path_hi_res' => 'required|image|mimes:jpg,jpeg,png|max:10240',
+            'policy_agreement' => ['accepted'],
             // 'status' => 'required|in:active,deleted,banned',
         ]);
 
@@ -70,6 +76,18 @@ class ContentController extends Controller
         $folder = Folder::where('id', $validated['folder_id'])
             ->where('seller_id', $user->id)
             ->firstOrFail();
+
+        $licenseId = $folder->is_bundle
+            ? $folder->license_id
+            : $validated['license_id'];
+
+        $saleType = $folder->is_bundle
+            ? 'multi_sale'
+            : $validated['sale_type'];
+
+        $price = ($folder->is_bundle && ! $folder->allow_individual_sale)
+            ? 0
+            : ($validated['price'] ?? 0.00);
 
         if ($folder->is_bundle && $validated['sale_type'] === 'single_sale') {
             return back()
@@ -94,15 +112,29 @@ class ContentController extends Controller
         $image = $manager->read($file->getRealPath());
 
         // Resize gambar untuk low-res
-        $image->scale(width: 360);
+        $image->scale(width: 720);
 
-        // Tambahkan watermark
-        $image->text('Rupaia ©', 10, 10, function ($font) {
-            $font->color('#ffffff');
-            $font->size(24);
-            $font->align('left');
-            $font->valign('top');
-        });
+        $imageWidth = $image->width();
+
+        $watermarkPath = public_path('aset/watermark.png');
+
+        if (file_exists($watermarkPath)) {
+            $watermark = $manager->read($watermarkPath);
+
+            $watermarkWidth = (int) ($imageWidth * 0.4);
+
+            $watermark->scaleDown(width: $watermarkWidth);
+
+            $image->place($watermark, 'center', 0, 0, 50);
+        }
+
+
+        // $image->text('Rupaia ©', $imageWidth / 2, $imageHeight / 2, function ($font) {
+        //     $font->color('rgba(255, 255, 255, 0.80)');
+        //     $font->size(512);
+        //     $font->align('center');
+        //     $font->valign('middle');
+        // });
 
         // Simpan gambar low-res
         $path_low_res = "content_file/{$id_user}/low_res/{$fileName}";
@@ -114,23 +146,24 @@ class ContentController extends Controller
             'folder_id' => $validated['folder_id'],
             'content_title' => $validated['content_title'],
             'content_description' => $validated['content_description'],
-            'price' => $validated['price'] ?? 0.00,
-            'sale_type' => $validated['sale_type'],
+            'price' => $price,
+            'license_id' => $licenseId,
+            'sale_type' => $saleType,
             'sale_status' => $validated['sale_status'],
             'path_hi_res' => $path_hi_res,
             'path_low_res' => $path_low_res,
             'visibility' => $visibility,
-            // 'status' => 'active',
+            'status' => 'active',
         ]);
 
         // Proses dan hubungkan tags
-        if (!empty($validated['tag_name'])) {
 
-            // Hubungkan konten ini dengan semua tag ID yang sudah diproses
-            // 'sync()' adalah perintah Eloquent untuk relasi Many-to-Many
-            // Ini akan otomatis menambah/menghapus data di tabel pivot 'tb_content_tag'
-            $content->tags()->sync($validated['tag_name']);
-        }
+
+        // Hubungkan konten ini dengan semua tag ID yang sudah diproses
+        // 'sync()' adalah perintah Eloquent untuk relasi Many-to-Many
+        // Ini akan otomatis menambah/menghapus data di tabel pivot 'tb_content_tag'
+        $content->tags()->sync($validated['tag_name']);
+
 
         return redirect()->route('content.index')->with('success', 'Content uploaded successfully!');
     }
@@ -143,7 +176,9 @@ class ContentController extends Controller
         $tags = Tags::orderBy('tag_name')->get();
         $currentFolder = $content->folder;
 
-        return view('dashboard.content.edit', compact('content', 'currentFolder', 'tags'));
+        $licenses = License::where('is_active', true)->orderBy('name')->get();
+
+        return view('dashboard.content.edit', compact('content', 'currentFolder', 'tags', 'licenses'));
     }
 
     public function update(Request $request, Content $content)
@@ -155,6 +190,12 @@ class ContentController extends Controller
             'content_title' => 'required|string|max:255',
             'content_description' => 'nullable|string',
             'price' => 'nullable|numeric|min:0',
+            'license_id' => [
+                'required',
+                Rule::exists('licenses', 'id')->where(function ($query) {
+                    return $query->where('is_active', true);
+                }),
+            ],
             'sale_type' => 'required|in:multi_sale,single_sale',
             'sale_status' => 'required|in:available,inactive,sold_out',
 
@@ -166,7 +207,7 @@ class ContentController extends Controller
             ],
             'tag_name' => 'required|array',
             'tag_name.*' => 'exists:tags,id',
-            'visibility' => 'required|in:public,private,by_request',
+            'visibility' => 'required|in:public,private',
             // 'status' => 'required|in:active,deleted,banned',
         ]);
 
@@ -182,12 +223,25 @@ class ContentController extends Controller
             ->where('seller_id', Auth::id())
             ->firstOrFail();
 
+        if ($folder->is_bundle) {
+            $validated['license_id'] = $folder->license_id;
+        }
+
         if ($folder->is_bundle && $validated['sale_type'] === 'single_sale') {
             return back()
                 ->withErrors([
                     'sale_type' => 'Single-sale content cannot be placed inside a bundle folder.',
                 ])
                 ->withInput();
+        }
+
+        if ($folder->is_bundle) {
+            $validated['license_id'] = $folder->license_id;
+            $validated['sale_type'] = 'multi_sale';
+
+            if (! $folder->allow_individual_sale) {
+                $validated['price'] = 0;
+            }
         }
 
         $content->fill($validated);
@@ -204,273 +258,31 @@ class ContentController extends Controller
         // OTORISASI: Cek apakah user ini boleh menghapus konten ini. Ini akan memanggil ContentPolicy@delete
         $this->authorize('delete', $content);
 
-        // Hapus file dari storage
-        Storage::disk('public')->delete([$content->path_hi_res, $content->path_low_res]);
-
         // Hapus data konten dari database
         $content->delete();
 
         return redirect()->route('content.index')->with('success', 'Content deleted successfully!');
     }
 
-    public function folderIndex(Request $request, Folder $folder)
-    {
-        $user = $request->user();
-
-        // $this->authorize('view', $folder);
-
-        $folders = $user->folders()->whereNull('parent_id')->latest()->paginate(12);
-
-        return view('dashboard.folder.index', compact('folders'));
-    }
-
-    // menampilkan form untuk menambahkan folder baru
-    public function createFolder(Request $request, ?Folder $folder)
-    {
-        // Ambil semua folder milik pengguna yang sedang login
-        $allFolders = $request->user()->folders()->orderBy('folder_name')->get();
-
-        return view('dashboard.folder.create', compact('allFolders'));
-    }
-
-    // menyimpan folder root baru
-    public function storeFolder(Request $request)
-    {
-        $user = $request->user();
-
-        $validated = $request->validate([
-            'folder_name' => 'required|string|max:255',
-            'folder_description' => 'nullable|string|max:1000',
-            'visibility' => 'required|in:public,private,by_request',
-            'parent_id' => ['nullable', 'exists:folders,id'],
-            'is_bundle' => 'required|boolean',
-            'bundle_price' => 'nullable|numeric|min:0',
-            // 'status' => 'required|in:active,deleted,banned',
-        ]);
-
-        $requestedIsBundle = (int) $validated['is_bundle'] === 1;
-
-        if ($requestedIsBundle && blank($validated['bundle_price'])) {
-            return back()
-                ->withErrors([
-                    'bundle_price' => 'Bundle price is required when folder is marked as bundle.',
-                ])
-                ->withInput();
-        }
-
-        $validated['bundle_price'] = $requestedIsBundle
-            ? $validated['bundle_price']
-            : null;
-
-        $request->user()->folders()->create($validated);
-
-        return redirect()->route('folder.index')->with('success', 'Folder created successfully!');
-    }
-
-    public function editFolder(Request $request, Folder $folder)
-    {
-        // OTORISASI: Cek apakah user ini boleh meng-update folder ini. Ini akan memanggil FolderPolicy@update
-        $this->authorize('update', $folder);
-
-        return view('dashboard.folder.edit', compact('folder'));
-    }
-
-    public function updateFolder(Request $request, Folder $folder)
-    {
-        $this->authorize('update', $folder);
-
-        $validated = $request->validate([
-            'folder_name' => 'required|string|max:255',
-            'folder_description' => 'nullable|string|max:1000',
-            'visibility' => 'required|in:public,private,by_request',
-            'is_bundle' => 'required|boolean',
-            'bundle_price' => 'nullable|numeric|min:0'
-        ]);
-
-        $requestedIsBundle = (int) $validated['is_bundle'] === 1;
-
-        if ($requestedIsBundle && $folder->hasDirectSingleSaleContent()) {
-            return back()
-                ->withErrors([
-                    'is_bundle' => 'This folder cannot be changed into a bundle because it contains single-sale content.',
-                ])
-                ->withInput();
-        }
-
-        if ($requestedIsBundle && blank($validated['bundle_price'])) {
-            return back()
-                ->withErrors([
-                    'bundle_price' => 'Bundle price is required when folder is marked as bundle.',
-                ])
-                ->withInput();
-        }
-
-        $folderData = [
-            'folder_name' => $validated['folder_name'],
-            'folder_description' => $validated['folder_description'],
-            'visibility' => $validated['visibility'],
-            'is_bundle' => $validated['is_bundle'],
-            'bundle_price' => $requestedIsBundle ? $validated['bundle_price'] : null
-        ];
-
-        // update data
-        $folder->fill($folderData);
-        $folder->save();
-
-        return redirect()->route('folder.index')->with('success', 'Folder updated successfully!');
-    }
-
-    public function destroyFolder(Folder $folder)
-    {
-        $this->authorize('delete', $folder);
-        // INI AKAN MEMICU SEMUA KEJADIAN:
-        // - DB akan menghapus folder ini
-        // - DB (via cascade) akan menghapus semua sub-folder
-        // - DB (via cascade) akan menghapus semua 'content' di folder ini & sub-folder
-        // - Model Event 'deleting' akan dipanggil untuk 
-        //   setiap 'content' yang dihapus, dan membersihkan file di storage.
-        $folder->delete();
-
-        return redirect()->route('folder.index')->with('success', 'Folder deleted successfully!');
-    }
-
-    public function detailFolderIndex(Request $request, ?Folder $folder)
-    {
-        $user = $request->user();
-        $currentFolder = $folder;
-
-        if ($currentFolder) {
-            $this->authorize('view', $currentFolder);
-        }
-
-        // ambil sub folder
-        // Jika di root (null), ambil folder utama (yang 'parent_id'-nya null)
-        // Jika di dalam folder, ambil 'children' (anak) dari folder itu
-        if ($currentFolder) {
-            // di dalam folder ➜ ambil anak-anaknya
-            $folders = $currentFolder->children()
-                ->orderBy('folder_name')
-                ->get();
-        } else {
-            // root ➜ ambil folder milik user yang parent_id null
-            $folders = $user->folders()
-                ->whereNull('parent_id')
-                ->orderBy('folder_name')
-                ->get();
-        };
-
-        // $folders = $queryFolders->orderBy('folder_name')->get();
-
-        //ambil konten
-        // Jika di root, ambil konten yang 'folder_id'-nya null
-        // Jika di dalam folder, ambil 'contents' dari folder itu
-        if ($currentFolder) {
-            $queryContents = $currentFolder->contents();
-        } else {
-            $queryContents = $user->contents();
-        }
-
-        $contents = $queryContents->with('tags')->latest()->paginate(10);
-
-        // Bangun Breadcrumbs
-        $breadcrumbs = collect();
-        $tempFolder = $currentFolder;
-        while ($tempFolder) {
-            $breadcrumbs->prepend($tempFolder); // tambahkan ke depan
-            $tempFolder = $tempFolder->parent; // mundur satu langkah
-        }
-
-        return view('dashboard.folder.detail-folder', compact('contents', 'folders', 'currentFolder', 'breadcrumbs'));
-    }
-
-    public function createDetailFolder(Request $request, ?Folder $folder)
-    {
-        $user = $request->user();
-        $parentId = $request->query('parent_id');
-
-        $parentFolder = null;
-
-        if ($parentId) {
-            $parentFolder = Folder::where('id', $parentId)
-                ->where('seller_id', $user->id)
-                ->firstOrFail();
-        }
-
-        return view('dashboard.folder.detail-folder-create', compact('parentFolder'));
-    }
-
-    public function storeDetailFolder(Request $request)
-    {
-        $user = $request->user();
-
-        $validated = $request->validate([
-            'folder_name' => 'required|string|max:255',
-            'folder_description' => 'nullable|string|max:1000',
-            'visibility' => 'required|in:public,private,by_request',
-            'parent_id' => ['required', 'exists:folders,id'],
-            'is_bundle' => 'required|boolean',
-            'bundle_price' => 'nullable|numeric|min:0',
-        ]);
-
-        $requestedIsBundle = (int) $validated['is_bundle'] === 1;
-
-        if ($requestedIsBundle && blank($validated['bundle_price'])) {
-            return back()
-                ->withErrors([
-                    'bundle_price' => 'Bundle price is required when folder is marked as bundle.',
-                ])
-                ->withInput();
-        }
-
-        $validated['bundle_price'] = $requestedIsBundle
-            ? $validated['bundle_price']
-            : null;
-
-        // $parentFolder = Folder::where('id', $validated['parent_id'])
-        //     ->where('seller_id', $user->id)
-        //     ->firstOrFail();
-
-        // if ($parentFolder->is_bundle == 1 && blank($validated['bundle_price'])) {
-        //     return back()
-        //         ->withErrors(['bundle_price' => 'Bundle price must be provided when the folder is marked as a bundle.'])
-        //         ->withInput();
-        // }
-
-        // $bundlePrice = $validated['is_bundle'] == 1 ? $validated['bundle_price'] : null;
-        // $validated['bundle_price'] = $bundlePrice;
-
-        $user->folders()->create($validated);
-
-        // Kalau ada parent, balik ke folder tersebut
-        if (!empty($validated['parent_id'])) {
-            return redirect()
-                ->route('detail.folder.show', $validated['parent_id'])
-                ->with('success', 'Subfolder berhasil dibuat.');
-        }
-
-        // Kalau tidak ada parent → folder di root
-        return redirect()
-            ->route('folder.index')
-            ->with('success', 'Folder root berhasil dibuat.');
-    }
-
     public function createContentDetailFolder(Request $request,)
     {
 
         $user = $request->user();
+        $licenses = License::where('is_active', true)->orderBy('name')->get();
         $parentId = $request->query('parent_id');
 
         $parentFolder = null;
 
         if ($parentId) {
-            $parentFolder = Folder::where('id', $parentId)
+            $parentFolder = Folder::with('license')
+                ->where('id', $parentId)
                 ->where('seller_id', $user->id)
                 ->firstOrFail();
         }
 
         $tags = Tags::orderBy('tag_name')->get();
 
-        return view('dashboard.folder.content-detail-folder-create', compact('parentFolder', 'tags'));
+        return view('dashboard.folder.content-detail-folder-create', compact('parentFolder', 'tags', 'licenses'));
     }
 
     public function storeContentDetailFolder(Request $request)
@@ -479,6 +291,12 @@ class ContentController extends Controller
             'content_title' => 'required|string|max:255',
             'content_description' => 'nullable|string',
             'price' => 'nullable|numeric|min:0',
+            'license_id' => [
+                'required',
+                Rule::exists('licenses', 'id')->where(function ($query) {
+                    return $query->where('is_active', true);
+                }),
+            ],
             'sale_type' => 'required|in:multi_sale,single_sale',
             'sale_status' => 'required|in:available,inactive',
             'folder_id' => [
@@ -487,10 +305,11 @@ class ContentController extends Controller
                     return $query->where('seller_id', Auth::id());
                 })
             ],
-            'tag_name' => 'nullable|array',
+            'tag_name' => 'required|array',
             'tag_name.*' => 'exists:tags,id',
             'path_hi_res' => 'required|image|mimes:jpg,jpeg,png|max:10240',
-            'visibility' => 'required|in:public,private,by_request',
+            // 'visibility' => 'required|in:public,private',
+            'policy_agreement' => ['accepted'],
         ]);
 
         $id_user = $request->user()->id;
@@ -500,6 +319,18 @@ class ContentController extends Controller
         $folder = Folder::where('id', $folder_id)
             ->where('seller_id', $id_user)
             ->firstOrFail();
+
+        $licenseId = $folder->is_bundle
+            ? $folder->license_id
+            : $validated['license_id'];
+
+        $saleType = $folder->is_bundle
+            ? 'multi_sale'
+            : $validated['sale_type'];
+
+        $price = ($folder->is_bundle && ! $folder->allow_individual_sale)
+            ? 0
+            : ($validated['price'] ?? 0.00);
 
         if ($folder->is_bundle && $validated['sale_type'] === 'single_sale') {
             return back()
@@ -523,15 +354,21 @@ class ContentController extends Controller
         $image = $manager->read($file->getRealPath());
 
         // Resize gambar untuk low-res
-        $image->scale(width: 360);
+        $image->scale(width: 720);
 
-        // Tambahkan watermark
-        $image->text('Rupaia ©', 10, 10, function ($font) {
-            $font->color('#ffffff');
-            $font->size(24);
-            $font->align('left');
-            $font->valign('top');
-        });
+        $imageWidth = $image->width();
+
+        $watermarkPath = public_path('aset/watermark.png');
+
+        if (file_exists($watermarkPath)) {
+            $watermark = $manager->read($watermarkPath);
+
+            $watermarkWidth = (int) ($imageWidth * 0.4);
+
+            $watermark->scaleDown(width: $watermarkWidth);
+
+            $image->place($watermark, 'center', 0, 0, 50);
+        }
 
         // Simpan gambar low-res
         $path_low_res = "content_file/{$id_user}/low_res/{$fileName}";
@@ -543,24 +380,312 @@ class ContentController extends Controller
             'folder_id' => $validated['folder_id'],
             'content_title' => $validated['content_title'],
             'content_description' => $validated['content_description'],
-            'price' => $validated['price'] ?? 0.00,
+            'price' => $price,
+            'license_id' => $licenseId,
             'path_hi_res' => $path_hi_res,
             'path_low_res' => $path_low_res,
             'visibility' => $visibility,
-            'sale_type' => $validated['sale_type'],
+            'sale_type' => $saleType,
             'sale_status' => $validated['sale_status'],
         ]);
 
         // Proses dan hubungkan tags
-        if (!empty($validated['tag_name'])) {
 
-            // Hubungkan konten ini dengan semua tag ID yang sudah diproses
-            // 'sync()' adalah perintah Eloquent untuk relasi Many-to-Many
-            // Ini akan otomatis menambah/menghapus data di tabel pivot 'tb_content_tag'
+
+        // Hubungkan konten ini dengan semua tag ID yang sudah diproses
+        // 'sync()' adalah perintah Eloquent untuk relasi Many-to-Many
+        // Ini akan otomatis menambah/menghapus data di tabel pivot 'tb_content_tag'
+        $content->tags()->sync($validated['tag_name']);
+
+
+        return redirect()->route('detail.folder.show', $validated['folder_id'])->with('success', 'Content uploaded successfully!');
+    }
+
+    public function createBatch(Request $request)
+    {
+        $user = $request->user();
+
+        $folders = $user->folders()
+            ->with('license')
+            ->whereNull('parent_id')
+            ->orderBy('folder_name')
+            ->get();
+
+        $tags = Tags::orderBy('tag_name')->get();
+
+        $licenses = License::where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('dashboard.content.batch-create', compact(
+            'folders',
+            'tags',
+            'licenses'
+        ));
+    }
+
+    public function storeBatch(Request $request)
+    {
+        $user = $request->user();
+        $sellerId = $user->id;
+
+        $validated = $request->validate([
+            'folder_id' => [
+                'required',
+                Rule::exists('folders', 'id')->where(function ($query) use ($sellerId) {
+                    return $query->where('seller_id', $sellerId);
+                }),
+            ],
+            'images' => ['required', 'array', 'max:50'],
+            'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:10240'],
+            'default_description' => ['nullable', 'string'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'license_id' => [
+                'nullable',
+                Rule::exists('licenses', 'id')->where(function ($query) {
+                    return $query->where('is_active', true);
+                }),
+            ],
+            'sale_type' => ['nullable', 'in:multi_sale,single_sale'],
+            'sale_status' => ['required', 'in:available,inactive'],
+            'tag_name' => ['required', 'array'],
+            'tag_name.*' => ['exists:tags,id'],
+            'policy_agreement' => ['accepted'],
+        ]);
+
+        $folder = Folder::where('id', $validated['folder_id'])
+            ->where('seller_id', $sellerId)
+            ->firstOrFail();
+
+        if (! $folder->is_bundle && blank($validated['license_id'])) {
+            return back()
+                ->withErrors([
+                    'license_id' => 'License is required when uploading content to a collection folder.',
+                ])
+                ->withInput();
+        }
+
+        if ($folder->is_bundle && blank($folder->license_id)) {
+            return back()
+                ->withErrors([
+                    'folder_id' => 'This bundle folder does not have a license.',
+                ])
+                ->withInput();
+        }
+
+        $licenseId = $folder->is_bundle
+            ? $folder->license_id
+            : $validated['license_id'];
+
+        $saleType = $folder->is_bundle
+            ? 'multi_sale'
+            : ($validated['sale_type'] ?? 'multi_sale');
+
+        $saleStatus = $validated['sale_status'];
+        $visibility = $folder->visibility;
+        $description = $validated['default_description'] ?? null;
+        $price = ($folder->is_bundle && ! $folder->allow_individual_sale)
+            ? 0
+            : ($validated['price'] ?? 0.00);
+
+        foreach ($request->file('images') as $file) {
+            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeTitle = str_replace(['_', '-'], ' ', $originalName);
+            $contentTitle = ucwords($safeTitle);
+
+            $fileName = uniqid() . '_' . time() . '_' . $file->getClientOriginalName();
+
+            $pathHiRes = $file->storeAs("content_file/{$sellerId}/hi_res", $fileName, 'public');
+
+            $manager = new ImageManager(new Driver());
+            $image = $manager->read($file->getRealPath());
+
+            // Resize gambar untuk low-res
+            $image->scale(width: 720);
+
+            $imageWidth = $image->width();
+
+            $watermarkPath = public_path('aset/watermark.png');
+
+            if (file_exists($watermarkPath)) {
+                $watermark = $manager->read($watermarkPath);
+
+                $watermarkWidth = (int) ($imageWidth * 0.4);
+
+                $watermark->scaleDown(width: $watermarkWidth);
+
+                $image->place($watermark, 'center', 0, 0, 50);
+            }
+
+            $pathLowRes = "content_file/{$sellerId}/low_res/{$fileName}";
+            Storage::disk('public')->put($pathLowRes, (string) $image->encode());
+
+            $content = Content::create([
+                'seller_id' => $sellerId,
+                'folder_id' => $folder->id,
+                'license_id' => $licenseId,
+                'content_title' => $contentTitle,
+                'content_description' => $description,
+                'price' => $price,
+                'sale_type' => $saleType,
+                'sale_status' => $saleStatus,
+                'path_hi_res' => $pathHiRes,
+                'path_low_res' => $pathLowRes,
+                'visibility' => $visibility,
+                'status' => 'active',
+            ]);
+
             $content->tags()->sync($validated['tag_name']);
         }
 
-        return redirect()->route('detail.folder.show', $validated['folder_id'])->with('success', 'Content uploaded successfully!');
+        return redirect()
+            ->route('content.index')
+            ->with('success', count($request->file('images')) . ' content(s) uploaded successfully.');
+    }
+
+    public function createBatchFromFolder(Request $request, Folder $folder)
+    {
+        $user = $request->user();
+
+        if ($folder->seller_id !== $user->id) {
+            abort(403);
+        }
+
+        $folder->load('license');
+
+        $tags = Tags::orderBy('tag_name')->get();
+
+        $licenses = License::where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('dashboard.folder.content-detail-folder-batch-create', compact(
+            'folder',
+            'tags',
+            'licenses'
+        ));
+    }
+
+    public function storeBatchFromFolder(Request $request, Folder $folder)
+    {
+        $user = $request->user();
+        $sellerId = $user->id;
+
+        if ($folder->seller_id !== $sellerId) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'images' => ['required', 'array', 'max:50'],
+            'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:10240'],
+            'default_description' => ['nullable', 'string'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'license_id' => [
+                'nullable',
+                Rule::exists('licenses', 'id')->where(function ($query) {
+                    return $query->where('is_active', true);
+                }),
+            ],
+            'sale_type' => ['nullable', 'in:multi_sale,single_sale'],
+            'sale_status' => ['required', 'in:available,inactive'],
+            'tag_name' => ['required', 'array'],
+            'tag_name.*' => ['exists:tags,id'],
+            'policy_agreement' => ['accepted'],
+        ]);
+
+        if (! $folder->is_bundle && blank($validated['license_id'])) {
+            return back()
+                ->withErrors([
+                    'license_id' => 'License is required when uploading content to a collection folder.',
+                ])
+                ->withInput();
+        }
+
+        if ($folder->is_bundle && blank($folder->license_id)) {
+            return back()
+                ->withErrors([
+                    'folder_id' => 'This bundle folder does not have a license.',
+                ])
+                ->withInput();
+        }
+
+        $licenseId = $folder->is_bundle
+            ? $folder->license_id
+            : $validated['license_id'];
+
+        $saleType = $folder->is_bundle
+            ? 'multi_sale'
+            : ($validated['sale_type'] ?? 'multi_sale');
+
+        $price = ($folder->is_bundle && ! $folder->allow_individual_sale)
+            ? 0
+            : ($validated['price'] ?? 0.00);
+
+        $saleStatus = $validated['sale_status'];
+        $visibility = $folder->visibility;
+        $description = $validated['default_description'] ?? null;
+
+        foreach ($request->file('images') as $file) {
+            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeTitle = str_replace(['_', '-'], ' ', $originalName);
+            $contentTitle = ucwords($safeTitle);
+
+            $fileName = uniqid() . '_' . time() . '_' . $file->getClientOriginalName();
+
+            $pathHiRes = $file->storeAs(
+                "content_file/{$sellerId}/hi_res",
+                $fileName,
+                'public'
+            );
+
+            $manager = new ImageManager(new Driver());
+            $image = $manager->read($file->getRealPath());
+
+            // Resize gambar untuk low-res
+            $image->scale(width: 720);
+
+            $imageWidth = $image->width();
+
+            $watermarkPath = public_path('aset/watermark.png');
+
+            if (file_exists($watermarkPath)) {
+                $watermark = $manager->read($watermarkPath);
+
+                $watermarkWidth = (int) ($imageWidth * 0.4);
+
+                $watermark->scaleDown(width: $watermarkWidth);
+
+                $image->place($watermark, 'center', 0, 0, 50);
+            }
+
+            $pathLowRes = "content_file/{$sellerId}/low_res/{$fileName}";
+
+            Storage::disk('public')->put(
+                $pathLowRes,
+                (string) $image->encode()
+            );
+
+            $content = Content::create([
+                'seller_id' => $sellerId,
+                'folder_id' => $folder->id,
+                'license_id' => $licenseId,
+                'content_title' => $contentTitle,
+                'content_description' => $description,
+                'price' => $price,
+                'sale_type' => $saleType,
+                'sale_status' => $saleStatus,
+                'path_hi_res' => $pathHiRes,
+                'path_low_res' => $pathLowRes,
+                'visibility' => $visibility,
+                'status' => 'active',
+            ]);
+
+            $content->tags()->sync($validated['tag_name']);
+        }
+
+        return redirect()
+            ->route('detail.folder.show', $folder->id)
+            ->with('success', count($request->file('images')) . ' content(s) uploaded successfully.');
     }
 
     public function contentMove(Request $request, Content $content)
@@ -595,9 +720,10 @@ class ContentController extends Controller
 
             $content->folder_id = $destinationFolderId;
             $content->visibility = $folder->visibility;
-        } else {
-            $content->folder_id = null;
-            $content->visibility = 'public';
+
+            if ($folder->is_bundle) {
+                $content->license_id = $folder->license_id;
+            }
         }
 
         $content->save();
@@ -611,58 +737,5 @@ class ContentController extends Controller
         return redirect()
             ->route('folder.index')
             ->with('success', 'Content moved to root');
-    }
-
-    public function folderMove(Request $request, Folder $folder)
-    {
-        $this->authorize('update', $folder);
-
-        $user = $request->user();
-
-        $validated = $request->validate([
-            'parent_id' => [
-                'nullable',
-                Rule::exists('folders', 'id')->where(function ($query) use ($user) {
-                    // pastikan folder tujuan milik user yang sama
-                    return $query->where('seller_id', $user->id);
-                }),
-            ],
-        ]);
-
-        $destinationFolderId = $validated['parent_id'] ?? null;
-
-        // Cegah folder jadi parent dirinya sendiri
-        if ($destinationFolderId && $destinationFolderId == $folder->id) {
-            return back()->withErrors([
-                'parent_id' => 'Folder tidak boleh menjadi parent dirinya sendiri'
-            ]);
-        }
-
-        if ($destinationFolderId) {
-            $parentFolder = Folder::where('id', $destinationFolderId)
-                ->where('seller_id', $user->id)
-                ->firstOrFail();
-
-            $folder->parent_id = $parentFolder->id;
-            $folder->save();
-
-            // samakan visibilitas folder, subfolder, dan content
-            $folder->updateVisibilityRecursive($parentFolder->visibility);
-        } else {
-            $folder->parent_id = null;
-            $folder->save();
-        }
-
-        // $folder->parent_id = $destinationFolderId;
-
-        if ($destinationFolderId) {
-            return redirect()
-                ->route('detail.folder.show', $destinationFolderId)
-                ->with('success', 'Folder moved');
-        }
-
-        return redirect()
-            ->route('folder.index')
-            ->with('success', 'Folder moved to root');
     }
 }

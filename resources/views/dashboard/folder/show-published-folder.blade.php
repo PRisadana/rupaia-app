@@ -22,9 +22,12 @@
                     <span class="badge bg-secondary px-3 py-2">Collection Folder</span>
                 @endif
             </div>
+            <span class="badge bg-info text-dark px-3 py-2">
+                {{ $folder->license->name ?? 'N/A' }}
+            </span>
         </a>
 
-        @if ($folder->is_bundle)
+        {{-- @if ($folder->is_bundle)
             <div class="alert alert-warning rounded-2 my-4">
                 <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
                     <div>
@@ -63,6 +66,72 @@
                     This folder is used to organize contents. Contents must be purchased individually.
                 </p>
             </div>
+        @endif --}}
+
+        @if ($folder->is_bundle)
+            <div class="alert alert-warning rounded-2 my-4">
+                <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                    <div>
+                        <h5 class="fw-bold mb-1">This folder is available as a bundle</h5>
+
+                        <p class="mb-2">
+                            This bundle includes only available multi-sale contents directly inside this folder.
+                            Subfolders are not included in this bundle.
+                        </p>
+
+                        @if ($folder->license)
+                            <div class="mb-2">
+                                <span class="badge bg-info text-dark px-3 py-2">
+                                    {{ $folder->license->name }}
+                                </span>
+
+                                @if ($folder->license->description)
+                                    <p class="text-muted small mb-0 mt-2">
+                                        {{ $folder->license->description }}
+                                    </p>
+                                @endif
+                            </div>
+                        @endif
+
+                        @if ($folder->allow_individual_sale)
+                            <p class="mb-2 small text-muted">
+                                Contents in this bundle can also be purchased individually.
+                            </p>
+                        @else
+                            <p class="mb-2 small fw-semibold text-dark">
+                                Contents in this folder are only available as part of this bundle.
+                            </p>
+                        @endif
+
+                        @if ($folder->bundle_price)
+                            <div class="fw-bold fs-5">
+                                Rp {{ number_format($folder->bundle_price, 0, ',', '.') }}
+                            </div>
+                        @endif
+                    </div>
+
+                    <div>
+                        @if ($hasPurchasableBundleContents)
+                            <button class="btn btn-dark flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                                type="button">
+                                <i class="fi fi-rr-shopping-cart-add"></i>
+                                <span>Add Bundle to Cart</span>
+                            </button>
+                        @else
+                            <button type="button" class="btn btn-secondary px-4" disabled>
+                                Bundle Not Available
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="alert alert-light border rounded-2 my-4">
+                <h5 class="fw-bold mb-1">This folder is a collection</h5>
+                <p class="mb-0 text-muted">
+                    This folder is used to organize contents. Contents must be purchased individually.
+                </p>
+            </div>
         @endif
 
         <h2><strong>{{ $folder->folder_name }}</strong></h2>
@@ -83,30 +152,67 @@
         <div class="row my-4">
             @foreach ($subfolders as $subfolder)
                 <div class="col-md-4 mb-4">
-                    <div class="card">
-                        {{-- <img src="{{ asset('storage/' . $content->path_low_res) }}" class="card-img-top"
-                        alt="{{ $content->content_title }}"> --}}
-
+                    <div class="card h-100">
                         <div class="card-body">
-                            <h5><a href="{{ route('folder.show', $subfolder) }}"
-                                    class="card-title">{{ $subfolder->folder_name }}</a>
+                            <h5>
+                                <a href="{{ route('folder.show', $subfolder) }}" class="card-title">
+                                    {{ $subfolder->folder_name }}
+                                </a>
                             </h5>
-                            @if ($subfolder->is_bundle)
-                                <span class="badge bg-dark">Bundle</span>
-                            @else
-                                <span class="badge bg-secondary">Collection</span>
-                            @endif
-                            <p class="card-text">Description: {{ $subfolder->folder_description }}</p>
-                            <p class="card-text"> <strong>Rp
-                                    {{ number_format($subfolder->bundle_price, 0, ',', '.') }}</strong>
+
+                            <div class="d-flex gap-2 flex-wrap mb-2">
+                                @if ($subfolder->is_bundle)
+                                    <span class="badge bg-dark">Bundle</span>
+                                @else
+                                    <span class="badge bg-secondary">Collection</span>
+                                @endif
+
+                                @if ($subfolder->is_bundle && $subfolder->license)
+                                    <span class="badge bg-info text-dark">
+                                        {{ $subfolder->license->name }}
+                                    </span>
+                                @endif
+                            </div>
+
+                            <p class="card-text text-muted">
+                                {{ $subfolder->folder_description ?? 'No description available.' }}
                             </p>
+
+                            @if ($subfolder->is_bundle)
+                                @if ($subfolder->bundle_price)
+                                    <p class="card-text mb-1">
+                                        <strong>Rp {{ number_format($subfolder->bundle_price, 0, ',', '.') }}</strong>
+                                    </p>
+                                @endif
+
+                                @if ($subfolder->allow_individual_sale)
+                                    <p class="small text-muted mb-0">
+                                        Contents can also be purchased individually.
+                                    </p>
+                                @else
+                                    <p class="small text-muted mb-0">
+                                        Contents are only available as bundle.
+                                    </p>
+                                @endif
+                            @else
+                                <p class="small text-muted mb-0">
+                                    Collection folder.
+                                </p>
+                            @endif
                         </div>
-                        <div class="d-flex flex-column flex-md-row gap-2">
-                            <button class="btn btn-dark flex-grow-1 d-flex align-items-center justify-content-center gap-2"
-                                type="submit">
-                                <i class="fi fi-rr-shopping-cart-add"></i>
-                                <span>Add to Cart</span>
-                            </button>
+
+                        <div class="card-footer bg-white border-0">
+                            @if ($subfolder->is_bundle)
+                                <button class="btn btn-dark w-100 d-flex align-items-center justify-content-center gap-2"
+                                    type="button">
+                                    <i class="fi fi-rr-shopping-cart-add"></i>
+                                    <span>Add Bundle to Cart</span>
+                                </button>
+                            @else
+                                <a href="{{ route('folder.show', $subfolder) }}" class="btn btn-outline-dark w-100">
+                                    Open Folder
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -114,6 +220,43 @@
         </div>
 
         @php
+            $itemCount = $contents->count();
+            $masonryClass = $itemCount < 4 ? 'masonry-gallery-few items-' . $itemCount : 'masonry-gallery';
+            $contentsAreBundleOnly = $folder->is_bundle && !$folder->allow_individual_sale;
+        @endphp
+
+        <div class="{{ $masonryClass }} my-4">
+            @forelse ($contents as $content)
+                <div class="masonry-item">
+                    <a href="{{ route('content.detail', $content->id) }}" class="text-decoration-none">
+                        <div class="position-relative content-clean-wrapper shadow-sm overflow-hidden">
+                            <img src="{{ asset('storage/' . $content->path_low_res) }}"
+                                alt="{{ $content->content_title }}" class="img-fluid w-100 content-clean-image"
+                                loading="lazy">
+
+                            @if ($contentsAreBundleOnly)
+                                <span class="badge bg-dark position-absolute top-0 end-0 m-2" style="z-index: 10;">
+                                    Bundle Only
+                                </span>
+                            @elseif ($content->sale_type === 'single_sale' && $content->sale_status === 'available')
+                                <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2"
+                                    style="z-index: 10;">
+                                    Premium
+                                </span>
+                            @endif
+                        </div>
+                    </a>
+                </div>
+            @empty
+                <div class="w-100 text-center py-5" style="column-span: all;">
+                    <p class="text-muted fs-5 mt-3">
+                        There is no content available yet.
+                    </p>
+                </div>
+            @endforelse
+        </div>
+
+        {{-- @php
             $itemCount = $contents->count();
             $masonryClass = $itemCount < 4 ? 'masonry-gallery-few items-' . $itemCount : 'masonry-gallery';
         @endphp
@@ -141,7 +284,7 @@
                     </p>
                 </div>
             @endforelse
-        </div>
+        </div> --}}
 
         {{-- <div class="row my-4">
             @foreach ($contents as $content)

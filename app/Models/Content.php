@@ -15,6 +15,7 @@ class Content extends Model
     protected $fillable = [
         'seller_id',
         'folder_id',
+        'license_id',
         'content_title',
         'content_description',
         'price',
@@ -60,5 +61,10 @@ class Content extends Model
     public function reports()
     {
         return $this->hasMany(Report::class, 'content_id');
+    }
+
+    public function license()
+    {
+        return $this->belongsTo(License::class, 'license_id');
     }
 }

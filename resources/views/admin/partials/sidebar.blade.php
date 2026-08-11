@@ -90,6 +90,14 @@
 
                 <div class="sb-sidenav-menu-heading">Configurations</div>
 
+                <a class="nav-link {{ request()->routeIs('admin.license.*') ? 'active' : '' }}"
+                    href="{{ route('admin.license.index') }}">
+                    <div class="sb-nav-link-icon d-inline-flex align-items-center">
+                        <i class="fi fi-rr-key mt-1"></i>
+                    </div>
+                    Licenses
+                </a>
+
                 <a class="nav-link {{ request()->routeIs('admin.preset.*') ? 'active' : '' }}"
                     href="{{ route('admin.preset.index') }}">
                     <div class="sb-nav-link-icon d-inline-flex align-items-center">
@@ -105,7 +113,6 @@
                     </div>
                     Tags
                 </a>
-
             </div>
         </div>
 

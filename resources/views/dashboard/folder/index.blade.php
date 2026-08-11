@@ -55,7 +55,30 @@
                         </h5>
                         <p class="card-text">Description: {{ $folder->folder_description }}</p>
                         <p class="card-text">Visibility Folder: {{ $folder->visibility }}</p>
-                        <p class="card-text">Is Bundle: {{ $folder->is_bundle ? 'Yes' : 'No' }}</p>
+                        <p class="card-text">
+                            Is Bundle:
+                            @if ($folder->is_bundle)
+                                <span class="badge bg-success">Yes</span>
+                            @else
+                                <span class="badge bg-danger">No</span>
+                            @endif
+                        </p>
+                        <p class="card-text">
+                            Allow Individual Sale:
+                            @if ($folder->allow_individual_sale)
+                                <span class="badge bg-success">Yes</span>
+                            @else
+                                <span class="badge bg-danger">No</span>
+                            @endif
+                        </p>
+                        <p class="card-text">
+                            Folder License:
+                            @if ($folder->license_id)
+                                <span class="badge bg-info text-dark border">{{ $folder->license->name }}</span>
+                            @else
+                                <span class="badge bg-light text-dark border">N/A</span>
+                            @endif
+                        </p>
                         <p class="card-text"> <strong>Rp {{ number_format($folder->bundle_price, 0, ',', '.') }}</strong>
                         </p>
                         <p class="card-text">Status: {{ $folder->status }}</p>

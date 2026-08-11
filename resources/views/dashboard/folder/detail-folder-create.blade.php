@@ -29,6 +29,24 @@
                         <input type="hidden" name="visibility" value="{{ $parentFolder->visibility }}">
                         {{-- <input type="hidden" name="is_bundle" value="{{ $parentFolder->is_bundle }}"> --}}
 
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const isBundleSelect = document.getElementById('is_bundle');
+                                const bundleFields = document.getElementById('bundleFields');
+
+                                function toggleBundleFields() {
+                                    if (isBundleSelect.value === '1') {
+                                        bundleFields.classList.remove('d-none');
+                                    } else {
+                                        bundleFields.classList.add('d-none');
+                                    }
+                                }
+
+                                isBundleSelect.addEventListener('change', toggleBundleFields);
+                                toggleBundleFields();
+                            });
+                        </script>
+
                         <div class="mb-3">
                             <h3 class="form-label">{{ $parentFolder->folder_name }}</h3>
                             <div class="form-text">
@@ -63,36 +81,74 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="is_bundle" :value="__('Is Bundle')" class="form-label">Is this folder a
-                                bundle?</label>
+                            <label for="is_bundle" class="form-label">Folder Type</label>
                             <select name="is_bundle" id="is_bundle"
-                                class="form-select @error('is_bundle') is-invalid @enderror">
-                                <option value="1" {{ old('is_bundle') == '1' ? 'selected' : '' }}>Yes
+                                class="form-select @error('is_bundle') is-invalid @enderror" required>
+                                <option value="0" {{ old('is_bundle') == 0 ? 'selected' : '' }}>
+                                    Collection Folder
                                 </option>
-                                <option value="0" {{ old('is_bundle', '0') == '0' ? 'selected' : '' }}>
-                                    No
+                                <option value="1" {{ old('is_bundle') == 1 ? 'selected' : '' }}>
+                                    Bundle Folder
                                 </option>
                             </select>
 
                             @error('is_bundle')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <div class="mb-3">
-                            <label for="bundle_price" :value="__('Bundle Price')" class="form-label">Bundle Price
-                                (IDR)</label>
-                            <input id="bundle_price" name="bundle_price" type="number"
-                                placeholder="Only fill if this folder is a bundle"
-                                class="form-control @error('bundle_price') is-invalid @enderror">
+                        <div id="bundleFields" class="{{ old('is_bundle') == 1 ? '' : 'd-none' }}">
+                            <div class="alert alert-info">
+                                Bundle price, license, and individual sale setting are only used when this folder is sold as
+                                a bundle.
+                            </div>
 
-                            @error('bundle_price')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div>
-                            @enderror
+                            <div class="mb-3">
+                                <label for="bundle_price" class="form-label">Bundle Price</label>
+                                <input id="bundle_price" name="bundle_price" type="number" min="0" step="0.01"
+                                    class="form-control @error('bundle_price') is-invalid @enderror"
+                                    value="{{ old('bundle_price') }}">
+
+                                @error('bundle_price')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="license_id" class="form-label">Bundle License</label>
+                                <select id="license_id" name="license_id"
+                                    class="form-select @error('license_id') is-invalid @enderror">
+                                    <option value="">Choose bundle license</option>
+
+                                    @foreach ($licenses as $license)
+                                        <option value="{{ $license->id }}"
+                                            {{ old('license_id') == $license->id ? 'selected' : '' }}>
+                                            {{ $license->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                @error('license_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="allow_individual_sale" class="form-label">Allow Individual Sale</label>
+                                <select id="allow_individual_sale" name="allow_individual_sale"
+                                    class="form-select @error('allow_individual_sale') is-invalid @enderror">
+                                    <option value="1" {{ old('allow_individual_sale', 0) == 1 ? 'selected' : '' }}>
+                                        Yes
+                                    </option>
+                                    <option value="0" {{ old('allow_individual_sale', 0) == 0 ? 'selected' : '' }}>
+                                        No
+                                    </option>
+                                </select>
+
+                                @error('allow_individual_sale')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
 
                         <div class="mb-3">

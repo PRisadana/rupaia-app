@@ -40,7 +40,7 @@ class ReportController extends Controller
                 'nullable',
                 'string',
                 'max:1000',
-                Rule::requiredIf($request->reason === 'other'),
+                Rule::requiredIf($request->input('reason') === 'other'),
             ],
         ]);
 
@@ -91,7 +91,7 @@ class ReportController extends Controller
                 'nullable',
                 'string',
                 'max:1000',
-                Rule::requiredIf($request->reason === 'other'),
+                Rule::requiredIf($request->input('reason') === 'other'),
             ],
         ]);
 
