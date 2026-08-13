@@ -16,15 +16,36 @@ class Content extends Model
         'seller_id',
         'folder_id',
         'license_id',
+
         'content_title',
         'content_description',
         'price',
         'sale_type',
         'sale_status',
+
         'path_hi_res',
         'path_low_res',
         'visibility',
-        'status'
+        'status',
+
+        'perceptual_hash',
+        'similar_content_id',
+        'similarity_distance',
+        'moderation_score',
+        'moderation_category',
+        'validation_reason',
+        'validated_at',
+
+        'reviewed_by',
+        'reviewed_at',
+        'review_note',
+    ];
+
+    protected $casts = [
+        'price' => 'decimal:2',
+        'moderation_score' => 'decimal:4',
+        'validated_at' => 'datetime',
+        'reviewed_at' => 'datetime',
     ];
 
     public function user()
@@ -66,5 +87,20 @@ class Content extends Model
     public function license()
     {
         return $this->belongsTo(License::class, 'license_id');
+    }
+
+    public function similarContent()
+    {
+        return $this->belongsTo(Content::class, 'similar_content_id');
+    }
+
+    public function similarContents()
+    {
+        return $this->hasMany(Content::class, 'similar_content_id');
+    }
+
+    public function reviewer()
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
     }
 }
