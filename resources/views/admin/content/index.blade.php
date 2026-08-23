@@ -24,6 +24,7 @@
                             <th scope="col">Sale Status</th>
                             <th scope="col">Visibility</th>
                             <th scope="col">Status</th>
+                            <th scope="col">Similarity</th>
                             <th scope="col">Action</th>
                         </tr>
                     </thead>
@@ -33,8 +34,10 @@
                                 <td>{{ $loop->iteration }}</td>
                                 <td><a href="{{ route('authors.show', $content->user->id) }}"
                                         class="text-dark fw-semibold">{{ $content->user->name }}</a></td>
-                                <td><a
-                                        href="{{ route('content.detail', $content->id) }}"class="text-dark fw-semibold text-color-dark">{{ $content->content_title }}</a>
+                                <td><a href="{{ route('admin.content.status.edit', $content) }}"
+                                        class="text-dark fw-semibold text-color-dark">
+                                        {{ $content->content_title }}
+                                    </a>
                                 </td>
                                 <td>{{ $content->content_description }}</td>
                                 <td>{{ number_format($content->price, 0, ',', '.') }}</td>
@@ -64,10 +67,28 @@
                                 <td>
                                     @if ($content->status === 'active')
                                         <span class="badge bg-success">Active</span>
+                                    @elseif ($content->status === 'pending_review')
+                                        <span class="badge bg-warning text-dark">Pending Review</span>
+                                    @elseif ($content->status === 'rejected')
+                                        <span class="badge bg-danger">Rejected</span>
                                     @elseif ($content->status === 'banned')
-                                        <span class="badge bg-danger">Banned</span>
+                                        <span class="badge bg-dark">Banned</span>
                                     @else
                                         <span class="badge bg-secondary">{{ ucfirst($content->status) }}</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($content->similar_content_id)
+                                        <span class="badge bg-warning text-dark">
+                                            Similar
+                                        </span>
+                                        <div class="small text-muted">
+                                            Distance: {{ $content->similarity_distance ?? '-' }}
+                                        </div>
+                                    @else
+                                        <span class="badge bg-light text-dark border">
+                                            -
+                                        </span>
                                     @endif
                                 </td>
                                 <td>

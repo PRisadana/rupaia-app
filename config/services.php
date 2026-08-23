@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'moderation_model' => env('OPENAI_MODERATION_MODEL', 'omni-moderation-latest'),
+    ],
+
+    'content_moderation' => [
+        'enabled' => env('CONTENT_AI_MODERATION_ENABLED', true),
+        'threshold' => (float) env('CONTENT_AI_MODERATION_THRESHOLD', 0.70),
+    ],
+
 ];

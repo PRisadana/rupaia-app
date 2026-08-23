@@ -26,7 +26,10 @@ class AdminDashboardController extends Controller
         $totalFolders = Folder::count();
         $totalLicenses = License::count();
         $totalReports = Report::count();
+        $pendingReviewContents = Content::where('status', 'pending_review')->count();
+        $rejectedContents = Content::where('status', 'rejected')->count();
+        $bannedContents = Content::where('status', 'banned')->count();
 
-        return view('admin.dashboard', compact('totalUsers', 'totalContents', 'totalShowcaseItems', 'totalPresets', 'totalTags', 'totalFolders', 'totalLicenses', 'totalReports'));
+        return view('admin.dashboard', compact('totalUsers', 'totalContents', 'totalShowcaseItems', 'totalPresets', 'totalTags', 'totalFolders', 'totalLicenses', 'totalReports', 'pendingReviewContents', 'rejectedContents', 'bannedContents'));
     }
 }

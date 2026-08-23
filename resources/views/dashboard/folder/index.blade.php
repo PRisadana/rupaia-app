@@ -81,7 +81,25 @@
                         </p>
                         <p class="card-text"> <strong>Rp {{ number_format($folder->bundle_price, 0, ',', '.') }}</strong>
                         </p>
-                        <p class="card-text">Status: {{ $folder->status }}</p>
+                        <p class="card-text">Status:
+                            @if ($folder->status === 'active')
+                                <span class="badge bg-success">active</span>
+                            @elseif ($folder->status === 'pending_review')
+                                <span class="badge bg-warning text-dark">pending review</span>
+                            @elseif ($folder->status === 'rejected')
+                                <span class="badge bg-danger">rejected</span>
+                            @elseif ($folder->status === 'banned')
+                                <span class="badge bg-dark">banned</span>
+                            @else
+                                <span class="badge bg-secondary">N/A</span>
+                            @endif
+
+                            {{-- @if ($folder->status === 'pending_review')
+                                <div class="small text-muted mt-2">
+                                    {{ $folder->validation_reason }}
+                                </div>
+                            @endif --}}
+                        </p>
 
                         <div class="d-flex flex-row mb-2 my-3">
                             <a href="{{ route('folder.edit', $folder) }}" class="btn btn-sm btn-secondary mx-1"><i
@@ -145,7 +163,8 @@
 
                                 {{-- Folder tujuan --}}
                                 <div class="mb-3">
-                                    <label for="move-folder-{{ $folder->id }}" class="form-label">Move to folder</label>
+                                    <label for="move-folder-{{ $folder->id }}" class="form-label">Move to
+                                        folder</label>
 
                                     <select name="parent_id" id="move-folder-{{ $folder->id }}" class="form-select">
                                         {{-- <option value="">Root (jadikan folder utama)</option> --}}

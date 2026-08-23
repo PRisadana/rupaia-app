@@ -13,8 +13,11 @@ use App\Models\Content;
 use App\Models\Folder;
 use App\Models\Tags;
 use App\Models\License;
+use App\Services\ImageHashService;
+use App\Services\ImageModerationService;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+
 
 class ContentController extends Controller
 {
@@ -22,7 +25,7 @@ class ContentController extends Controller
     {
         $user = $request->user();
 
-        $contents = $user->contents()->with('folder', 'tags', 'license')->latest()->paginate(12);
+        $contents = $user->contents()->with('folder', 'tags', 'license', 'similarContent', 'reviewer')->latest()->paginate(12);
 
         // Kirim data ke view
         return view('dashboard.content.index', compact('contents'));
@@ -42,7 +45,7 @@ class ContentController extends Controller
     }
 
     // menyimpan konten baru (upload)
-    public function store(Request $request)
+    public function store(Request $request, ImageHashService $imageHashService, ImageModerationService $imageModerationService)
     {
         $user = $request->user();
         $sellerId = $user->id;
@@ -107,6 +110,34 @@ class ContentController extends Controller
         // Simpan file asli
         $path_hi_res = $file->storeAs("content_file/{$id_user}/hi_res", $fileName, 'public');
 
+        $hiResFullPath = Storage::disk('public')->path($path_hi_res);
+
+        $imageValidation = $imageHashService->validateImage($hiResFullPath);
+        $moderationResult = $imageModerationService->moderateImage($hiResFullPath);
+
+        $contentStatus = (
+            $imageValidation['is_similar'] ||
+            $moderationResult['is_flagged']
+        )
+            ? 'pending_review'
+            : 'active';
+
+        $validationReasons = [];
+
+        if ($imageValidation['is_similar']) {
+            $validationReasons[] = $imageValidation['validation_reason'];
+        }
+
+        if ($moderationResult['is_flagged']) {
+            $validationReasons[] = $moderationResult['reason'];
+        }
+
+        if (empty($validationReasons)) {
+            $validationReasons[] = 'No similar or unsafe content detected.';
+        }
+
+        $validationReason = implode(' ', $validationReasons);
+
         // Buat dan simpan versi low-res (low res + watermark)
         $manager = new ImageManager(new Driver());
         $image = $manager->read($file->getRealPath());
@@ -128,14 +159,6 @@ class ContentController extends Controller
             $image->place($watermark, 'center', 0, 0, 50);
         }
 
-
-        // $image->text('Rupaia ©', $imageWidth / 2, $imageHeight / 2, function ($font) {
-        //     $font->color('rgba(255, 255, 255, 0.80)');
-        //     $font->size(512);
-        //     $font->align('center');
-        //     $font->valign('middle');
-        // });
-
         // Simpan gambar low-res
         $path_low_res = "content_file/{$id_user}/low_res/{$fileName}";
         Storage::disk('public')->put($path_low_res, (string) $image->encode());
@@ -153,19 +176,27 @@ class ContentController extends Controller
             'path_hi_res' => $path_hi_res,
             'path_low_res' => $path_low_res,
             'visibility' => $visibility,
-            'status' => 'active',
+            'status' => $contentStatus,
+            'perceptual_hash' => $imageValidation['perceptual_hash'],
+            'similar_content_id' => $imageValidation['similar_content']?->id,
+            'similarity_distance' => $imageValidation['similarity_distance'],
+            'moderation_score' => $moderationResult['moderation_score'],
+            'moderation_category' => $moderationResult['moderation_category'],
+            'validation_reason' => $validationReason,
+            'validated_at' => now(),
         ]);
 
         // Proses dan hubungkan tags
-
-
         // Hubungkan konten ini dengan semua tag ID yang sudah diproses
         // 'sync()' adalah perintah Eloquent untuk relasi Many-to-Many
         // Ini akan otomatis menambah/menghapus data di tabel pivot 'tb_content_tag'
         $content->tags()->sync($validated['tag_name']);
 
+        $message = $contentStatus === 'pending_review'
+            ? 'Content uploaded successfully, but it requires admin review because similar content was detected.'
+            : 'Content uploaded successfully.';
 
-        return redirect()->route('content.index')->with('success', 'Content uploaded successfully!');
+        return redirect()->route('content.index')->with('success',  $message);
     }
 
     public function edit(Request $request, Content $content)
@@ -285,7 +316,7 @@ class ContentController extends Controller
         return view('dashboard.folder.content-detail-folder-create', compact('parentFolder', 'tags', 'licenses'));
     }
 
-    public function storeContentDetailFolder(Request $request)
+    public function storeContentDetailFolder(Request $request, ImageHashService $imageHashService, ImageModerationService $imageModerationService)
     {
         $validated = $request->validate([
             'content_title' => 'required|string|max:255',
@@ -349,6 +380,34 @@ class ContentController extends Controller
         // Simpan file asli
         $path_hi_res = $file->storeAs("content_file/{$id_user}/hi_res", $fileName, 'public');
 
+        $hiResFullPath = Storage::disk('public')->path($path_hi_res);
+
+        $imageValidation = $imageHashService->validateImage($hiResFullPath);
+        $moderationResult = $imageModerationService->moderateImage($hiResFullPath);
+
+        $contentStatus = (
+            $imageValidation['is_similar'] ||
+            $moderationResult['is_flagged']
+        )
+            ? 'pending_review'
+            : 'active';
+
+        $validationReasons = [];
+
+        if ($imageValidation['is_similar']) {
+            $validationReasons[] = $imageValidation['validation_reason'];
+        }
+
+        if ($moderationResult['is_flagged']) {
+            $validationReasons[] = $moderationResult['reason'];
+        }
+
+        if (empty($validationReasons)) {
+            $validationReasons[] = 'No similar or unsafe content detected.';
+        }
+
+        $validationReason = implode(' ', $validationReasons);
+
         // Buat dan simpan versi low-res (low res + watermark)
         $manager = new ImageManager(new Driver());
         $image = $manager->read($file->getRealPath());
@@ -382,11 +441,19 @@ class ContentController extends Controller
             'content_description' => $validated['content_description'],
             'price' => $price,
             'license_id' => $licenseId,
+            'sale_type' => $saleType,
+            'sale_status' => $validated['sale_status'],
             'path_hi_res' => $path_hi_res,
             'path_low_res' => $path_low_res,
             'visibility' => $visibility,
-            'sale_type' => $saleType,
-            'sale_status' => $validated['sale_status'],
+            'status' => $contentStatus,
+            'perceptual_hash' => $imageValidation['perceptual_hash'],
+            'similar_content_id' => $imageValidation['similar_content']?->id,
+            'similarity_distance' => $imageValidation['similarity_distance'],
+            'moderation_score' => $moderationResult['moderation_score'],
+            'moderation_category' => $moderationResult['moderation_category'],
+            'validation_reason' => $validationReason,
+            'validated_at' => now()
         ]);
 
         // Proses dan hubungkan tags
@@ -397,8 +464,12 @@ class ContentController extends Controller
         // Ini akan otomatis menambah/menghapus data di tabel pivot 'tb_content_tag'
         $content->tags()->sync($validated['tag_name']);
 
+        $message = $contentStatus === 'pending_review'
+            ? 'Content uploaded successfully, but it requires admin review because similar content was detected.'
+            : 'Content uploaded successfully.';
 
-        return redirect()->route('detail.folder.show', $validated['folder_id'])->with('success', 'Content uploaded successfully!');
+
+        return redirect()->route('detail.folder.show', $validated['folder_id'])->with('success', $message);
     }
 
     public function createBatch(Request $request)
@@ -424,7 +495,7 @@ class ContentController extends Controller
         ));
     }
 
-    public function storeBatch(Request $request)
+    public function storeBatch(Request $request, ImageHashService $imageHashService, ImageModerationService $imageModerationService)
     {
         $user = $request->user();
         $sellerId = $user->id;
@@ -488,6 +559,9 @@ class ContentController extends Controller
             ? 0
             : ($validated['price'] ?? 0.00);
 
+        $uploadedCount = 0;
+        $pendingReviewCount = 0;
+
         foreach ($request->file('images') as $file) {
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $safeTitle = str_replace(['_', '-'], ' ', $originalName);
@@ -496,6 +570,40 @@ class ContentController extends Controller
             $fileName = uniqid() . '_' . time() . '_' . $file->getClientOriginalName();
 
             $pathHiRes = $file->storeAs("content_file/{$sellerId}/hi_res", $fileName, 'public');
+
+            $hiResFullPath = Storage::disk('public')->path($pathHiRes);
+
+            $imageValidation = $imageHashService->validateImage($hiResFullPath);
+            $moderationResult = $imageModerationService->moderateImage($hiResFullPath);
+
+            $contentStatus = (
+                $imageValidation['is_similar'] ||
+                $moderationResult['is_flagged']
+            )
+                ? 'pending_review'
+                : 'active';
+
+            $validationReasons = [];
+
+            if ($imageValidation['is_similar']) {
+                $validationReasons[] = $imageValidation['validation_reason'];
+            }
+
+            if ($moderationResult['is_flagged']) {
+                $validationReasons[] = $moderationResult['reason'];
+            }
+
+            if (empty($validationReasons)) {
+                $validationReasons[] = 'No similar or unsafe content detected.';
+            }
+
+            $validationReason = implode(' ', $validationReasons);
+
+            if ($contentStatus === 'pending_review') {
+                $pendingReviewCount++;
+            }
+
+            $uploadedCount++;
 
             $manager = new ImageManager(new Driver());
             $image = $manager->read($file->getRealPath());
@@ -532,15 +640,28 @@ class ContentController extends Controller
                 'path_hi_res' => $pathHiRes,
                 'path_low_res' => $pathLowRes,
                 'visibility' => $visibility,
-                'status' => 'active',
+                'status' => $contentStatus,
+                'perceptual_hash' => $imageValidation['perceptual_hash'],
+                'similar_content_id' => $imageValidation['similar_content']?->id,
+                'similarity_distance' => $imageValidation['similarity_distance'],
+                'moderation_score' => $moderationResult['moderation_score'],
+                'moderation_category' => $moderationResult['moderation_category'],
+                'validation_reason' => $validationReason,
+                'validated_at' => now(),
             ]);
 
             $content->tags()->sync($validated['tag_name']);
         }
 
+        $message = "{$uploadedCount} content(s) uploaded successfully.";
+
+        if ($pendingReviewCount > 0) {
+            $message .= " {$pendingReviewCount} content(s) require admin review because similar content was detected.";
+        }
+
         return redirect()
             ->route('content.index')
-            ->with('success', count($request->file('images')) . ' content(s) uploaded successfully.');
+            ->with('success', $message);
     }
 
     public function createBatchFromFolder(Request $request, Folder $folder)
@@ -566,7 +687,7 @@ class ContentController extends Controller
         ));
     }
 
-    public function storeBatchFromFolder(Request $request, Folder $folder)
+    public function storeBatchFromFolder(Request $request, Folder $folder, ImageHashService $imageHashService, ImageModerationService $imageModerationService)
     {
         $user = $request->user();
         $sellerId = $user->id;
@@ -625,6 +746,9 @@ class ContentController extends Controller
         $visibility = $folder->visibility;
         $description = $validated['default_description'] ?? null;
 
+        $uploadedCount = 0;
+        $pendingReviewCount = 0;
+
         foreach ($request->file('images') as $file) {
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $safeTitle = str_replace(['_', '-'], ' ', $originalName);
@@ -637,6 +761,44 @@ class ContentController extends Controller
                 $fileName,
                 'public'
             );
+
+            $hiResFullPath = Storage::disk('public')->path($pathHiRes);
+
+            $imageValidation = $imageHashService->validateImage($hiResFullPath);
+            $moderationResult = $imageModerationService->moderateImage($hiResFullPath);
+
+            $contentStatus = (
+                $imageValidation['is_similar'] ||
+                $moderationResult['is_flagged']
+            )
+                ? 'pending_review'
+                : 'active';
+
+            $validationReasons = [];
+
+            if ($imageValidation['is_similar']) {
+                $validationReasons[] = $imageValidation['validation_reason'];
+            }
+
+            if ($moderationResult['is_flagged']) {
+                $validationReasons[] = $moderationResult['reason'];
+            }
+
+            if (empty($validationReasons)) {
+                $validationReasons[] = 'No similar or unsafe content detected.';
+            }
+
+            $validationReason = implode(' ', $validationReasons);
+
+            if ($contentStatus === 'pending_review') {
+                $pendingReviewCount++;
+            }
+
+            if ($contentStatus === 'pending_review') {
+                $pendingReviewCount++;
+            }
+
+            $uploadedCount++;
 
             $manager = new ImageManager(new Driver());
             $image = $manager->read($file->getRealPath());
@@ -677,15 +839,28 @@ class ContentController extends Controller
                 'path_hi_res' => $pathHiRes,
                 'path_low_res' => $pathLowRes,
                 'visibility' => $visibility,
-                'status' => 'active',
+                'status' => $contentStatus,
+                'perceptual_hash' => $imageValidation['perceptual_hash'],
+                'similar_content_id' => $imageValidation['similar_content']?->id,
+                'similarity_distance' => $imageValidation['similarity_distance'],
+                'moderation_score' => $moderationResult['moderation_score'],
+                'moderation_category' => $moderationResult['moderation_category'],
+                'validation_reason' => $validationReason,
+                'validated_at' => now(),
             ]);
 
             $content->tags()->sync($validated['tag_name']);
+
+            $message = "{$uploadedCount} content(s) uploaded successfully.";
+
+            if ($pendingReviewCount > 0) {
+                $message .= " {$pendingReviewCount} content(s) require admin review because similar content was detected.";
+            }
         }
 
         return redirect()
             ->route('detail.folder.show', $folder->id)
-            ->with('success', count($request->file('images')) . ' content(s) uploaded successfully.');
+            ->with('success', $message);
     }
 
     public function contentMove(Request $request, Content $content)

@@ -100,7 +100,25 @@
                             <p class="card-text"> <strong>Rp
                                     {{ number_format($folder->bundle_price, 0, ',', '.') }}</strong>
                             </p>
-                            <p class="card-text">Status: {{ $folder->status }}</p>
+                            <p class="card-text">Status:
+                                @if ($folder->status === 'active')
+                                    <span class="badge bg-success">active</span>
+                                @elseif ($folder->status === 'pending_review')
+                                    <span class="badge bg-warning text-dark">pending review</span>
+                                @elseif ($folder->status === 'rejected')
+                                    <span class="badge bg-danger">rejected</span>
+                                @elseif ($folder->status === 'banned')
+                                    <span class="badge bg-dark">banned</span>
+                                @else
+                                    <span class="badge bg-secondary">N/A</span>
+                                @endif
+
+                                {{-- @if ($content->status === 'pending_review')
+                                    <div class="small text-muted mt-2">
+                                        {{ $content->validation_reason }}
+                                    </div>
+                                @endif --}}
+                            </p>
                             <div class="card">
                                 <div></div>
                             </div>
@@ -270,7 +288,26 @@
                                     <span class="badge bg-light text-dark border">N/A</span>
                                 @endif
                             </p>
-                            <p class="card-text">Status: {{ $content->status }}</p>
+                            <p class="card-text">Status:
+                                @if ($content->status === 'active')
+                                    <span class="badge bg-success">active</span>
+                                @elseif ($content->status === 'pending_review')
+                                    <span class="badge bg-warning text-dark">pending review</span>
+                                @elseif ($content->status === 'rejected')
+                                    <span class="badge bg-danger">rejected</span>
+                                @elseif ($content->status === 'banned')
+                                    <span class="badge bg-dark">banned</span>
+                                @else
+                                    <span class="badge bg-secondary">N/A</span>
+                                @endif
+
+                                @if ($content->status === 'pending_review')
+                                    <div class="small text-muted mt-2">
+                                        {{ $content->validation_reason }}
+                                    </div>
+                                @endif
+                            </p>
+
                             <div col-4>
 
                             </div>

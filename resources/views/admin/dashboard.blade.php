@@ -120,6 +120,22 @@
                     </div>
                 </div>
             </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card text-bg-warning mb-4" style="max-width: 18rem;">
+                    <div class="card-header">Pending Content Review</div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ $pendingReviewContents }}</h5>
+                        <p class="card-text">Contents waiting for admin review.</p>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a class="small text-dark stretched-link" href="{{ route('admin.content.index') }}">
+                            View Details
+                        </a>
+                        <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
