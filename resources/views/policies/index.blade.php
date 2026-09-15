@@ -67,13 +67,17 @@
                     </div>
                 </div>
 
-                <div class="card shadow-sm mb-4">
+                <div class="card shadow-sm mb-4" id="license-policy">
                     <div class="card-body p-4">
                         <h3>4. License Policy</h3>
+
                         <p>
                             Each content or bundle may be associated with a license that explains how the buyer
-                            may use the purchased content.
+                            may use the purchased content. Buying content on Rupaia does not transfer copyright
+                            ownership to the buyer. The buyer only receives usage rights based on the selected license,
+                            while copyright remains with the seller or the legitimate copyright holder.
                         </p>
+
                         <ul>
                             <li>Content inside a collection folder uses its own content license.</li>
                             <li>Content inside a bundle folder follows the bundle folder license.</li>
@@ -84,10 +88,58 @@
                             <li>Buyers must follow the license terms shown on the content or bundle page.</li>
                         </ul>
 
-                        <div class="alert alert-light border mt-3 mb-0">
-                            Available license types include Personal License, Commercial License,
-                            Editorial License, and Extended Commercial License.
+                        <div class="alert alert-warning mt-3">
+                            <strong>Important:</strong>
+                            Buyers are not allowed to resell the original file as a standalone asset,
+                            redistribute the file to other parties, claim ownership or copyright over the seller's work,
+                            remove ownership information or metadata, or use the content for illegal activities.
                         </div>
+
+                        <h4 class="h5 mt-4 mb-3">Available License Types</h4>
+
+                        @if ($licenses->isEmpty())
+                            <div class="alert alert-light border mb-0">
+                                No active licenses are available at the moment.
+                            </div>
+                        @else
+                            <div class="row g-3">
+                                @foreach ($licenses as $license)
+                                    <div class="col-md-6">
+                                        <div class="border rounded p-3 h-100">
+                                            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                                <h5 class="mb-0">{{ $license->name }}</h5>
+
+                                                @if ($license->code)
+                                                    <span class="badge bg-dark">
+                                                        {{ strtoupper(str_replace('_', ' ', $license->code)) }}
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            @if ($license->description)
+                                                <p class="text-muted mb-3">
+                                                    {{ $license->description }}
+                                                </p>
+                                            @else
+                                                <p class="text-muted mb-3">
+                                                    No description has been added for this license.
+                                                </p>
+                                            @endif
+
+                                            @if ($license->terms)
+                                                <div class="small mb-0">
+                                                    {!! nl2br(e($license->terms)) !!}
+                                                </div>
+                                            @else
+                                                <div class="small text-muted mb-0">
+                                                    Detailed terms for this license have not been added yet.
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 </div>
 

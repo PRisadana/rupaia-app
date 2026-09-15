@@ -42,7 +42,9 @@ return [
 
     'content_moderation' => [
         'enabled' => env('CONTENT_AI_MODERATION_ENABLED', true),
+        'driver' => env('CONTENT_AI_MODERATION_DRIVER', 'openai'),
         'threshold' => (float) env('CONTENT_AI_MODERATION_THRESHOLD', 0.70),
+        'log_raw_response' => env('CONTENT_AI_MODERATION_LOG_RAW', false),
     ],
 
 ];

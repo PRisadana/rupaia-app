@@ -113,7 +113,11 @@ class ContentController extends Controller
         $hiResFullPath = Storage::disk('public')->path($path_hi_res);
 
         $imageValidation = $imageHashService->validateImage($hiResFullPath);
-        $moderationResult = $imageModerationService->moderateImage($hiResFullPath);
+        $moderationResult = $imageModerationService->moderateImage(
+            $hiResFullPath,
+            $validated['content_title'] ?? null,
+            $validated['content_description'] ?? null
+        );
 
         $contentStatus = (
             $imageValidation['is_similar'] ||
@@ -383,7 +387,11 @@ class ContentController extends Controller
         $hiResFullPath = Storage::disk('public')->path($path_hi_res);
 
         $imageValidation = $imageHashService->validateImage($hiResFullPath);
-        $moderationResult = $imageModerationService->moderateImage($hiResFullPath);
+        $moderationResult = $imageModerationService->moderateImage(
+            $hiResFullPath,
+            $validated['content_title'] ?? null,
+            $validated['content_description'] ?? null
+        );
 
         $contentStatus = (
             $imageValidation['is_similar'] ||
@@ -574,7 +582,11 @@ class ContentController extends Controller
             $hiResFullPath = Storage::disk('public')->path($pathHiRes);
 
             $imageValidation = $imageHashService->validateImage($hiResFullPath);
-            $moderationResult = $imageModerationService->moderateImage($hiResFullPath);
+            $moderationResult = $imageModerationService->moderateImage(
+                $hiResFullPath,
+                $validated['content_title'] ?? null,
+                $validated['content_description'] ?? null
+            );
 
             $contentStatus = (
                 $imageValidation['is_similar'] ||
@@ -765,7 +777,11 @@ class ContentController extends Controller
             $hiResFullPath = Storage::disk('public')->path($pathHiRes);
 
             $imageValidation = $imageHashService->validateImage($hiResFullPath);
-            $moderationResult = $imageModerationService->moderateImage($hiResFullPath);
+            $moderationResult = $imageModerationService->moderateImage(
+                $hiResFullPath,
+                $validated['content_title'] ?? null,
+                $validated['content_description'] ?? null
+            );
 
             $contentStatus = (
                 $imageValidation['is_similar'] ||

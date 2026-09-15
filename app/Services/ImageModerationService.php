@@ -7,8 +7,12 @@ use Illuminate\Support\Facades\Log;
 
 class ImageModerationService
 {
-    public function moderateImage(string $imagePath): array
-    {
+    public function moderateImage(
+        string $imagePath,
+        ?string $contentTitle = null,
+        ?string $contentDescription = null
+    ): array {
+
         if (! config('services.content_moderation.enabled')) {
             return $this->safeResult('AI moderation is disabled.');
         }
@@ -27,18 +31,39 @@ class ImageModerationService
             $base64Image = base64_encode(file_get_contents($imagePath));
             $mimeType = mime_content_type($imagePath) ?: 'image/jpeg';
 
+            $textInput = trim(implode("\n", array_filter([
+                $contentTitle ? 'Content title: ' . $contentTitle : null,
+                $contentDescription ? 'Content description: ' . $contentDescription : null,
+            ])));
+
+            $moderationInput = [];
+
+            if ($textInput !== '') {
+                $moderationInput[] = [
+                    'type' => 'text',
+                    'text' => $textInput,
+                ];
+            }
+
+            $moderationInput[] = [
+                'type' => 'image_url',
+                'image_url' => [
+                    'url' => "data:{$mimeType};base64,{$base64Image}",
+                ],
+            ];
+
+            Log::info('OpenAI moderation input summary.', [
+                'has_title' => filled($contentTitle),
+                'has_description' => filled($contentDescription),
+                'text_length' => strlen($textInput),
+                'has_image' => true,
+            ]);
+
             $response = Http::timeout(30)
                 ->withToken($apiKey)
                 ->post('https://api.openai.com/v1/moderations', [
                     'model' => config('services.openai.moderation_model', 'omni-moderation-latest'),
-                    'input' => [
-                        [
-                            'type' => 'image_url',
-                            'image_url' => [
-                                'url' => "data:{$mimeType};base64,{$base64Image}",
-                            ],
-                        ],
-                    ],
+                    'input' => $moderationInput,
                 ]);
 
             if (! $response->successful()) {
@@ -50,7 +75,26 @@ class ImageModerationService
                 return $this->failedResult('AI moderation request failed.');
             }
 
-            return $this->parseResponse($response->json());
+            $rawResponse = $response->json();
+
+            Log::info('OpenAI moderation request succeeded.', [
+                'status' => $response->status(),
+                'request_id' => $response->header('x-request-id'),
+            ]);
+
+            if (config('services.content_moderation.log_raw_response')) {
+                Log::info('OpenAI moderation raw JSON response.', [
+                    'raw_response' => $rawResponse,
+                ]);
+            }
+
+            $parsedResult = $this->parseResponse($rawResponse);
+
+            Log::info('OpenAI moderation parsed result used by system.', [
+                'parsed_result' => $parsedResult,
+            ]);
+
+            return $parsedResult;
         } catch (\Throwable $exception) {
             Log::warning('OpenAI moderation exception.', [
                 'message' => $exception->getMessage(),
@@ -68,8 +112,17 @@ class ImageModerationService
             return $this->failedResult('AI moderation returned an invalid response.');
         }
 
+        $flagged = (bool) ($result['flagged'] ?? false);
         $categories = $result['categories'] ?? [];
         $categoryScores = $result['category_scores'] ?? [];
+        $categoryAppliedInputTypes = $result['category_applied_input_types'] ?? [];
+
+        Log::info('OpenAI moderation fields extracted from raw JSON.', [
+            'flagged' => $flagged,
+            'categories' => $categories,
+            'category_scores' => $categoryScores,
+            'category_applied_input_types' => $categoryAppliedInputTypes,
+        ]);
 
         $flaggedCategory = $this->getFlaggedCategory($categories, $categoryScores);
         $highestScoreCategory = $this->getHighestScoreCategory($categoryScores);
@@ -84,20 +137,34 @@ class ImageModerationService
             ? (float) ($categoryScores[$flaggedCategory] ?? 1)
             : (float) ($highestScoreCategory['score'] ?? 0);
 
-        $isFlagged = (bool) ($result['flagged'] ?? false)
-            || $moderationScore >= $threshold;
+        $isFlagged = $flagged || $moderationScore >= $threshold;
+
+        $moderationCategorySaved = $isFlagged
+            ? $this->normalizeCategory($moderationCategory)
+            : 'safe';
+
+        $moderationScoreSaved = round($moderationScore, 4);
+
+        Log::info('OpenAI moderation final decision.', [
+            'openai_flagged' => $flagged,
+            'threshold' => $threshold,
+            'selected_category' => $moderationCategory,
+            'selected_score' => $moderationScore,
+            'is_flagged_by_system' => $isFlagged,
+            'moderation_category_saved' => $moderationCategorySaved,
+            'moderation_score_saved' => $moderationScoreSaved,
+        ]);
 
         return [
             'is_flagged' => $isFlagged,
-            'moderation_category' => $isFlagged
-                ? $this->normalizeCategory($moderationCategory)
-                : 'safe',
-            'moderation_score' => round($moderationScore, 4),
+            'moderation_category' => $moderationCategorySaved,
+            'moderation_score' => $moderationScoreSaved,
             'reason' => $isFlagged
                 ? 'Potentially unsafe content detected by AI moderation.'
                 : 'No unsafe content detected by AI moderation.',
             'raw_categories' => $categories,
             'raw_category_scores' => $categoryScores,
+            'raw_category_applied_input_types' => $categoryAppliedInputTypes,
         ];
     }
 
