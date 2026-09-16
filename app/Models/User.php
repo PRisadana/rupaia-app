@@ -75,4 +75,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Report::class, 'processed_by');
     }
+
+    public function kycSubmissions()
+    {
+        return $this->hasMany(KycSubmission::class, 'user_id');
+    }
+
+    public function bankAccounts()
+    {
+        return $this->hasMany(BankAccount::class, 'seller_id');
+    }
 }

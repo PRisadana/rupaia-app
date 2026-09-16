@@ -67,7 +67,8 @@
 
                 <div class="sb-sidenav-menu-heading">Transactions</div>
 
-                <a class="nav-link" href="#">
+                <a class="nav-link {{ request()->routeIs('admin.kyc.*') ? 'active' : '' }}"
+                    href="{{ route('admin.kyc.index') }}">
                     <div class="sb-nav-link-icon d-inline-flex align-items-center">
                         <i class="fi fi-rr-assept-document mt-1"></i>
                     </div>

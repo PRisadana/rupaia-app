@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminContentController;
 use App\Http\Controllers\Admin\AdminFolderController;
 use App\Http\Controllers\Admin\AdminShowcaseController;
 use App\Http\Controllers\Admin\AdminReportController;
+use App\Http\Controllers\Admin\AdminKycController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\PresetController;
 use App\Http\Controllers\Admin\LicenseController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\EditingController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SellerReportController;
 use App\Http\Controllers\PolicyController;
+use App\Http\Controllers\KycController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('dashboard');
@@ -47,6 +49,10 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/contents/{content}/report', [ReportController::class, 'storeContentReport'])->name('content.report');
     Route::post('/showcases/{showcaseItem}/report', [ReportController::class, 'storeShowcaseReport'])->name('showcase.report');
+
+    Route::get('/kyc', [KycController::class, 'index'])->name('kyc.index');
+    Route::get('/kyc/create', [KycController::class, 'create'])->name('kyc.create');
+    Route::post('/kyc', [KycController::class, 'store'])->name('kyc.store');
 });
 
 Route::middleware(['auth', 'seller'])->group(function () {
@@ -145,6 +151,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/licenses/{license}/edit', [LicenseController::class, 'edit'])->name('license.edit');
     Route::put('/licenses/{license}', [LicenseController::class, 'update'])->name('license.update');
     Route::delete('/licenses/{license}', [LicenseController::class, 'destroy'])->name('license.destroy');
+
+    Route::get('/kyc', [AdminKycController::class, 'index'])->name('kyc.index');
+    Route::get('/kyc/{kyc}', [AdminKycController::class, 'show'])->name('kyc.show');
+    Route::get('/kyc/{kyc}/document', [AdminKycController::class, 'document'])->name('kyc.document');
+    Route::patch('/kyc/{kyc}/verify', [AdminKycController::class, 'verify'])->name('kyc.verify');
+    Route::patch('/kyc/{kyc}/reject', [AdminKycController::class, 'reject'])->name('kyc.reject');
 });
 
 require __DIR__ . '/auth.php';

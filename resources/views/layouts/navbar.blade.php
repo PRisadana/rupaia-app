@@ -36,11 +36,33 @@
                     </a>
 
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                        <li>
+                        {{-- <li>
                             <a class="dropdown-item" href="{{ route('content.index') }}">
                                 {{ __('Your Profile') }}
                             </a>
-                        </li>
+                        </li> --}}
+
+                        @auth
+                            @if (auth()->user()->role === 'seller')
+                                <a class="dropdown-item" href="{{ route('content.index') }}">
+                                    {{ __('Your Profile') }}
+                                </a>
+                            @endif
+                        @endauth
+
+                        {{-- <li>
+                            <a class="dropdown-item" href="{{ route('kyc.index') }}">
+                                {{ __('Become a Seller') }}
+                            </a>
+                        </li> --}}
+
+                        @auth
+                            @if (auth()->user()->role != 'admin')
+                                <a class="dropdown-item" href="{{ route('kyc.index') }}">
+                                    {{ __('Become a Seller') }}
+                                </a>
+                            @endif
+                        @endauth
 
                         <li>
                             <a class="dropdown-item" href="{{ route('profile.edit') }}">
