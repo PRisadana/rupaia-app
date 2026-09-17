@@ -17,9 +17,21 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
+        $user = $request->user();
+
+        $bankAccounts = collect();
+
+        if ($user->role === 'seller') {
+            $bankAccounts = $user->bankAccounts()
+                ->orderByDesc('is_default')
+                ->latest()
+                ->get();
+        }
+
+        return view('profile.edit', compact(
+            'user',
+            'bankAccounts'
+        ));
     }
 
     /**
@@ -35,8 +47,8 @@ class ProfileController extends Controller
 
         // validasi manual di sini karena ProfileUpdateRequest tidak tahu ttg field baru
         $request->validate([
-        'bio' => ['nullable', 'string', 'max:1000'],
-        'profile_photo_path' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'bio' => ['nullable', 'string', 'max:1000'],
+            'profile_photo_path' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ]);
 
         //Simpan Bio

@@ -85,4 +85,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(BankAccount::class, 'seller_id');
     }
+
+    public function defaultBankAccount()
+    {
+        return $this->hasOne(BankAccount::class, 'seller_id')->where('is_default', true);
+    }
 }

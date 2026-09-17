@@ -11,6 +11,16 @@
             </div>
         </div>
 
+        @if (auth()->user()->role === 'seller')
+            <div class="col-lg-10">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body p-4 p-md-5">
+                        @include('profile.partials.bank-account-information')
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="col-lg-10">
             <div class="card shadow-sm mb-4">
                 <div class="card-body p-4 p-md-5">
@@ -26,6 +36,5 @@
                 </div>
             </div>
         </div>
-    </div>
     </div>
 @endsection

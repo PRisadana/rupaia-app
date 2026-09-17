@@ -20,6 +20,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SellerReportController;
 use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\KycController;
+use App\Http\Controllers\BankAccountController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('dashboard');
@@ -98,6 +99,13 @@ Route::middleware(['auth', 'seller'])->group(function () {
     Route::get('/dashboard/showcase/create-from-content', [ShowcaseController::class, 'showcaseFromContentCreate'])->name('showcase.from.content.create');
 
     Route::get('/dashboard/reports', [SellerReportController::class, 'index'])->name('seller.report.index');
+
+    Route::get('/profile/bank-accounts/create', [BankAccountController::class, 'create'])->name('bank-accounts.create');
+    Route::post('/profile/bank-accounts', [BankAccountController::class, 'store'])->name('bank-accounts.store');
+    Route::get('/profile/bank-accounts/{bankAccount}/edit', [BankAccountController::class, 'edit'])->name('bank-accounts.edit');
+    Route::put('/profile/bank-accounts/{bankAccount}', [BankAccountController::class, 'update'])->name('bank-accounts.update');
+    Route::patch('/profile/bank-accounts/{bankAccount}/default', [BankAccountController::class, 'setDefault'])->name('bank-accounts.default');
+    Route::delete('/profile/bank-accounts/{bankAccount}', [BankAccountController::class, 'destroy'])->name('bank-accounts.destroy');
 });
 
 
