@@ -29,7 +29,8 @@
                     @endphp
 
                     <li class="mx-3 list-unstyled">
-                        <a href="{{ route('cart.index') }}" class="nav-link fs-5 position-relative d-inline-block">
+                        <a href="{{ route('cart.index') }}" class="nav-link fs-5 position-relative d-inline-block"
+                            title="My Cart">
                             <i class="fi fi-rr-shopping-cart"></i>
                             @if ($cartItemCount > 0)
                                 <span
@@ -38,6 +39,28 @@
                                     {{ $cartItemCount > 99 ? '99+' : $cartItemCount }}
                                     <span class="visually-hidden">
                                         items in cart
+                                    </span>
+                                </span>
+                            @endif
+                        </a>
+                    </li>
+                @endif
+
+                @if (in_array(auth()->user()->role, ['buyer', 'seller']))
+                    @php
+                        $pendingTransactionCount = auth()->user()->transactions()->where('status', 'pending')->count();
+                    @endphp
+                    <li class="me-3 list-unstyled">
+                        <a href="{{ route('transactions.index') }}" class="nav-link fs-5 position-relative d-inline-block"
+                            title="My Transactions">
+                            <i class="fi fi-rr-receipt"></i>
+                            @if ($pendingTransactionCount > 0)
+                                <span
+                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                    style="font-size: 0.65rem;">
+                                    {{ $pendingTransactionCount > 99 ? '99+' : $pendingTransactionCount }}
+                                    <span class="visually-hidden">
+                                        pending transactions
                                     </span>
                                 </span>
                             @endif

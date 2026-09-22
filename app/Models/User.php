@@ -100,4 +100,14 @@ class User extends Authenticatable
     {
         return $this->hasOne(Cart::class, 'buyer_id')->where('status', 'active');
     }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'buyer_id');
+    }
+
+    public function soldTransactionItems()
+    {
+        return $this->hasMany(TransactionItem::class, 'seller_id');
+    }
 }

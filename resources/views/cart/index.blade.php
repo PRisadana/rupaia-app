@@ -77,7 +77,19 @@
                                         <tr>
                                             <td>
                                                 <div class="fw-semibold">
-                                                    {{ $itemName ?? 'Unavailable Item' }}
+                                                    @if ($item->item_type === 'bundle' && $item->folder)
+                                                        <a href="{{ route('folder.show', $item->folder->id) }}"
+                                                            class="text-decoration-none">
+                                                            {{ $item->folder->folder_name ?? 'Unavailable Bundle' }}
+                                                        </a>
+                                                    @elseif ($item->content)
+                                                        <a href="{{ route('content.detail', $item->content->id) }}"
+                                                            class="text-decoration-none">
+                                                            {{ $item->content->content_title ?? 'Unavailable Item' }}
+                                                        </a>
+                                                    @else
+                                                        <span class="text-muted">Unavailable Item</span>
+                                                    @endif
                                                 </div>
                                                 @if ($item->preset)
                                                     <div class="small text-muted">
@@ -191,13 +203,9 @@
                             </div>
                             <div class="text-end">
                                 @if ($canCheckout)
-                                    <button type="button" class="btn btn-dark btn-lg" disabled>
+                                    <a href="{{ route('checkout.index') }}" class="btn btn-dark btn-lg">
                                         Checkout
-                                    </button>
-                                    <div class="small text-muted mt-1">
-                                        Checkout will be implemented
-                                        in the next stage.
-                                    </div>
+                                    </a>
                                 @else
                                     <button type="button" class="btn btn-secondary btn-lg" disabled>
                                         Checkout

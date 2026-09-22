@@ -22,6 +22,8 @@ use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\KycController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('dashboard');
@@ -61,6 +63,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/cart/bundle/{folder}', [CartController::class, 'storeBundle'])->name('cart.bundle.store');
     Route::patch('/cart/items/{cartItem}/refresh-price', [CartController::class, 'refreshPrice'])->name('cart.items.refresh-price');
     Route::delete('/cart/items/{cartItem}', [CartController::class, 'destroy'])->name('cart.items.destroy');
+
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+
+    Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+    Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
 });
 
 Route::middleware(['auth', 'seller'])->group(function () {
