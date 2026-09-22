@@ -21,6 +21,7 @@ use App\Http\Controllers\SellerReportController;
 use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\KycController;
 use App\Http\Controllers\BankAccountController;
+use App\Http\Controllers\CartController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('dashboard');
@@ -54,6 +55,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/kyc', [KycController::class, 'index'])->name('kyc.index');
     Route::get('/kyc/create', [KycController::class, 'create'])->name('kyc.create');
     Route::post('/kyc', [KycController::class, 'store'])->name('kyc.store');
+
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/content/{content}', [CartController::class, 'storeContent'])->name('cart.content.store');
+    Route::post('/cart/bundle/{folder}', [CartController::class, 'storeBundle'])->name('cart.bundle.store');
+    Route::patch('/cart/items/{cartItem}/refresh-price', [CartController::class, 'refreshPrice'])->name('cart.items.refresh-price');
+    Route::delete('/cart/items/{cartItem}', [CartController::class, 'destroy'])->name('cart.items.destroy');
 });
 
 Route::middleware(['auth', 'seller'])->group(function () {

@@ -90,4 +90,14 @@ class User extends Authenticatable
     {
         return $this->hasOne(BankAccount::class, 'seller_id')->where('is_default', true);
     }
+
+    public function carts()
+    {
+        return $this->hasMany(Cart::class, 'buyer_id');
+    }
+
+    public function activeCart()
+    {
+        return $this->hasOne(Cart::class, 'buyer_id')->where('status', 'active');
+    }
 }

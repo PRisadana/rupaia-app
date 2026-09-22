@@ -142,11 +142,14 @@
                                 <span>Available in Bundle Only</span>
                             </button>
                         @else
-                            <button class="btn btn-dark flex-grow-1 d-flex align-items-center justify-content-center gap-2"
-                                type="button">
-                                <i class="fi fi-rr-shopping-cart-add"></i>
-                                <span>Add to Cart</span>
-                            </button>
+                            <form method="POST" action="{{ route('cart.content.store', $content) }}" class="flex-grow-1">
+                                @csrf
+                                <button class="btn btn-dark w-100 d-flex align-items-center justify-content-center gap-2"
+                                    type="submit">
+                                    <i class="fi fi-rr-shopping-cart-add"></i>
+                                    <span>Add to Cart</span>
+                                </button>
+                            </form>
                         @endif
 
                         <a href="{{ route('editing.preview', $content->id) }}"

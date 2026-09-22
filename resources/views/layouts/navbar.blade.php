@@ -19,9 +19,31 @@
                     <a href="#" class="nav-link fs-5"><i class="fi fi-rr-circle-heart"></i></a>
                 </li> --}}
 
-                <li class="mx-3 list-unstyled">
-                    <a href="#" class="nav-link fs-5"><i class="fi fi-rr-shopping-cart"></i></a>
-                </li>
+                {{-- <li class="mx-3 list-unstyled">
+                    <a href="{{ route('cart.index') }}" class="nav-link fs-5"><i class="fi fi-rr-shopping-cart"></i></a>
+                </li> --}}
+
+                @if (in_array(auth()->user()->role, ['buyer', 'seller']))
+                    @php
+                        $cartItemCount = auth()->user()->activeCart()->withCount('items')->first()?->items_count ?? 0;
+                    @endphp
+
+                    <li class="mx-3 list-unstyled">
+                        <a href="{{ route('cart.index') }}" class="nav-link fs-5 position-relative d-inline-block">
+                            <i class="fi fi-rr-shopping-cart"></i>
+                            @if ($cartItemCount > 0)
+                                <span
+                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                    style="font-size: 0.65rem;">
+                                    {{ $cartItemCount > 99 ? '99+' : $cartItemCount }}
+                                    <span class="visually-hidden">
+                                        items in cart
+                                    </span>
+                                </span>
+                            @endif
+                        </a>
+                    </li>
+                @endif
 
                 <li class="me-lg mb-2 mb-md-0 list-unstyled">
                     <span class="nav-link">Hi, {{ Auth::user()->name }}</span>
