@@ -75,7 +75,8 @@
                     KYC Verification
                 </a>
 
-                <a class="nav-link" href="#">
+                <a class="nav-link {{ request()->routeIs('admin.transaction.*') ? 'active' : '' }}"
+                    href="{{ route('admin.transaction.index') }}">
                     <div class="sb-nav-link-icon d-inline-flex align-items-center">
                         <i class="fi fi-rr-exchange mt-1"></i>
                     </div>

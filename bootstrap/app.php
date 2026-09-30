@@ -16,7 +16,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => AdminMiddleware::class,
             'seller' => SellerMiddleware::class,
+
         ]);
+
+        $middleware->validateCsrfTokens(
+            except: [
+                'midtrans/notification',
+            ]
+        );
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -20,6 +20,7 @@
                             <th scope="col">Content Title</th>
                             <th scope="col">Content Description</th>
                             <th scope="col">Price (Rp)</th>
+                            <th scope="col">License</th>
                             <th scope="col">Sale Type</th>
                             <th scope="col">Sale Status</th>
                             <th scope="col">Visibility</th>
@@ -41,6 +42,9 @@
                                 </td>
                                 <td>{{ $content->content_description }}</td>
                                 <td>{{ number_format($content->price, 0, ',', '.') }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ $content->license->name }}</span>
+                                </td>
                                 <td>
                                     @if ($content->sale_type === 'single_sale')
                                         <span class="badge bg-warning text-black">Premium</span>

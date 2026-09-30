@@ -11,6 +11,7 @@ use App\Models\Preset;
 use App\Models\Tags;
 use App\Models\License;
 use App\Models\Report;
+use App\Models\Transaction;
 
 use Illuminate\Http\Request;
 
@@ -29,7 +30,8 @@ class AdminDashboardController extends Controller
         $pendingReviewContents = Content::where('status', 'pending_review')->count();
         $rejectedContents = Content::where('status', 'rejected')->count();
         $bannedContents = Content::where('status', 'banned')->count();
+        $totalTransactions = Transaction::count();
 
-        return view('admin.dashboard', compact('totalUsers', 'totalContents', 'totalShowcaseItems', 'totalPresets', 'totalTags', 'totalFolders', 'totalLicenses', 'totalReports', 'pendingReviewContents', 'rejectedContents', 'bannedContents'));
+        return view('admin.dashboard', compact('totalUsers', 'totalContents', 'totalShowcaseItems', 'totalPresets', 'totalTags', 'totalFolders', 'totalLicenses', 'totalReports', 'pendingReviewContents', 'rejectedContents', 'bannedContents', 'totalTransactions'));
     }
 }

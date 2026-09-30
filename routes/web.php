@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminFolderController;
 use App\Http\Controllers\Admin\AdminShowcaseController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminKycController;
+use App\Http\Controllers\Admin\AdminTransactionController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\PresetController;
 use App\Http\Controllers\Admin\LicenseController;
@@ -24,6 +25,9 @@ use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\MidtransWebhookController;
+use App\Http\Controllers\TransactionDownloadController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('dashboard');
@@ -34,6 +38,8 @@ Route::get('/showcase/{user}/published', [HomeController::class, 'showPublishedC
 Route::get('/folder/{folder}', [HomeController::class, 'showPublishedFolder'])->name('folder.show');
 
 Route::get('/policies', [PolicyController::class, 'index'])->name('policies.index');
+
+Route::post('/midtrans/notification', [MidtransWebhookController::class, 'handle'])->name('midtrans.notification');
 
 Route::get('/about', function () {
     return view('about');
@@ -69,6 +75,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
+
+    Route::post('/transactions/{transaction}/payment', [PaymentController::class, 'create'])->name('transactions.payment.create');
+
+    Route::get('/transactions/{transaction}/items/{transactionItem}/download', [TransactionDownloadController::class, 'download'])->name('transactions.items.download');
 });
 
 Route::middleware(['auth', 'seller'])->group(function () {
@@ -180,6 +190,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/kyc/{kyc}/document', [AdminKycController::class, 'document'])->name('kyc.document');
     Route::patch('/kyc/{kyc}/verify', [AdminKycController::class, 'verify'])->name('kyc.verify');
     Route::patch('/kyc/{kyc}/reject', [AdminKycController::class, 'reject'])->name('kyc.reject');
+
+    Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transaction.index');
+    Route::get('/transactions/{transaction}', [AdminTransactionController::class, 'show'])->name('transaction.show');
+    Route::post('/transactions/{transaction}/sync-status', [AdminTransactionController::class, 'syncStatus'])->name('transaction.sync-status');
 });
 
 require __DIR__ . '/auth.php';

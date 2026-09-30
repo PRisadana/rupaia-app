@@ -108,9 +108,9 @@ class ContentController extends Controller
         $id_user = $request->user()->id;
 
         // Simpan file asli
-        $path_hi_res = $file->storeAs("content_file/{$id_user}/hi_res", $fileName, 'public');
+        $path_hi_res = $file->storeAs("content_file/{$id_user}/hi_res", $fileName, 'local');
 
-        $hiResFullPath = Storage::disk('public')->path($path_hi_res);
+        $hiResFullPath = Storage::disk('local')->path($path_hi_res);
 
         $imageValidation = $imageHashService->validateImage($hiResFullPath);
         $moderationResult = $imageModerationService->moderateImage(
@@ -382,9 +382,9 @@ class ContentController extends Controller
         $fileName = time() . '_' . $file->getClientOriginalName();
 
         // Simpan file asli
-        $path_hi_res = $file->storeAs("content_file/{$id_user}/hi_res", $fileName, 'public');
+        $path_hi_res = $file->storeAs("content_file/{$id_user}/hi_res", $fileName, 'local');
 
-        $hiResFullPath = Storage::disk('public')->path($path_hi_res);
+        $hiResFullPath = Storage::disk('local')->path($path_hi_res);
 
         $imageValidation = $imageHashService->validateImage($hiResFullPath);
         $moderationResult = $imageModerationService->moderateImage(
@@ -577,9 +577,9 @@ class ContentController extends Controller
 
             $fileName = uniqid() . '_' . time() . '_' . $file->getClientOriginalName();
 
-            $pathHiRes = $file->storeAs("content_file/{$sellerId}/hi_res", $fileName, 'public');
+            $pathHiRes = $file->storeAs("content_file/{$sellerId}/hi_res", $fileName, 'local');
 
-            $hiResFullPath = Storage::disk('public')->path($pathHiRes);
+            $hiResFullPath = Storage::disk('local')->path($pathHiRes);
 
             $imageValidation = $imageHashService->validateImage($hiResFullPath);
             $moderationResult = $imageModerationService->moderateImage(
@@ -768,13 +768,9 @@ class ContentController extends Controller
 
             $fileName = uniqid() . '_' . time() . '_' . $file->getClientOriginalName();
 
-            $pathHiRes = $file->storeAs(
-                "content_file/{$sellerId}/hi_res",
-                $fileName,
-                'public'
-            );
+            $pathHiRes = $file->storeAs("content_file/{$sellerId}/hi_res", $fileName, 'local');
 
-            $hiResFullPath = Storage::disk('public')->path($pathHiRes);
+            $hiResFullPath = Storage::disk('local')->path($pathHiRes);
 
             $imageValidation = $imageHashService->validateImage($hiResFullPath);
             $moderationResult = $imageModerationService->moderateImage(

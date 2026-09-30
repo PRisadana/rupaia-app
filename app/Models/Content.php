@@ -67,7 +67,13 @@ class Content extends Model
     {
         // berjalan OTOMATIS setiap kali $content->delete() dipanggil
         static::deleting(function (Content $content) {
-            Storage::disk('public')->delete([$content->path_hi_res, $content->path_low_res]);
+            Storage::disk('local')->delete(
+                $content->path_hi_res
+            );
+
+            Storage::disk('public')->delete(
+                $content->path_low_res
+            );
 
             // Hapus relasi tags ketika konten dihapus
             $content->tags()->detach();

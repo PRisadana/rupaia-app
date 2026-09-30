@@ -23,10 +23,10 @@
                         <tr>
                             <th scope="col">No</th>
                             <th scope="col">Author</th>
-                            {{-- <th scope="col">Folder</th> --}}
                             <th scope="col">Parent</th>
                             <th scope="col">Folder Name</th>
                             <th scope="col">Folder Description</th>
+                            <th scope="col">License</th>
                             <th scope="col">Visibility</th>
                             <th scope="col">Is Bundle</th>
                             <th scope="col">Bundle Price (Rp)</th>
@@ -54,6 +54,9 @@
                                         href="{{ route('folder.show', $folder->id) }}"class="text-dark fw-semibold text-color-dark">{{ $folder->folder_name }}</a>
                                 </td>
                                 <td>{{ $folder->folder_description }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ $folder->license->name ?? null }}</span>
+                                </td>
                                 <td>
                                     @if ($folder->visibility === 'public')
                                         <span class="badge bg-success">public</span>
