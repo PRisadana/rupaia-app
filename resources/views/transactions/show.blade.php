@@ -108,6 +108,7 @@
                             <table class="table">
                                 <thead>
                                     <tr>
+                                        <th>Seller</th>
                                         <th>Item</th>
                                         <th>Item Type</th>
                                         <th>License</th>
@@ -118,6 +119,7 @@
                                 <tbody>
                                     @foreach ($transaction->items as $item)
                                         <tr>
+                                            <td>{{ $item->seller->name }}</td>
                                             <td>{{ $item->item_name_snapshot }}</td>
                                             <td>
                                                 @if ($item->item_type === 'bundle')

@@ -105,10 +105,11 @@
                         <div class="form-check mt-3">
                             <input type="checkbox" class="form-check-input" name="terms_accepted" value="1"
                                 id="terms_accepted" {{ old('terms_accepted') ? 'checked' : '' }}>
-                            <label class="form-check-label" for="terms_accepted">
+                            <a href="{{ route('policies.index') }}" target="_blank" class="form-check-label"
+                                for="terms_accepted">
                                 I agree to the Seller Terms and the processing
                                 of my KYC information.
-                            </label>
+                            </a>
                         </div>
                         @error('terms_accepted')
                             <div class="text-danger small mt-1">

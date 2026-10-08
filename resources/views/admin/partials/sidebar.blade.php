@@ -83,7 +83,8 @@
                     Transaction
                 </a>
 
-                <a class="nav-link" href="#">
+                <a class="nav-link {{ request()->routeIs('admin.payout.*') ? 'active' : '' }}"
+                    href="{{ route('admin.payout.index') }}">
                     <div class="sb-nav-link-icon d-inline-flex align-items-center">
                         <i class="fi fi-rr-wallet mt-1"></i>
                     </div>

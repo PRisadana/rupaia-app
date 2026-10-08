@@ -13,6 +13,8 @@ class PolicyController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('policies.index', compact('licenses'));
+        $sellerPolicyVersion = config('rupaia.seller_policy_version');
+
+        return view('policies.index', compact('licenses', 'sellerPolicyVersion'));
     }
 }

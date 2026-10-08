@@ -72,4 +72,9 @@ class TransactionItem extends Model
     {
         return $this->belongsTo(License::class);
     }
+
+    public function payout()
+    {
+        return $this->belongsTo(Payout::class);
+    }
 }

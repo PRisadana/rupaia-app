@@ -91,6 +91,12 @@
                     <p class="mb-0">
                         Your account now has seller access.
                     </p>
+                    <a href="{{ route('content.index') }}" class="btn btn-sm btn-dark mt-2">
+                        Go to my content dashboard
+                    </a>
+                    <a href="{{ route('kyc.show', $latestSubmission) }}" class="btn btn-sm btn-dark mt-2">
+                        Look my data
+                    </a>
                 </div>
             </div>
         @endif

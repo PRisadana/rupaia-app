@@ -10,6 +10,9 @@
                         This page contains the terms, privacy policy, copyright policy,
                         upload rules, license policy, and platform disclaimer for using Rupaia.
                     </p>
+                    <p class="text-muted">
+                        Version: {{ $sellerPolicyVersion }}
+                    </p>
                 </div>
 
                 <div class="card shadow-sm mb-4">
@@ -178,6 +181,155 @@
                         </ul>
                     </div>
                 </div>
+
+                <section id="seller-kyc-policy" class="mb-5">
+                    <div class="card shadow-sm">
+                        <div class="card-body p-4">
+                            <h2 class="h4 mb-3">
+                                Seller & KYC Terms
+                            </h2>
+
+                            <p>
+                                These Seller & KYC Terms apply to users who request
+                                verification in order to obtain seller access on Rupaia.
+                                By submitting a KYC application, the user confirms that
+                                they have read, understood, and agreed to the following
+                                terms.
+                            </p>
+
+                            <h3 class="h5 mt-4">
+                                1. Purpose of Verification
+                            </h3>
+
+                            <p>
+                                KYC verification is used to verify the identity of users
+                                who request seller access and to reduce the risk of
+                                misuse, fraud, impersonation, and other activities that
+                                may violate Rupaia policies.
+                            </p>
+
+                            <h3 class="h5 mt-4">
+                                2. Accuracy of Information
+                            </h3>
+
+                            <p>
+                                Users must provide identity information that is accurate,
+                                complete, valid, and belongs to themselves. Users may not
+                                submit another person's identity or intentionally provide
+                                false or misleading information.
+                            </p>
+
+                            <h3 class="h5 mt-4">
+                                3. Identity Documents
+                            </h3>
+
+                            <p>
+                                Users may be required to provide identifying information
+                                and supporting documents for verification. Submitted
+                                documents are used only for purposes related to account
+                                verification, seller administration, security, and other
+                                operational requirements of the platform.
+                            </p>
+
+                            <h3 class="h5 mt-4">
+                                4. Processing of Personal Data
+                            </h3>
+
+                            <p>
+                                By submitting a KYC application, users consent to Rupaia
+                                processing the personal data provided for identity
+                                verification, account administration, fraud prevention,
+                                seller access management, payout administration, and
+                                platform security.
+                            </p>
+
+                            <p>
+                                KYC information is not intended to be displayed publicly
+                                on the user's profile.
+                            </p>
+
+                            <h3 class="h5 mt-4">
+                                5. Verification Decision
+                            </h3>
+
+                            <p>
+                                Submission of a KYC application does not automatically
+                                grant seller access. Rupaia administrators may verify or
+                                reject an application based on the information and
+                                documents submitted.
+                            </p>
+
+                            <h3 class="h5 mt-4">
+                                6. Rejected Applications
+                            </h3>
+
+                            <p>
+                                If an application is rejected, the user may receive an
+                                administrative note explaining the reason. Where
+                                permitted by the system, the user may correct the
+                                relevant information and submit another application.
+                            </p>
+
+                            <h3 class="h5 mt-4">
+                                7. Seller Access
+                            </h3>
+
+                            <p>
+                                Seller privileges are granted only after the KYC
+                                application has been verified. Seller access may include
+                                publishing content for sale, receiving seller revenue,
+                                registering payout bank accounts, and requesting payouts
+                                in accordance with Rupaia policies.
+                            </p>
+
+                            <h3 class="h5 mt-4">
+                                8. Bank Account and Payout
+                            </h3>
+
+                            <p>
+                                Seller payout information must be accurate and belong to
+                                the seller or otherwise satisfy the account ownership
+                                requirements applied by Rupaia. Rupaia may delay or reject
+                                a payout where the account information is invalid,
+                                inconsistent, disputed, or otherwise requires further
+                                verification.
+                            </p>
+
+                            <h3 class="h5 mt-4">
+                                9. Prohibited Conduct
+                            </h3>
+
+                            <p>
+                                Users may not falsify identity documents, impersonate
+                                another person, manipulate verification data, misuse
+                                another person's personal information, or attempt to
+                                bypass the verification process.
+                            </p>
+
+                            <h3 class="h5 mt-4">
+                                10. Policy Version
+                            </h3>
+
+                            <p>
+                                Rupaia may update these Seller & KYC Terms when necessary.
+                                The policy version accepted by the user is recorded when
+                                the KYC application is submitted.
+                            </p>
+
+                            <h3 class="h5 mt-4">
+                                11. User Declaration
+                            </h3>
+
+                            <p class="mb-0">
+                                By submitting a KYC application, the user declares that
+                                the information provided is accurate, the submitted
+                                documents belong to the user, and the user agrees to the
+                                Seller & KYC Terms and the processing of personal data
+                                required for the verification process.
+                            </p>
+                        </div>
+                    </div>
+                </section>
 
                 <div class="alert alert-dark">
                     By creating an account, uploading content, reporting content, or using Rupaia,

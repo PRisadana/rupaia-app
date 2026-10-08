@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminShowcaseController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminKycController;
 use App\Http\Controllers\Admin\AdminTransactionController;
+use App\Http\Controllers\Admin\AdminPayoutController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\PresetController;
 use App\Http\Controllers\Admin\LicenseController;
@@ -18,7 +19,6 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ShowcaseController;
 use App\Http\Controllers\EditingController;
 use App\Http\Controllers\ReportController;
-use App\Http\Controllers\SellerReportController;
 use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\KycController;
 use App\Http\Controllers\BankAccountController;
@@ -27,7 +27,10 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\MidtransWebhookController;
+use App\Http\Controllers\SellerReportController;
 use App\Http\Controllers\TransactionDownloadController;
+use App\Http\Controllers\SellerSalesController;
+use App\Http\Controllers\SellerPayoutController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('dashboard');
@@ -63,6 +66,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/kyc', [KycController::class, 'index'])->name('kyc.index');
     Route::get('/kyc/create', [KycController::class, 'create'])->name('kyc.create');
     Route::post('/kyc', [KycController::class, 'store'])->name('kyc.store');
+    Route::get('/kyc/{kyc}', [KycController::class, 'show'])->name('kyc.show');
+    Route::get('/kyc/{kyc}/document', [KycController::class, 'document'])->name('kyc.seller.document');
 
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/content/{content}', [CartController::class, 'storeContent'])->name('cart.content.store');
@@ -124,6 +129,11 @@ Route::middleware(['auth', 'seller'])->group(function () {
     Route::get('/dashboard/showcase/create-from-content', [ShowcaseController::class, 'showcaseFromContentCreate'])->name('showcase.from.content.create');
 
     Route::get('/dashboard/reports', [SellerReportController::class, 'index'])->name('seller.report.index');
+
+    Route::get('/dashboard/sales', [SellerSalesController::class, 'index'])->name('seller.sales.index');
+
+    Route::get('/dashboard/payouts', [SellerPayoutController::class, 'index'])->name('seller.payout.index');
+    Route::post('/dashboard/payouts', [SellerPayoutController::class, 'store'])->name('seller.payout.store');
 
     Route::get('/profile/bank-accounts/create', [BankAccountController::class, 'create'])->name('bank-accounts.create');
     Route::post('/profile/bank-accounts', [BankAccountController::class, 'store'])->name('bank-accounts.store');
@@ -194,6 +204,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transaction.index');
     Route::get('/transactions/{transaction}', [AdminTransactionController::class, 'show'])->name('transaction.show');
     Route::post('/transactions/{transaction}/sync-status', [AdminTransactionController::class, 'syncStatus'])->name('transaction.sync-status');
+
+    Route::get('/payouts', [AdminPayoutController::class, 'index'])->name('payout.index');
+    Route::get('/payouts/{payout}', [AdminPayoutController::class, 'show'])->name('payout.show');
+    Route::patch('/payouts/{payout}/paid', [AdminPayoutController::class, 'markPaid'])->name('payout.paid');
+    Route::patch('/payouts/{payout}/reject', [AdminPayoutController::class, 'reject'])->name('payout.reject');
 });
 
 require __DIR__ . '/auth.php';

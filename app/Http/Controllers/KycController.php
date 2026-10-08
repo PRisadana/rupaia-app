@@ -17,7 +17,9 @@ class KycController extends Controller
             ->latest('id')
             ->first();
 
-        return view('kyc.index', compact('latestSubmission'));
+        $alreadySeller = $user->role === 'seller';
+
+        return view('kyc.index', compact('latestSubmission', 'alreadySeller'));
     }
 
     public function create(Request $request)
@@ -172,5 +174,57 @@ class KycController extends Controller
                 'success',
                 'Your KYC submission has been submitted successfully.'
             );
+    }
+
+    public function show(Request $request, KycSubmission $kyc)
+    {
+        $user = $request->user();
+
+        if ((int) $kyc->user_id !== (int) $user->id) {
+            abort(403);
+        }
+
+        if ($kyc->status !== 'verified') {
+            abort(403);
+        }
+
+        $kyc->load([
+            'processor',
+        ]);
+
+        return view(
+            'kyc.show',
+            compact('kyc')
+        );
+    }
+
+    public function document(Request $request, KycSubmission $kyc)
+    {
+        $user = $request->user();
+
+        if ((int) $kyc->user_id !== (int) $user->id) {
+            abort(403);
+        }
+
+        if ($kyc->status !== 'verified') {
+            abort(403);
+        }
+
+        if (! Storage::disk('private')
+            ->exists($kyc->id_card_path)) {
+            abort(404);
+        }
+
+        $fullPath = Storage::disk('private')
+            ->path($kyc->id_card_path);
+
+        return response()->file(
+            $fullPath,
+            [
+                'Content-Disposition' => 'inline',
+                'Cache-Control' => 'private, no-store, max-age=0',
+                'Pragma' => 'no-cache',
+            ]
+        );
     }
 }

@@ -102,9 +102,13 @@
                         </li> --}}
 
                         @auth
-                            @if (auth()->user()->role != 'admin')
+                            @if (auth()->user()->role === 'buyer')
                                 <a class="dropdown-item" href="{{ route('kyc.index') }}">
                                     {{ __('Become a Seller') }}
+                                </a>
+                            @elseif (auth()->user()->role === 'seller')
+                                <a class="dropdown-item" href="{{ route('kyc.index') }}">
+                                    {{ __('Seller Verification') }}
                                 </a>
                             @endif
                         @endauth

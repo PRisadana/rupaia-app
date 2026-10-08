@@ -44,6 +44,9 @@
             <a class="nav-link text-secondary" aria-current="page" href="{{ route('seller.report.index') }}">Reported
                 Items</a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link text-secondary" href="{{ route('seller.sales.index') }}">Sales</a>
+        </li>
     </ul>
 
     <div class="row my-4">
