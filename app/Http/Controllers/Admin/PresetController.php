@@ -85,12 +85,30 @@ class PresetController extends Controller
 
     public function destroyPreset(Preset $preset)
     {
+        if (
+            $preset->cartItems()->exists()
+            ||
+            $preset->transactionItems()->exists()
+        ) {
+            return back()->withErrors([
+                'preset'
+                => 'This preset cannot be deleted because it is already used in a cart or transaction. Deactivate the preset instead.',
+            ]);
+        }
+
         if ($preset->preset_file_path) {
-            Storage::disk('public')->delete($preset->preset_file_path);
+            Storage::disk('public')->delete(
+                $preset->preset_file_path
+            );
         }
 
         $preset->delete();
 
-        return redirect()->route('admin.preset.index')->with('success', 'Preset deleted successfully.');
+        return redirect()
+            ->route('admin.preset.index')
+            ->with(
+                'success',
+                'Preset deleted successfully.'
+            );
     }
 }

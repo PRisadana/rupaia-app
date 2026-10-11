@@ -6,13 +6,16 @@ use App\Models\Content;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 class PaymentFulfillmentService
 {
     public function __construct(
-        private BundleZipService $bundleZipService
+        private BundleZipService $bundleZipService,
+        private EditingService $editingService
     ) {}
+
 
     public function complete(Transaction $transaction): Transaction
     {
@@ -26,6 +29,7 @@ class PaymentFulfillmentService
                 $transaction->load([
                     'items.content',
                     'items.folder',
+                    'items.preset',
                 ]);
 
                 $commissionRate = (float) config('marketplace.platform_commission_rate');
@@ -108,11 +112,42 @@ class PaymentFulfillmentService
                         &&
                         $item->content
                     ) {
-                        if (! $item->final_file_path) {
-                            $itemUpdates['final_file_path'] =
-                                $item
-                                ->content
-                                ->path_hi_res;
+                        if (
+                            $item->item_type === 'content'
+                            &&
+                            $item->content
+                        ) {
+                            if (! $item->final_file_path) {
+                                $itemUpdates['final_file_path'] =
+                                    $item->content->path_hi_res;
+                            }
+                        }
+
+                        if (
+                            $item->item_type
+                            === 'content_with_preset'
+                            &&
+                            $item->content
+                        ) {
+                            if (
+                                ! $item->preset_id
+                                ||
+                                ! $item->preset
+                            ) {
+                                throw new RuntimeException(
+                                    'Preset transaction item does not have a valid preset.'
+                                );
+                            }
+
+                            if (! $item->final_file_path) {
+                                $itemUpdates['final_file_path'] =
+                                    $this->editingService
+                                    ->generateFinal(
+                                        $item->content,
+                                        $item->preset,
+                                        $item
+                                    );
+                            }
                         }
 
                         if ($item->content->sale_type === 'single_sale') {

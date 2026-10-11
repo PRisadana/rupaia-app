@@ -20,4 +20,9 @@ class Preset extends Model
     {
         return $this->hasMany(CartItem::class);
     }
+
+    public function transactionItems()
+    {
+        return $this->hasMany(TransactionItem::class);
+    }
 }

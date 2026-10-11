@@ -5,8 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Content;
 use App\Models\Preset;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
+use App\Services\EditingService;
 
 class EditingController extends Controller
 {
@@ -41,62 +40,39 @@ class EditingController extends Controller
         ));
     }
 
-    public function imagePreview(Request $request, Content $content)
+    public function imagePreview(Request $request, Content $content, EditingService $editingService)
     {
-        if ($content->visibility !== 'public' || $content->status !== 'active') {
+        if (
+            $content->visibility !== 'public'
+            ||
+            $content->status !== 'active'
+        ) {
             abort(404);
         }
 
         $request->validate([
-            'preset_id' => 'required|exists:presets,id',
+            'preset_id' => [
+                'required',
+                'integer',
+                'exists:presets,id',
+            ],
         ]);
 
-        $preset = Preset::where('id', $request->preset_id)
+        $preset = Preset::query()
+            ->whereKey($request->preset_id)
             ->where('is_active', true)
             ->firstOrFail();
 
-        $imagePath = storage_path('app/public/' . $content->path_low_res);
+        $image = $editingService->generatePreview($content, $preset);
 
-        if (! file_exists($imagePath)) {
-            abort(404, 'Preview image not found.');
-        }
-
-        $lutPath = storage_path('app/public/' . $preset->preset_file_path);
-
-        if (! file_exists($lutPath)) {
-            abort(404, 'Preset file not found.');
-        }
-
-        // copy lut file to editing service directory
-        $pythonLutDir = base_path('editing-service/luts');
-        if (! is_dir($pythonLutDir)) {
-            mkdir($pythonLutDir, 0777, true);
-        }
-
-        $lutFilename = basename($lutPath);
-        $targetLutPath = $pythonLutDir . DIRECTORY_SEPARATOR . $lutFilename;
-
-        if (! file_exists($targetLutPath)) {
-            copy($lutPath, $targetLutPath);
-        }
-
-        $response = Http::timeout(10)
-            ->attach(
-                'image',
-                file_get_contents($imagePath),
-                basename($imagePath)
-            )
-            ->post('http://127.0.0.1:5001/apply-lut-preview', [
-                'lut_filename' => $lutFilename,
-            ]);
-
-        if (! $response->successful()) {
-            abort(500, 'Failed to generate preview. Response: ' . $response->body());
-        }
-
-        return response($response->body(), 200, [
-            'Content-Type' => 'image/jpeg',
-            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-        ]);
+        return response(
+            $image,
+            200,
+            [
+                'Content-Type' => 'image/jpeg',
+                'Cache-Control'
+                => 'no-store, no-cache, must-revalidate, max-age=0',
+            ]
+        );
     }
 }

@@ -1,8 +1,25 @@
 @extends('layouts.main')
 
 @section('content')
-    <div class="container py-5">
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
 
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>There was a problem:</strong>
+            <ul class="mb-0 mt-2">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    <div class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h1 class="h3 fw-bold mb-1">Editing Preview</h1>
@@ -27,11 +44,9 @@
         @endif
 
         <div class="row g-4 mb-4">
-
             <div class="col-lg-6">
                 <div class="bg-white rounded-4 shadow-sm p-3 h-100 d-flex flex-column">
                     <h5 class="fw-semibold text-muted text-center mb-3">Before</h5>
-
                     <div
                         class="flex-grow-1 d-flex align-items-center justify-content-center bg-light rounded-3 overflow-hidden">
                         <img src="{{ asset('storage/' . $content->path_low_res) }}" alt="Original Image"
@@ -44,10 +59,8 @@
                 <div
                     class="bg-white rounded-4 shadow-sm p-3 h-100 d-flex flex-column border-2 border-primary border-opacity-50">
                     <h5 class="fw-semibold text-primary text-center mb-3">After</h5>
-
                     <div class="flex-grow-1 d-flex align-items-center justify-content-center bg-light rounded-3 overflow-hidden"
                         style="min-height: 350px;">
-
                         @if (!empty($selectedPresetId))
                             <img src="{{ route('content.image-preview', ['content' => $content->id, 'preset_id' => $selectedPresetId]) }}"
                                 alt="Edited Preview" class="img-fluid w-100 shadow-sm"
@@ -69,49 +82,46 @@
         <div class="row">
             <div class="col-12">
                 <div class="bg-white rounded-4 shadow-sm p-4">
-
-                    <form action="{{ route('editing.preview', $content->id) }}" method="GET"
-                        class="row align-items-end g-3">
-
-                        <div class="col-md-5 col-lg-4">
-                            <label for="presetSelect" class="form-label fw-semibold text-dark">Choose a LUT Preset</label>
-                            <select class="form-select form-select-sm @error('preset_id') is-invalid @enderror"
-                                id="presetSelect" name="preset_id" required onchange="this.form.submit()">
-                                <option value="" disabled {{ empty($selectedPresetId) ? 'selected' : '' }}>
-                                    Select a Color Preset
-                                </option>
-
-                                @foreach ($presets as $preset)
-                                    <option value="{{ $preset->id }}"
-                                        {{ (string) $selectedPresetId === (string) $preset->id ? 'selected' : '' }}>
-                                        {{ $preset->preset_name }}
+                    <div class="row align-items-end g-3">
+                        <div class="col-md-6 col-lg-5">
+                            <form action="{{ route('editing.preview', $content->id) }}" method="GET"
+                                class="row align-items-end g-3">
+                                <label for="presetSelect" class="form-label fw-semibold text-dark">Choose a LUT
+                                    Preset</label>
+                                <select class="form-select form-select-sm @error('preset_id') is-invalid @enderror"
+                                    id="presetSelect" name="preset_id" required onchange="this.form.submit()">
+                                    <option value="" disabled {{ empty($selectedPresetId) ? 'selected' : '' }}>
+                                        Select a Color Preset
                                     </option>
-                                @endforeach
-                            </select>
-                            @error('preset_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+
+                                    @foreach ($presets as $preset)
+                                        <option value="{{ $preset->id }}"
+                                            {{ (string) $selectedPresetId === (string) $preset->id ? 'selected' : '' }}>
+                                            {{ $preset->preset_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('preset_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                         </div>
-
-                        <div class="col-md-3 col-lg-5">
-                            <button type="button" class="btn btn-success btn-sm px-4 d-flex align-items-center gap-2"
-                                {{ empty($selectedPresetId) ? 'disabled' : '' }}>
-                                <i class="fi fi-rr-shopping-cart-add"></i> Add to Cart
-                            </button>
+                        </form>
+                        <div class="col-md-6 col-lg-5">
+                            @if ($selectedPresetId)
+                                <form method="POST" action="{{ route('cart.content.store', $content) }}">
+                                    @csrf
+                                    <input type="hidden" name="preset_id" value="{{ $selectedPresetId }}">
+                                    <button type="submit"
+                                        class="btn btn-success btn-sm px-4d-flex align-items-center gap-2">
+                                        <i class="fi fi-rr-shopping-cart-add"></i>
+                                        Add to Cart
+                                    </button>
+                                </form>
+                            @endif
                         </div>
-
-                        {{-- <div class="col-md-4 col-lg-3">
-                            <button type="submit"
-                                class="btn btn-dark btn-sm w-100 d-flex align-items-center justify-content-center gap-2">
-                                <i class="fi fi-rr-magic-wand"></i> Apply Preset
-                            </button>
-                        </div> --}}
-
-                    </form>
-
+                    </div>
                 </div>
             </div>
         </div>
-
     </div>
 @endsection

@@ -26,6 +26,87 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def process_lut_request(prefix: str):
+    if "image" not in request.files:
+        return jsonify({
+            "error": "image is required"
+        }), 400
+
+    image_file = request.files["image"]
+
+    lut_filename = request.form.get("lut_filename","").strip()
+
+    if (
+        not image_file
+        or image_file.filename == ""
+    ):
+        return jsonify({
+            "error": "empty image file"
+        }), 400
+
+    if not allowed_file(
+        image_file.filename
+    ):
+        return jsonify({
+            "error": "unsupported image type"
+        }), 400
+
+    if not lut_filename:
+        return jsonify({
+            "error": "lut_filename is required"
+        }), 400
+
+    lut_path = LUT_DIR / secure_filename(lut_filename)
+
+    if not lut_path.exists():
+        return jsonify({
+            "error":
+                f"LUT not found: {lut_filename}"
+        }), 404
+
+    input_name = (
+        f"{uuid.uuid4().hex}_"
+        f"{secure_filename(image_file.filename)}"
+    )
+
+    input_path = UPLOAD_DIR / input_name
+
+    image_file.save(input_path)
+
+    output_name = (f"{prefix}_{uuid.uuid4().hex}.jpg")
+
+    output_path = OUTPUT_DIR / output_name
+
+    try:
+        apply_lut_to_image(
+            input_path=input_path,
+            lut_path=lut_path,
+            output_path=output_path,
+        )
+
+        with output_path.open("rb") as file: result = file.read()
+
+        return (
+            result,
+            200,
+            {
+                "Content-Type": "image/jpeg"
+            },
+        )
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
+
+    finally:
+        input_path.unlink(
+            missing_ok=True
+        )
+
+        output_path.unlink(
+            missing_ok=True
+        )
 
 @app.get("/health")
 def health():
@@ -34,48 +115,15 @@ def health():
 
 @app.post("/apply-lut-preview")
 def apply_lut_preview():
-    if "image" not in request.files:
-        return jsonify({"error": "image is required"}), 400
+    return process_lut_request(
+        "preview"
+    )
 
-    image_file = request.files["image"]
-    lut_filename = request.form.get("lut_filename", "").strip()
-
-    if not image_file or image_file.filename == "":
-        return jsonify({"error": "empty image file"}), 400
-
-    if not allowed_file(image_file.filename):
-        return jsonify({"error": "unsupported image type"}), 400
-
-    if not lut_filename:
-        return jsonify({"error": "lut_filename is required"}), 400
-
-    lut_path = LUT_DIR / secure_filename(lut_filename)
-    if not lut_path.exists():
-        return jsonify({"error": f"LUT not found: {lut_filename}"}), 404
-
-    input_name = f"{uuid.uuid4().hex}_{secure_filename(image_file.filename)}"
-    input_path = UPLOAD_DIR / input_name
-    image_file.save(input_path)
-
-    output_name = f"preview_{uuid.uuid4().hex}.jpg"
-    output_path = OUTPUT_DIR / output_name
-
-    try:
-        apply_lut_to_image(
-            input_path=input_path,
-            lut_path=lut_path,
-            output_path=output_path
-        )
-
-        return send_file(output_path, mimetype="image/jpeg")
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        if input_path.exists():
-            input_path.unlink(missing_ok=True)
-        
-        # if output_path.exists():
-        #     output_path.unlink(missing_ok=True)
+@app.post("/apply-lut-final")
+def apply_lut_final():
+    return process_lut_request(
+        "final"
+    )
 
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5001)

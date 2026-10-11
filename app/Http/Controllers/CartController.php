@@ -6,6 +6,8 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Content;
 use App\Models\Folder;
+use App\Models\Preset;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -30,7 +32,6 @@ class CartController extends Controller
             ->where('status', 'active')
             ->first();
 
-        // Jika belum punya cart, gunakan collection kosong.
         $items = $cart?->items ?? collect();
 
         $availabilityErrors = [];
@@ -52,10 +53,8 @@ class CartController extends Controller
                         = 'Bundle no longer exists.';
                     continue;
                 }
-
                 $error = $this->bundlePurchaseError($item->folder, $user);
-                $currentPrice =
-                    (float) $item->folder->bundle_price;
+                $currentPrice = (float) $item->folder->bundle_price;
             } else {
                 $availabilityErrors[$item->id]
                     = 'Unsupported cart item type.';
@@ -106,6 +105,29 @@ class CartController extends Controller
         $content->load('folder');
 
         $purchaseError = $this->contentPurchaseError($content, $user);
+        $validated = $request->validate([
+            'preset_id' => [
+                'nullable',
+                'integer',
+            ],
+        ]);
+
+        $preset = null;
+
+        if (! empty($validated['preset_id'])) {
+            $preset = Preset::query()
+                ->whereKey($validated['preset_id'])
+                ->where('is_active', true)
+                ->first();
+
+            if (! $preset) {
+                return back()
+                    ->withErrors([
+                        'cart'
+                        => 'The selected preset is no longer available.',
+                    ]);
+            }
+        }
 
         if ($purchaseError) {
             return back()
@@ -122,8 +144,14 @@ class CartController extends Controller
         );
 
         $duplicateExists = $cart->items()
-            ->where('item_type', 'content')
             ->where('content_id', $content->id)
+            ->whereIn(
+                'item_type',
+                [
+                    'content',
+                    'content_with_preset',
+                ]
+            )
             ->exists();
 
         if ($duplicateExists) {
@@ -137,8 +165,10 @@ class CartController extends Controller
         $cart->items()->create([
             'content_id' => $content->id,
             'folder_id' => null,
-            'preset_id' => null,
-            'item_type' => 'content',
+            'preset_id' => $preset?->id,
+            'item_type' => $preset
+                ? 'content_with_preset'
+                : 'content',
             'price_snapshot' => $content->price,
         ]);
 
@@ -234,7 +264,7 @@ class CartController extends Controller
                         'cart' => $error,
                     ]);
             }
-            $currentPrice = $cartItem->content->price;
+            $currentPrice = (float) $cartItem->content->price;
         } elseif ($cartItem->item_type === 'bundle') {
             if (! $cartItem->folder) {
                 return back()
@@ -253,7 +283,7 @@ class CartController extends Controller
                         'cart' => $error,
                     ]);
             }
-            $currentPrice = $cartItem->folder->bundle_price;
+            $currentPrice = (float) $cartItem->folder->bundle_price;
         } else {
             return back()
                 ->withErrors([
@@ -310,6 +340,12 @@ class CartController extends Controller
 
     private function contentPurchaseError(Content $content, $user): ?string
     {
+        if (! Storage::disk('local')->exists(
+            $content->path_hi_res
+        )) {
+            return ('Hi-res source image not found.');
+        }
+
         if ($content->seller_id === $user->id) {
             return 'You cannot purchase your own content.';
         }
@@ -320,6 +356,10 @@ class CartController extends Controller
 
         if ($content->visibility !== 'public') {
             return 'This content is not publicly available.';
+        }
+
+        if ($content->sale_status !== 'available') {
+            return 'This content is currently unavailable for purchase.';
         }
 
         if ($content->sale_status !== 'available') {

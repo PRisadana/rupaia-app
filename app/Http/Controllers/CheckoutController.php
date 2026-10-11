@@ -99,7 +99,6 @@ class CheckoutController extends Controller
                     'items.preset',
                 ]);
 
-
                 if ($cart->items->isEmpty()) {
                     throw ValidationException::withMessages([
                         'checkout'

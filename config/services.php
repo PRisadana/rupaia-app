@@ -47,4 +47,11 @@ return [
         'log_raw_response' => env('CONTENT_AI_MODERATION_LOG_RAW', false),
     ],
 
+    'editing' => [
+        'url' => env(
+            'EDITING_SERVICE_URL',
+            'http://127.0.0.1:5001'
+        ),
+    ],
+
 ];
