@@ -13,11 +13,8 @@ use App\Models\Content;
 use App\Models\Folder;
 use App\Models\Tags;
 use App\Models\License;
-use App\Services\ImageHashService;
-use App\Services\ImageModerationService;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
-
+use App\Services\ContentUploadService;
+use throwable;
 
 class ContentController extends Controller
 {
@@ -44,8 +41,166 @@ class ContentController extends Controller
         return view('dashboard.content.create', compact('folders', 'tags', 'licenses'));
     }
 
-    // menyimpan konten baru (upload)
-    public function store(Request $request, ImageHashService $imageHashService, ImageModerationService $imageModerationService)
+    // // menyimpan konten baru (upload)
+    // public function store(Request $request, ImageHashService $imageHashService, ImageModerationService $imageModerationService)
+    // {
+    //     $user = $request->user();
+    //     $sellerId = $user->id;
+
+    //     $validated = $request->validate([
+    //         'content_title' => 'required|string|max:255',
+    //         'content_description' => 'nullable|string',
+    //         'price' => 'nullable|numeric|min:0',
+    //         'license_id' => [
+    //             'required',
+    //             Rule::exists('licenses', 'id')->where(function ($query) {
+    //                 return $query->where('is_active', true);
+    //             }),
+    //         ],
+    //         'sale_type' => 'required|in:multi_sale,single_sale',
+    //         'sale_status' => 'required|in:available,inactive',
+    //         'folder_id' => [
+    //             'required',
+    //             Rule::exists('folders', 'id')->where(function ($query) use ($sellerId) {
+    //                 return $query->where('seller_id', $sellerId);
+    //             })
+    //         ],
+    //         'tag_name' => 'required|array',
+    //         'tag_name.*' => 'exists:tags,id',
+    //         'path_hi_res' => 'required|image|mimes:jpg,jpeg,png|max:10240',
+    //         'policy_agreement' => ['accepted'],
+    //         // 'status' => 'required|in:active,deleted,banned',
+    //     ]);
+
+    //     //cari folder tujuan
+    //     $folder = Folder::where('id', $validated['folder_id'])
+    //         ->where('seller_id', $user->id)
+    //         ->firstOrFail();
+
+    //     $licenseId = $folder->is_bundle
+    //         ? $folder->license_id
+    //         : $validated['license_id'];
+
+    //     $saleType = $folder->is_bundle
+    //         ? 'multi_sale'
+    //         : $validated['sale_type'];
+
+    //     $price = ($folder->is_bundle && ! $folder->allow_individual_sale)
+    //         ? 0
+    //         : ($validated['price'] ?? 0.00);
+
+    //     if ($folder->is_bundle && $validated['sale_type'] === 'single_sale') {
+    //         return back()
+    //             ->withErrors([
+    //                 'sale_type' => 'Single-sale content cannot be uploaded into a bundle folder.',
+    //             ])
+    //             ->withInput();
+    //     }
+
+    //     // pakai visibility folder untuk konten
+    //     $visibility = $folder->visibility;
+
+    //     $file = $request->file('path_hi_res');
+    //     $fileName = time() . '_' . $file->getClientOriginalName();
+    //     $id_user = $request->user()->id;
+
+    //     // Simpan file asli
+    //     $path_hi_res = $file->storeAs("content_file/{$id_user}/hi_res", $fileName, 'local');
+
+    //     $hiResFullPath = Storage::disk('local')->path($path_hi_res);
+
+    //     $imageValidation = $imageHashService->validateImage($hiResFullPath);
+    //     $moderationResult = $imageModerationService->moderateImage(
+    //         $hiResFullPath,
+    //         $validated['content_title'] ?? null,
+    //         $validated['content_description'] ?? null
+    //     );
+
+    //     $contentStatus = (
+    //         $imageValidation['is_similar'] ||
+    //         $moderationResult['is_flagged']
+    //     )
+    //         ? 'pending_review'
+    //         : 'active';
+
+    //     $validationReasons = [];
+
+    //     if ($imageValidation['is_similar']) {
+    //         $validationReasons[] = $imageValidation['validation_reason'];
+    //     }
+
+    //     if ($moderationResult['is_flagged']) {
+    //         $validationReasons[] = $moderationResult['reason'];
+    //     }
+
+    //     if (empty($validationReasons)) {
+    //         $validationReasons[] = 'No similar or unsafe content detected.';
+    //     }
+
+    //     $validationReason = implode(' ', $validationReasons);
+
+    //     // Buat dan simpan versi low-res (low res + watermark)
+    //     $manager = new ImageManager(new Driver());
+    //     $image = $manager->read($file->getRealPath());
+
+    //     // Resize gambar untuk low-res
+    //     $image->scale(width: 720);
+
+    //     $imageWidth = $image->width();
+
+    //     $watermarkPath = public_path('aset/watermark.png');
+
+    //     if (file_exists($watermarkPath)) {
+    //         $watermark = $manager->read($watermarkPath);
+
+    //         $watermarkWidth = (int) ($imageWidth * 0.4);
+
+    //         $watermark->scaleDown(width: $watermarkWidth);
+
+    //         $image->place($watermark, 'center', 0, 0, 50);
+    //     }
+
+    //     // Simpan gambar low-res
+    //     $path_low_res = "content_file/{$id_user}/low_res/{$fileName}";
+    //     Storage::disk('public')->put($path_low_res, (string) $image->encode());
+
+    //     // Simpan data konten ke database
+    //     $content = Content::create([
+    //         'seller_id' => $id_user,
+    //         'folder_id' => $validated['folder_id'],
+    //         'content_title' => $validated['content_title'],
+    //         'content_description' => $validated['content_description'],
+    //         'price' => $price,
+    //         'license_id' => $licenseId,
+    //         'sale_type' => $saleType,
+    //         'sale_status' => $validated['sale_status'],
+    //         'path_hi_res' => $path_hi_res,
+    //         'path_low_res' => $path_low_res,
+    //         'visibility' => $visibility,
+    //         'status' => $contentStatus,
+    //         'perceptual_hash' => $imageValidation['perceptual_hash'],
+    //         'similar_content_id' => $imageValidation['similar_content']?->id,
+    //         'similarity_distance' => $imageValidation['similarity_distance'],
+    //         'moderation_score' => $moderationResult['moderation_score'],
+    //         'moderation_category' => $moderationResult['moderation_category'],
+    //         'validation_reason' => $validationReason,
+    //         'validated_at' => now(),
+    //     ]);
+
+    //     // Proses dan hubungkan tags
+    //     // Hubungkan konten ini dengan semua tag ID yang sudah diproses
+    //     // 'sync()' adalah perintah Eloquent untuk relasi Many-to-Many
+    //     // Ini akan otomatis menambah/menghapus data di tabel pivot 'tb_content_tag'
+    //     $content->tags()->sync($validated['tag_name']);
+
+    //     $message = $contentStatus === 'pending_review'
+    //         ? 'Content uploaded successfully, but it requires admin review because similar content was detected.'
+    //         : 'Content uploaded successfully.';
+
+    //     return redirect()->route('content.index')->with('success',  $message);
+    // }
+
+    public function store(Request $request, ContentUploadService $contentUploadService)
     {
         $user = $request->user();
         $sellerId = $user->id;
@@ -72,135 +227,38 @@ class ContentController extends Controller
             'tag_name.*' => 'exists:tags,id',
             'path_hi_res' => 'required|image|mimes:jpg,jpeg,png|max:10240',
             'policy_agreement' => ['accepted'],
-            // 'status' => 'required|in:active,deleted,banned',
         ]);
 
-        //cari folder tujuan
         $folder = Folder::where('id', $validated['folder_id'])
             ->where('seller_id', $user->id)
             ->firstOrFail();
 
-        $licenseId = $folder->is_bundle
-            ? $folder->license_id
-            : $validated['license_id'];
-
-        $saleType = $folder->is_bundle
-            ? 'multi_sale'
-            : $validated['sale_type'];
-
-        $price = ($folder->is_bundle && ! $folder->allow_individual_sale)
-            ? 0
-            : ($validated['price'] ?? 0.00);
-
-        if ($folder->is_bundle && $validated['sale_type'] === 'single_sale') {
-            return back()
-                ->withErrors([
-                    'sale_type' => 'Single-sale content cannot be uploaded into a bundle folder.',
-                ])
-                ->withInput();
-        }
-
-        // pakai visibility folder untuk konten
-        $visibility = $folder->visibility;
-
-        $file = $request->file('path_hi_res');
-        $fileName = time() . '_' . $file->getClientOriginalName();
-        $id_user = $request->user()->id;
-
-        // Simpan file asli
-        $path_hi_res = $file->storeAs("content_file/{$id_user}/hi_res", $fileName, 'local');
-
-        $hiResFullPath = Storage::disk('local')->path($path_hi_res);
-
-        $imageValidation = $imageHashService->validateImage($hiResFullPath);
-        $moderationResult = $imageModerationService->moderateImage(
-            $hiResFullPath,
-            $validated['content_title'] ?? null,
-            $validated['content_description'] ?? null
+        $folderRules = $contentUploadService->getFolderRules(
+            $folder,
+            $validated['license_id'],
+            $validated['sale_type'],
+            $validated['price'] ?? 0.00
         );
 
-        $contentStatus = (
-            $imageValidation['is_similar'] ||
-            $moderationResult['is_flagged']
-        )
-            ? 'pending_review'
-            : 'active';
-
-        $validationReasons = [];
-
-        if ($imageValidation['is_similar']) {
-            $validationReasons[] = $imageValidation['validation_reason'];
-        }
-
-        if ($moderationResult['is_flagged']) {
-            $validationReasons[] = $moderationResult['reason'];
-        }
-
-        if (empty($validationReasons)) {
-            $validationReasons[] = 'No similar or unsafe content detected.';
-        }
-
-        $validationReason = implode(' ', $validationReasons);
-
-        // Buat dan simpan versi low-res (low res + watermark)
-        $manager = new ImageManager(new Driver());
-        $image = $manager->read($file->getRealPath());
-
-        // Resize gambar untuk low-res
-        $image->scale(width: 720);
-
-        $imageWidth = $image->width();
-
-        $watermarkPath = public_path('aset/watermark.png');
-
-        if (file_exists($watermarkPath)) {
-            $watermark = $manager->read($watermarkPath);
-
-            $watermarkWidth = (int) ($imageWidth * 0.4);
-
-            $watermark->scaleDown(width: $watermarkWidth);
-
-            $image->place($watermark, 'center', 0, 0, 50);
-        }
-
-        // Simpan gambar low-res
-        $path_low_res = "content_file/{$id_user}/low_res/{$fileName}";
-        Storage::disk('public')->put($path_low_res, (string) $image->encode());
-
-        // Simpan data konten ke database
-        $content = Content::create([
-            'seller_id' => $id_user,
-            'folder_id' => $validated['folder_id'],
+        $data = [
+            'folder_id' => $folder->id,
+            'license_id' => $folderRules['license_id'],
+            'sale_type' => $folderRules['sale_type'],
+            'price' => $folderRules['price'],
+            'visibility' => $folderRules['visibility'],
             'content_title' => $validated['content_title'],
-            'content_description' => $validated['content_description'],
-            'price' => $price,
-            'license_id' => $licenseId,
-            'sale_type' => $saleType,
+            'content_description' => $validated['content_description'] ?? null,
             'sale_status' => $validated['sale_status'],
-            'path_hi_res' => $path_hi_res,
-            'path_low_res' => $path_low_res,
-            'visibility' => $visibility,
-            'status' => $contentStatus,
-            'perceptual_hash' => $imageValidation['perceptual_hash'],
-            'similar_content_id' => $imageValidation['similar_content']?->id,
-            'similarity_distance' => $imageValidation['similarity_distance'],
-            'moderation_score' => $moderationResult['moderation_score'],
-            'moderation_category' => $moderationResult['moderation_category'],
-            'validation_reason' => $validationReason,
-            'validated_at' => now(),
-        ]);
+            'tag_ids' => $validated['tag_name'],
+        ];
 
-        // Proses dan hubungkan tags
-        // Hubungkan konten ini dengan semua tag ID yang sudah diproses
-        // 'sync()' adalah perintah Eloquent untuk relasi Many-to-Many
-        // Ini akan otomatis menambah/menghapus data di tabel pivot 'tb_content_tag'
-        $content->tags()->sync($validated['tag_name']);
+        $content = $contentUploadService->upload($sellerId, $request->file('path_hi_res'), $data);
 
-        $message = $contentStatus === 'pending_review'
-            ? 'Content uploaded successfully, but it requires admin review because similar content was detected.'
+        $message = $content->status === 'pending_review'
+            ? 'Content uploaded successfully, but it requires admin review.'
             : 'Content uploaded successfully.';
 
-        return redirect()->route('content.index')->with('success',  $message);
+        return redirect()->route('content.index')->with('success', $message);
     }
 
     public function edit(Request $request, Content $content)
@@ -320,7 +378,167 @@ class ContentController extends Controller
         return view('dashboard.folder.content-detail-folder-create', compact('parentFolder', 'tags', 'licenses'));
     }
 
-    public function storeContentDetailFolder(Request $request, ImageHashService $imageHashService, ImageModerationService $imageModerationService)
+    // public function storeContentDetailFolder(Request $request, ImageHashService $imageHashService, ImageModerationService $imageModerationService)
+    // {
+    //     $validated = $request->validate([
+    //         'content_title' => 'required|string|max:255',
+    //         'content_description' => 'nullable|string',
+    //         'price' => 'nullable|numeric|min:0',
+    //         'license_id' => [
+    //             'required',
+    //             Rule::exists('licenses', 'id')->where(function ($query) {
+    //                 return $query->where('is_active', true);
+    //             }),
+    //         ],
+    //         'sale_type' => 'required|in:multi_sale,single_sale',
+    //         'sale_status' => 'required|in:available,inactive',
+    //         'folder_id' => [
+    //             'required',
+    //             Rule::exists('folders', 'id')->where(function ($query) {
+    //                 return $query->where('seller_id', Auth::id());
+    //             })
+    //         ],
+    //         'tag_name' => 'required|array',
+    //         'tag_name.*' => 'exists:tags,id',
+    //         'path_hi_res' => 'required|image|mimes:jpg,jpeg,png|max:10240',
+    //         // 'visibility' => 'required|in:public,private',
+    //         'policy_agreement' => ['accepted'],
+    //     ]);
+
+    //     $id_user = $request->user()->id;
+    //     $folder_id = $validated['folder_id'];
+
+    //     //cari folder tujuan
+    //     $folder = Folder::where('id', $folder_id)
+    //         ->where('seller_id', $id_user)
+    //         ->firstOrFail();
+
+    //     $licenseId = $folder->is_bundle
+    //         ? $folder->license_id
+    //         : $validated['license_id'];
+
+    //     $saleType = $folder->is_bundle
+    //         ? 'multi_sale'
+    //         : $validated['sale_type'];
+
+    //     $price = ($folder->is_bundle && ! $folder->allow_individual_sale)
+    //         ? 0
+    //         : ($validated['price'] ?? 0.00);
+
+    //     if ($folder->is_bundle && $validated['sale_type'] === 'single_sale') {
+    //         return back()
+    //             ->withErrors([
+    //                 'sale_type' => 'Single-sale content cannot be uploaded into a bundle folder.',
+    //             ])
+    //             ->withInput();
+    //     }
+
+    //     // pakai visibility folder untuk konten
+    //     $visibility = $folder->visibility;
+
+    //     $file = $request->file('path_hi_res');
+    //     $fileName = time() . '_' . $file->getClientOriginalName();
+
+    //     // Simpan file asli
+    //     $path_hi_res = $file->storeAs("content_file/{$id_user}/hi_res", $fileName, 'local');
+
+    //     $hiResFullPath = Storage::disk('local')->path($path_hi_res);
+
+    //     $imageValidation = $imageHashService->validateImage($hiResFullPath);
+    //     $moderationResult = $imageModerationService->moderateImage(
+    //         $hiResFullPath,
+    //         $validated['content_title'] ?? null,
+    //         $validated['content_description'] ?? null
+    //     );
+
+    //     $contentStatus = (
+    //         $imageValidation['is_similar'] ||
+    //         $moderationResult['is_flagged']
+    //     )
+    //         ? 'pending_review'
+    //         : 'active';
+
+    //     $validationReasons = [];
+
+    //     if ($imageValidation['is_similar']) {
+    //         $validationReasons[] = $imageValidation['validation_reason'];
+    //     }
+
+    //     if ($moderationResult['is_flagged']) {
+    //         $validationReasons[] = $moderationResult['reason'];
+    //     }
+
+    //     if (empty($validationReasons)) {
+    //         $validationReasons[] = 'No similar or unsafe content detected.';
+    //     }
+
+    //     $validationReason = implode(' ', $validationReasons);
+
+    //     // Buat dan simpan versi low-res (low res + watermark)
+    //     $manager = new ImageManager(new Driver());
+    //     $image = $manager->read($file->getRealPath());
+
+    //     // Resize gambar untuk low-res
+    //     $image->scale(width: 720);
+
+    //     $imageWidth = $image->width();
+
+    //     $watermarkPath = public_path('aset/watermark.png');
+
+    //     if (file_exists($watermarkPath)) {
+    //         $watermark = $manager->read($watermarkPath);
+
+    //         $watermarkWidth = (int) ($imageWidth * 0.4);
+
+    //         $watermark->scaleDown(width: $watermarkWidth);
+
+    //         $image->place($watermark, 'center', 0, 0, 50);
+    //     }
+
+    //     // Simpan gambar low-res
+    //     $path_low_res = "content_file/{$id_user}/low_res/{$fileName}";
+    //     Storage::disk('public')->put($path_low_res, (string) $image->encode());
+
+    //     // Simpan data konten ke database
+    //     $content = Content::create([
+    //         'seller_id' => $id_user,
+    //         'folder_id' => $validated['folder_id'],
+    //         'content_title' => $validated['content_title'],
+    //         'content_description' => $validated['content_description'],
+    //         'price' => $price,
+    //         'license_id' => $licenseId,
+    //         'sale_type' => $saleType,
+    //         'sale_status' => $validated['sale_status'],
+    //         'path_hi_res' => $path_hi_res,
+    //         'path_low_res' => $path_low_res,
+    //         'visibility' => $visibility,
+    //         'status' => $contentStatus,
+    //         'perceptual_hash' => $imageValidation['perceptual_hash'],
+    //         'similar_content_id' => $imageValidation['similar_content']?->id,
+    //         'similarity_distance' => $imageValidation['similarity_distance'],
+    //         'moderation_score' => $moderationResult['moderation_score'],
+    //         'moderation_category' => $moderationResult['moderation_category'],
+    //         'validation_reason' => $validationReason,
+    //         'validated_at' => now()
+    //     ]);
+
+    //     // Proses dan hubungkan tags
+
+
+    //     // Hubungkan konten ini dengan semua tag ID yang sudah diproses
+    //     // 'sync()' adalah perintah Eloquent untuk relasi Many-to-Many
+    //     // Ini akan otomatis menambah/menghapus data di tabel pivot 'tb_content_tag'
+    //     $content->tags()->sync($validated['tag_name']);
+
+    //     $message = $contentStatus === 'pending_review'
+    //         ? 'Content uploaded successfully, but it requires admin review because similar content was detected.'
+    //         : 'Content uploaded successfully.';
+
+
+    //     return redirect()->route('detail.folder.show', $validated['folder_id'])->with('success', $message);
+    // }
+
+    public function storeContentDetailFolder(Request $request, ContentUploadService $contentUploadService)
     {
         $validated = $request->validate([
             'content_title' => 'required|string|max:255',
@@ -343,139 +561,39 @@ class ContentController extends Controller
             'tag_name' => 'required|array',
             'tag_name.*' => 'exists:tags,id',
             'path_hi_res' => 'required|image|mimes:jpg,jpeg,png|max:10240',
-            // 'visibility' => 'required|in:public,private',
             'policy_agreement' => ['accepted'],
         ]);
 
-        $id_user = $request->user()->id;
-        $folder_id = $validated['folder_id'];
+        $user = $request->user()->id;
 
-        //cari folder tujuan
-        $folder = Folder::where('id', $folder_id)
-            ->where('seller_id', $id_user)
+        $folder = Folder::where('id', $validated['folder_id'])
+            ->where('seller_id', $user)
             ->firstOrFail();
 
-        $licenseId = $folder->is_bundle
-            ? $folder->license_id
-            : $validated['license_id'];
-
-        $saleType = $folder->is_bundle
-            ? 'multi_sale'
-            : $validated['sale_type'];
-
-        $price = ($folder->is_bundle && ! $folder->allow_individual_sale)
-            ? 0
-            : ($validated['price'] ?? 0.00);
-
-        if ($folder->is_bundle && $validated['sale_type'] === 'single_sale') {
-            return back()
-                ->withErrors([
-                    'sale_type' => 'Single-sale content cannot be uploaded into a bundle folder.',
-                ])
-                ->withInput();
-        }
-
-        // pakai visibility folder untuk konten
-        $visibility = $folder->visibility;
-
-        $file = $request->file('path_hi_res');
-        $fileName = time() . '_' . $file->getClientOriginalName();
-
-        // Simpan file asli
-        $path_hi_res = $file->storeAs("content_file/{$id_user}/hi_res", $fileName, 'local');
-
-        $hiResFullPath = Storage::disk('local')->path($path_hi_res);
-
-        $imageValidation = $imageHashService->validateImage($hiResFullPath);
-        $moderationResult = $imageModerationService->moderateImage(
-            $hiResFullPath,
-            $validated['content_title'] ?? null,
-            $validated['content_description'] ?? null
+        $folderRules = $contentUploadService->getFolderRules(
+            $folder,
+            $validated['license_id'],
+            $validated['sale_type'],
+            $validated['price'] ?? 0.00
         );
 
-        $contentStatus = (
-            $imageValidation['is_similar'] ||
-            $moderationResult['is_flagged']
-        )
-            ? 'pending_review'
-            : 'active';
-
-        $validationReasons = [];
-
-        if ($imageValidation['is_similar']) {
-            $validationReasons[] = $imageValidation['validation_reason'];
-        }
-
-        if ($moderationResult['is_flagged']) {
-            $validationReasons[] = $moderationResult['reason'];
-        }
-
-        if (empty($validationReasons)) {
-            $validationReasons[] = 'No similar or unsafe content detected.';
-        }
-
-        $validationReason = implode(' ', $validationReasons);
-
-        // Buat dan simpan versi low-res (low res + watermark)
-        $manager = new ImageManager(new Driver());
-        $image = $manager->read($file->getRealPath());
-
-        // Resize gambar untuk low-res
-        $image->scale(width: 720);
-
-        $imageWidth = $image->width();
-
-        $watermarkPath = public_path('aset/watermark.png');
-
-        if (file_exists($watermarkPath)) {
-            $watermark = $manager->read($watermarkPath);
-
-            $watermarkWidth = (int) ($imageWidth * 0.4);
-
-            $watermark->scaleDown(width: $watermarkWidth);
-
-            $image->place($watermark, 'center', 0, 0, 50);
-        }
-
-        // Simpan gambar low-res
-        $path_low_res = "content_file/{$id_user}/low_res/{$fileName}";
-        Storage::disk('public')->put($path_low_res, (string) $image->encode());
-
-        // Simpan data konten ke database
-        $content = Content::create([
-            'seller_id' => $id_user,
-            'folder_id' => $validated['folder_id'],
+        $data = [
+            'folder_id' => $folder->id,
+            'license_id' => $folderRules['license_id'],
+            'sale_type' => $folderRules['sale_type'],
+            'price' => $folderRules['price'],
+            'visibility' => $folderRules['visibility'],
             'content_title' => $validated['content_title'],
-            'content_description' => $validated['content_description'],
-            'price' => $price,
-            'license_id' => $licenseId,
-            'sale_type' => $saleType,
+            'content_description' => $validated['content_description'] ?? null,
             'sale_status' => $validated['sale_status'],
-            'path_hi_res' => $path_hi_res,
-            'path_low_res' => $path_low_res,
-            'visibility' => $visibility,
-            'status' => $contentStatus,
-            'perceptual_hash' => $imageValidation['perceptual_hash'],
-            'similar_content_id' => $imageValidation['similar_content']?->id,
-            'similarity_distance' => $imageValidation['similarity_distance'],
-            'moderation_score' => $moderationResult['moderation_score'],
-            'moderation_category' => $moderationResult['moderation_category'],
-            'validation_reason' => $validationReason,
-            'validated_at' => now()
-        ]);
+            'tag_ids' => $validated['tag_name'],
+        ];
 
-        // Proses dan hubungkan tags
+        $content = $contentUploadService->upload($user, $request->file('path_hi_res'), $data);
 
-
-        // Hubungkan konten ini dengan semua tag ID yang sudah diproses
-        // 'sync()' adalah perintah Eloquent untuk relasi Many-to-Many
-        // Ini akan otomatis menambah/menghapus data di tabel pivot 'tb_content_tag'
-        $content->tags()->sync($validated['tag_name']);
-
-        $message = $contentStatus === 'pending_review'
-            ? 'Content uploaded successfully, but it requires admin review because similar content was detected.'
+        $message = $content->status === 'pending_review'
+            ? 'Content uploaded successfully, but it requires admin review.'
             : 'Content uploaded successfully.';
-
 
         return redirect()->route('detail.folder.show', $validated['folder_id'])->with('success', $message);
     }
@@ -503,7 +621,180 @@ class ContentController extends Controller
         ));
     }
 
-    public function storeBatch(Request $request, ImageHashService $imageHashService, ImageModerationService $imageModerationService)
+    // public function storeBatch(Request $request, ImageHashService $imageHashService, ImageModerationService $imageModerationService)
+    // {
+    //     $user = $request->user();
+    //     $sellerId = $user->id;
+
+    //     $validated = $request->validate([
+    //         'folder_id' => [
+    //             'required',
+    //             Rule::exists('folders', 'id')->where(function ($query) use ($sellerId) {
+    //                 return $query->where('seller_id', $sellerId);
+    //             }),
+    //         ],
+    //         'images' => ['required', 'array', 'max:50'],
+    //         'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:10240'],
+    //         'default_description' => ['nullable', 'string'],
+    //         'price' => ['nullable', 'numeric', 'min:0'],
+    //         'license_id' => [
+    //             'nullable',
+    //             Rule::exists('licenses', 'id')->where(function ($query) {
+    //                 return $query->where('is_active', true);
+    //             }),
+    //         ],
+    //         'sale_type' => ['nullable', 'in:multi_sale,single_sale'],
+    //         'sale_status' => ['required', 'in:available,inactive'],
+    //         'tag_name' => ['required', 'array'],
+    //         'tag_name.*' => ['exists:tags,id'],
+    //         'policy_agreement' => ['accepted'],
+    //     ]);
+
+    //     $folder = Folder::where('id', $validated['folder_id'])
+    //         ->where('seller_id', $sellerId)
+    //         ->firstOrFail();
+
+    //     if (! $folder->is_bundle && blank($validated['license_id'])) {
+    //         return back()
+    //             ->withErrors([
+    //                 'license_id' => 'License is required when uploading content to a collection folder.',
+    //             ])
+    //             ->withInput();
+    //     }
+
+    //     if ($folder->is_bundle && blank($folder->license_id)) {
+    //         return back()
+    //             ->withErrors([
+    //                 'folder_id' => 'This bundle folder does not have a license.',
+    //             ])
+    //             ->withInput();
+    //     }
+
+    //     $licenseId = $folder->is_bundle
+    //         ? $folder->license_id
+    //         : $validated['license_id'];
+
+    //     $saleType = $folder->is_bundle
+    //         ? 'multi_sale'
+    //         : ($validated['sale_type'] ?? 'multi_sale');
+
+    //     $saleStatus = $validated['sale_status'];
+    //     $visibility = $folder->visibility;
+    //     $description = $validated['default_description'] ?? null;
+    //     $price = ($folder->is_bundle && ! $folder->allow_individual_sale)
+    //         ? 0
+    //         : ($validated['price'] ?? 0.00);
+
+    //     $uploadedCount = 0;
+    //     $pendingReviewCount = 0;
+
+    //     foreach ($request->file('images') as $file) {
+    //         $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+    //         $safeTitle = str_replace(['_', '-'], ' ', $originalName);
+    //         $contentTitle = ucwords($safeTitle);
+
+    //         $fileName = uniqid() . '_' . time() . '_' . $file->getClientOriginalName();
+
+    //         $pathHiRes = $file->storeAs("content_file/{$sellerId}/hi_res", $fileName, 'local');
+
+    //         $hiResFullPath = Storage::disk('local')->path($pathHiRes);
+
+    //         $imageValidation = $imageHashService->validateImage($hiResFullPath);
+    //         $moderationResult = $imageModerationService->moderateImage(
+    //             $hiResFullPath,
+    //             $validated['content_title'] ?? null,
+    //             $validated['content_description'] ?? null
+    //         );
+
+    //         $contentStatus = (
+    //             $imageValidation['is_similar'] ||
+    //             $moderationResult['is_flagged']
+    //         )
+    //             ? 'pending_review'
+    //             : 'active';
+
+    //         $validationReasons = [];
+
+    //         if ($imageValidation['is_similar']) {
+    //             $validationReasons[] = $imageValidation['validation_reason'];
+    //         }
+
+    //         if ($moderationResult['is_flagged']) {
+    //             $validationReasons[] = $moderationResult['reason'];
+    //         }
+
+    //         if (empty($validationReasons)) {
+    //             $validationReasons[] = 'No similar or unsafe content detected.';
+    //         }
+
+    //         $validationReason = implode(' ', $validationReasons);
+
+    //         if ($contentStatus === 'pending_review') {
+    //             $pendingReviewCount++;
+    //         }
+
+    //         $uploadedCount++;
+
+    //         $manager = new ImageManager(new Driver());
+    //         $image = $manager->read($file->getRealPath());
+
+    //         // Resize gambar untuk low-res
+    //         $image->scale(width: 720);
+
+    //         $imageWidth = $image->width();
+
+    //         $watermarkPath = public_path('aset/watermark.png');
+
+    //         if (file_exists($watermarkPath)) {
+    //             $watermark = $manager->read($watermarkPath);
+
+    //             $watermarkWidth = (int) ($imageWidth * 0.4);
+
+    //             $watermark->scaleDown(width: $watermarkWidth);
+
+    //             $image->place($watermark, 'center', 0, 0, 50);
+    //         }
+
+    //         $pathLowRes = "content_file/{$sellerId}/low_res/{$fileName}";
+    //         Storage::disk('public')->put($pathLowRes, (string) $image->encode());
+
+    //         $content = Content::create([
+    //             'seller_id' => $sellerId,
+    //             'folder_id' => $folder->id,
+    //             'license_id' => $licenseId,
+    //             'content_title' => $contentTitle,
+    //             'content_description' => $description,
+    //             'price' => $price,
+    //             'sale_type' => $saleType,
+    //             'sale_status' => $saleStatus,
+    //             'path_hi_res' => $pathHiRes,
+    //             'path_low_res' => $pathLowRes,
+    //             'visibility' => $visibility,
+    //             'status' => $contentStatus,
+    //             'perceptual_hash' => $imageValidation['perceptual_hash'],
+    //             'similar_content_id' => $imageValidation['similar_content']?->id,
+    //             'similarity_distance' => $imageValidation['similarity_distance'],
+    //             'moderation_score' => $moderationResult['moderation_score'],
+    //             'moderation_category' => $moderationResult['moderation_category'],
+    //             'validation_reason' => $validationReason,
+    //             'validated_at' => now(),
+    //         ]);
+
+    //         $content->tags()->sync($validated['tag_name']);
+    //     }
+
+    //     $message = "{$uploadedCount} content(s) uploaded successfully.";
+
+    //     if ($pendingReviewCount > 0) {
+    //         $message .= " {$pendingReviewCount} content(s) require admin review because similar content was detected.";
+    //     }
+
+    //     return redirect()
+    //         ->route('content.index')
+    //         ->with('success', $message);
+    // }
+
+    public function storeBatch(Request $request, ContentUploadService $contentUploadService)
     {
         $user = $request->user();
         $sellerId = $user->id;
@@ -536,139 +827,68 @@ class ContentController extends Controller
             ->where('seller_id', $sellerId)
             ->firstOrFail();
 
-        if (! $folder->is_bundle && blank($validated['license_id'])) {
-            return back()
-                ->withErrors([
-                    'license_id' => 'License is required when uploading content to a collection folder.',
-                ])
-                ->withInput();
-        }
+        $folderRules = $contentUploadService->getFolderRules(
+            $folder,
+            $validated['license_id'] ?? null,
+            $validated['sale_type'] ?? null,
+            $validated['price'] ?? 0.00,
+            false
+        );
 
-        if ($folder->is_bundle && blank($folder->license_id)) {
-            return back()
-                ->withErrors([
-                    'folder_id' => 'This bundle folder does not have a license.',
-                ])
-                ->withInput();
-        }
-
-        $licenseId = $folder->is_bundle
-            ? $folder->license_id
-            : $validated['license_id'];
-
-        $saleType = $folder->is_bundle
-            ? 'multi_sale'
-            : ($validated['sale_type'] ?? 'multi_sale');
-
-        $saleStatus = $validated['sale_status'];
-        $visibility = $folder->visibility;
         $description = $validated['default_description'] ?? null;
-        $price = ($folder->is_bundle && ! $folder->allow_individual_sale)
-            ? 0
-            : ($validated['price'] ?? 0.00);
 
         $uploadedCount = 0;
         $pendingReviewCount = 0;
+        $failedFiles = [];
 
         foreach ($request->file('images') as $file) {
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $safeTitle = str_replace(['_', '-'], ' ', $originalName);
             $contentTitle = ucwords($safeTitle);
 
-            $fileName = uniqid() . '_' . time() . '_' . $file->getClientOriginalName();
-
-            $pathHiRes = $file->storeAs("content_file/{$sellerId}/hi_res", $fileName, 'local');
-
-            $hiResFullPath = Storage::disk('local')->path($pathHiRes);
-
-            $imageValidation = $imageHashService->validateImage($hiResFullPath);
-            $moderationResult = $imageModerationService->moderateImage(
-                $hiResFullPath,
-                $validated['content_title'] ?? null,
-                $validated['content_description'] ?? null
-            );
-
-            $contentStatus = (
-                $imageValidation['is_similar'] ||
-                $moderationResult['is_flagged']
-            )
-                ? 'pending_review'
-                : 'active';
-
-            $validationReasons = [];
-
-            if ($imageValidation['is_similar']) {
-                $validationReasons[] = $imageValidation['validation_reason'];
-            }
-
-            if ($moderationResult['is_flagged']) {
-                $validationReasons[] = $moderationResult['reason'];
-            }
-
-            if (empty($validationReasons)) {
-                $validationReasons[] = 'No similar or unsafe content detected.';
-            }
-
-            $validationReason = implode(' ', $validationReasons);
-
-            if ($contentStatus === 'pending_review') {
-                $pendingReviewCount++;
-            }
-
-            $uploadedCount++;
-
-            $manager = new ImageManager(new Driver());
-            $image = $manager->read($file->getRealPath());
-
-            // Resize gambar untuk low-res
-            $image->scale(width: 720);
-
-            $imageWidth = $image->width();
-
-            $watermarkPath = public_path('aset/watermark.png');
-
-            if (file_exists($watermarkPath)) {
-                $watermark = $manager->read($watermarkPath);
-
-                $watermarkWidth = (int) ($imageWidth * 0.4);
-
-                $watermark->scaleDown(width: $watermarkWidth);
-
-                $image->place($watermark, 'center', 0, 0, 50);
-            }
-
-            $pathLowRes = "content_file/{$sellerId}/low_res/{$fileName}";
-            Storage::disk('public')->put($pathLowRes, (string) $image->encode());
-
-            $content = Content::create([
-                'seller_id' => $sellerId,
+            $data = [
                 'folder_id' => $folder->id,
-                'license_id' => $licenseId,
+                'license_id' => $folderRules['license_id'],
+                'sale_type' => $folderRules['sale_type'],
+                'price' => $folderRules['price'],
+                'visibility' => $folderRules['visibility'],
                 'content_title' => $contentTitle,
                 'content_description' => $description,
-                'price' => $price,
-                'sale_type' => $saleType,
-                'sale_status' => $saleStatus,
-                'path_hi_res' => $pathHiRes,
-                'path_low_res' => $pathLowRes,
-                'visibility' => $visibility,
-                'status' => $contentStatus,
-                'perceptual_hash' => $imageValidation['perceptual_hash'],
-                'similar_content_id' => $imageValidation['similar_content']?->id,
-                'similarity_distance' => $imageValidation['similarity_distance'],
-                'moderation_score' => $moderationResult['moderation_score'],
-                'moderation_category' => $moderationResult['moderation_category'],
-                'validation_reason' => $validationReason,
-                'validated_at' => now(),
-            ]);
+                'sale_status' => $validated['sale_status'],
+                'tag_ids' => $validated['tag_name'],
+            ];
 
-            $content->tags()->sync($validated['tag_name']);
+            try {
+                $content = $contentUploadService->upload($sellerId, $file, $data);
+
+                $uploadedCount++;
+
+                if ($content->status === 'pending_review') {
+                    $pendingReviewCount++;
+                }
+            } catch (Throwable $e) {
+                report($e);
+
+                $failedFiles[] = $file->getClientOriginalName();
+            }
+        }
+
+        if ($uploadedCount === 0) {
+            return back()
+                ->withErrors([
+                    'images' => 'No file could be uploaded: ' . implode(', ', $failedFiles),
+                ])
+                ->withInput();
         }
 
         $message = "{$uploadedCount} content(s) uploaded successfully.";
 
         if ($pendingReviewCount > 0) {
-            $message .= " {$pendingReviewCount} content(s) require admin review because similar content was detected.";
+            $message .= " {$pendingReviewCount} content(s) require admin review.";
+        }
+
+        if (count($failedFiles) > 0) {
+            $message .= ' Failed: ' . implode(', ', $failedFiles) . '.';
         }
 
         return redirect()
@@ -699,7 +919,179 @@ class ContentController extends Controller
         ));
     }
 
-    public function storeBatchFromFolder(Request $request, Folder $folder, ImageHashService $imageHashService, ImageModerationService $imageModerationService)
+    // public function storeBatchFromFolder(Request $request, Folder $folder, ImageHashService $imageHashService, ImageModerationService $imageModerationService)
+    // {
+    //     $user = $request->user();
+    //     $sellerId = $user->id;
+
+    //     if ($folder->seller_id !== $sellerId) {
+    //         abort(403);
+    //     }
+
+    //     $validated = $request->validate([
+    //         'images' => ['required', 'array', 'max:50'],
+    //         'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:10240'],
+    //         'default_description' => ['nullable', 'string'],
+    //         'price' => ['nullable', 'numeric', 'min:0'],
+    //         'license_id' => [
+    //             'nullable',
+    //             Rule::exists('licenses', 'id')->where(function ($query) {
+    //                 return $query->where('is_active', true);
+    //             }),
+    //         ],
+    //         'sale_type' => ['nullable', 'in:multi_sale,single_sale'],
+    //         'sale_status' => ['required', 'in:available,inactive'],
+    //         'tag_name' => ['required', 'array'],
+    //         'tag_name.*' => ['exists:tags,id'],
+    //         'policy_agreement' => ['accepted'],
+    //     ]);
+
+    //     if (! $folder->is_bundle && blank($validated['license_id'])) {
+    //         return back()
+    //             ->withErrors([
+    //                 'license_id' => 'License is required when uploading content to a collection folder.',
+    //             ])
+    //             ->withInput();
+    //     }
+
+    //     if ($folder->is_bundle && blank($folder->license_id)) {
+    //         return back()
+    //             ->withErrors([
+    //                 'folder_id' => 'This bundle folder does not have a license.',
+    //             ])
+    //             ->withInput();
+    //     }
+
+    //     $licenseId = $folder->is_bundle
+    //         ? $folder->license_id
+    //         : $validated['license_id'];
+
+    //     $saleType = $folder->is_bundle
+    //         ? 'multi_sale'
+    //         : ($validated['sale_type'] ?? 'multi_sale');
+
+    //     $price = ($folder->is_bundle && ! $folder->allow_individual_sale)
+    //         ? 0
+    //         : ($validated['price'] ?? 0.00);
+
+    //     $saleStatus = $validated['sale_status'];
+    //     $visibility = $folder->visibility;
+    //     $description = $validated['default_description'] ?? null;
+
+    //     $uploadedCount = 0;
+    //     $pendingReviewCount = 0;
+
+    //     foreach ($request->file('images') as $file) {
+    //         $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+    //         $safeTitle = str_replace(['_', '-'], ' ', $originalName);
+    //         $contentTitle = ucwords($safeTitle);
+
+    //         $fileName = uniqid() . '_' . time() . '_' . $file->getClientOriginalName();
+
+    //         $pathHiRes = $file->storeAs("content_file/{$sellerId}/hi_res", $fileName, 'local');
+
+    //         $hiResFullPath = Storage::disk('local')->path($pathHiRes);
+
+    //         $imageValidation = $imageHashService->validateImage($hiResFullPath);
+    //         $moderationResult = $imageModerationService->moderateImage(
+    //             $hiResFullPath,
+    //             $validated['content_title'] ?? null,
+    //             $validated['content_description'] ?? null
+    //         );
+
+    //         $contentStatus = (
+    //             $imageValidation['is_similar'] ||
+    //             $moderationResult['is_flagged']
+    //         )
+    //             ? 'pending_review'
+    //             : 'active';
+
+    //         $validationReasons = [];
+
+    //         if ($imageValidation['is_similar']) {
+    //             $validationReasons[] = $imageValidation['validation_reason'];
+    //         }
+
+    //         if ($moderationResult['is_flagged']) {
+    //             $validationReasons[] = $moderationResult['reason'];
+    //         }
+
+    //         if (empty($validationReasons)) {
+    //             $validationReasons[] = 'No similar or unsafe content detected.';
+    //         }
+
+    //         $validationReason = implode(' ', $validationReasons);
+
+    //         if ($contentStatus === 'pending_review') {
+    //             $pendingReviewCount++;
+    //         }
+
+    //         $uploadedCount++;
+
+    //         $manager = new ImageManager(new Driver());
+    //         $image = $manager->read($file->getRealPath());
+
+    //         // Resize gambar untuk low-res
+    //         $image->scale(width: 720);
+
+    //         $imageWidth = $image->width();
+
+    //         $watermarkPath = public_path('aset/watermark.png');
+
+    //         if (file_exists($watermarkPath)) {
+    //             $watermark = $manager->read($watermarkPath);
+
+    //             $watermarkWidth = (int) ($imageWidth * 0.4);
+
+    //             $watermark->scaleDown(width: $watermarkWidth);
+
+    //             $image->place($watermark, 'center', 0, 0, 50);
+    //         }
+
+    //         $pathLowRes = "content_file/{$sellerId}/low_res/{$fileName}";
+
+    //         Storage::disk('public')->put(
+    //             $pathLowRes,
+    //             (string) $image->encode()
+    //         );
+
+    //         $content = Content::create([
+    //             'seller_id' => $sellerId,
+    //             'folder_id' => $folder->id,
+    //             'license_id' => $licenseId,
+    //             'content_title' => $contentTitle,
+    //             'content_description' => $description,
+    //             'price' => $price,
+    //             'sale_type' => $saleType,
+    //             'sale_status' => $saleStatus,
+    //             'path_hi_res' => $pathHiRes,
+    //             'path_low_res' => $pathLowRes,
+    //             'visibility' => $visibility,
+    //             'status' => $contentStatus,
+    //             'perceptual_hash' => $imageValidation['perceptual_hash'],
+    //             'similar_content_id' => $imageValidation['similar_content']?->id,
+    //             'similarity_distance' => $imageValidation['similarity_distance'],
+    //             'moderation_score' => $moderationResult['moderation_score'],
+    //             'moderation_category' => $moderationResult['moderation_category'],
+    //             'validation_reason' => $validationReason,
+    //             'validated_at' => now(),
+    //         ]);
+
+    //         $content->tags()->sync($validated['tag_name']);
+
+    //         $message = "{$uploadedCount} content(s) uploaded successfully.";
+
+    //         if ($pendingReviewCount > 0) {
+    //             $message .= " {$pendingReviewCount} content(s) require admin review because similar content was detected.";
+    //         }
+    //     }
+
+    //     return redirect()
+    //         ->route('detail.folder.show', $folder->id)
+    //         ->with('success', $message);
+    // }
+
+    public function storeBatchFromFolder(Request $request, Folder $folder, ContentUploadService $contentUploadService)
     {
         $user = $request->user();
         $sellerId = $user->id;
@@ -726,148 +1118,68 @@ class ContentController extends Controller
             'policy_agreement' => ['accepted'],
         ]);
 
-        if (! $folder->is_bundle && blank($validated['license_id'])) {
-            return back()
-                ->withErrors([
-                    'license_id' => 'License is required when uploading content to a collection folder.',
-                ])
-                ->withInput();
-        }
+        $folderRules = $contentUploadService->getFolderRules(
+            $folder,
+            $validated['license_id'] ?? null,
+            $validated['sale_type'] ?? null,
+            $validated['price'] ?? 0.00,
+            false
+        );
 
-        if ($folder->is_bundle && blank($folder->license_id)) {
-            return back()
-                ->withErrors([
-                    'folder_id' => 'This bundle folder does not have a license.',
-                ])
-                ->withInput();
-        }
-
-        $licenseId = $folder->is_bundle
-            ? $folder->license_id
-            : $validated['license_id'];
-
-        $saleType = $folder->is_bundle
-            ? 'multi_sale'
-            : ($validated['sale_type'] ?? 'multi_sale');
-
-        $price = ($folder->is_bundle && ! $folder->allow_individual_sale)
-            ? 0
-            : ($validated['price'] ?? 0.00);
-
-        $saleStatus = $validated['sale_status'];
-        $visibility = $folder->visibility;
         $description = $validated['default_description'] ?? null;
 
         $uploadedCount = 0;
         $pendingReviewCount = 0;
+        $failedFiles = [];
 
         foreach ($request->file('images') as $file) {
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $safeTitle = str_replace(['_', '-'], ' ', $originalName);
             $contentTitle = ucwords($safeTitle);
 
-            $fileName = uniqid() . '_' . time() . '_' . $file->getClientOriginalName();
-
-            $pathHiRes = $file->storeAs("content_file/{$sellerId}/hi_res", $fileName, 'local');
-
-            $hiResFullPath = Storage::disk('local')->path($pathHiRes);
-
-            $imageValidation = $imageHashService->validateImage($hiResFullPath);
-            $moderationResult = $imageModerationService->moderateImage(
-                $hiResFullPath,
-                $validated['content_title'] ?? null,
-                $validated['content_description'] ?? null
-            );
-
-            $contentStatus = (
-                $imageValidation['is_similar'] ||
-                $moderationResult['is_flagged']
-            )
-                ? 'pending_review'
-                : 'active';
-
-            $validationReasons = [];
-
-            if ($imageValidation['is_similar']) {
-                $validationReasons[] = $imageValidation['validation_reason'];
-            }
-
-            if ($moderationResult['is_flagged']) {
-                $validationReasons[] = $moderationResult['reason'];
-            }
-
-            if (empty($validationReasons)) {
-                $validationReasons[] = 'No similar or unsafe content detected.';
-            }
-
-            $validationReason = implode(' ', $validationReasons);
-
-            if ($contentStatus === 'pending_review') {
-                $pendingReviewCount++;
-            }
-
-            if ($contentStatus === 'pending_review') {
-                $pendingReviewCount++;
-            }
-
-            $uploadedCount++;
-
-            $manager = new ImageManager(new Driver());
-            $image = $manager->read($file->getRealPath());
-
-            // Resize gambar untuk low-res
-            $image->scale(width: 720);
-
-            $imageWidth = $image->width();
-
-            $watermarkPath = public_path('aset/watermark.png');
-
-            if (file_exists($watermarkPath)) {
-                $watermark = $manager->read($watermarkPath);
-
-                $watermarkWidth = (int) ($imageWidth * 0.4);
-
-                $watermark->scaleDown(width: $watermarkWidth);
-
-                $image->place($watermark, 'center', 0, 0, 50);
-            }
-
-            $pathLowRes = "content_file/{$sellerId}/low_res/{$fileName}";
-
-            Storage::disk('public')->put(
-                $pathLowRes,
-                (string) $image->encode()
-            );
-
-            $content = Content::create([
-                'seller_id' => $sellerId,
+            $data = [
                 'folder_id' => $folder->id,
-                'license_id' => $licenseId,
+                'license_id' => $folderRules['license_id'],
+                'sale_type' => $folderRules['sale_type'],
+                'price' => $folderRules['price'],
+                'visibility' => $folderRules['visibility'],
                 'content_title' => $contentTitle,
                 'content_description' => $description,
-                'price' => $price,
-                'sale_type' => $saleType,
-                'sale_status' => $saleStatus,
-                'path_hi_res' => $pathHiRes,
-                'path_low_res' => $pathLowRes,
-                'visibility' => $visibility,
-                'status' => $contentStatus,
-                'perceptual_hash' => $imageValidation['perceptual_hash'],
-                'similar_content_id' => $imageValidation['similar_content']?->id,
-                'similarity_distance' => $imageValidation['similarity_distance'],
-                'moderation_score' => $moderationResult['moderation_score'],
-                'moderation_category' => $moderationResult['moderation_category'],
-                'validation_reason' => $validationReason,
-                'validated_at' => now(),
-            ]);
+                'sale_status' => $validated['sale_status'],
+                'tag_ids' => $validated['tag_name'],
+            ];
 
-            $content->tags()->sync($validated['tag_name']);
+            try {
+                $content = $contentUploadService->upload($sellerId, $file, $data);
 
-            $message = "{$uploadedCount} content(s) uploaded successfully.";
+                $uploadedCount++;
 
-            if ($pendingReviewCount > 0) {
-                $message .= " {$pendingReviewCount} content(s) require admin review because similar content was detected.";
+                if ($content->status === 'pending_review') {
+                    $pendingReviewCount++;
+                }
+            } catch (Throwable $e) {
+                report($e);
+
+                $failedFiles[] = $file->getClientOriginalName();
             }
+        }
+
+        if ($uploadedCount === 0) {
+            return back()
+                ->withErrors([
+                    'images' => 'No file could be uploaded: ' . implode(', ', $failedFiles),
+                ])
+                ->withInput();
+        }
+
+        $message = "{$uploadedCount} content(s) uploaded successfully.";
+
+        if ($pendingReviewCount > 0) {
+            $message .= " {$pendingReviewCount} content(s) require admin review.";
+        }
+
+        if (count($failedFiles) > 0) {
+            $message .= ' Failed: ' . implode(', ', $failedFiles) . '.';
         }
 
         return redirect()

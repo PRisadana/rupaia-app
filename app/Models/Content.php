@@ -10,8 +10,6 @@ class Content extends Model
 {
     use HasFactory;
 
-    // protected $table = 'tb_content';
-
     protected $fillable = [
         'seller_id',
         'folder_id',
@@ -65,17 +63,17 @@ class Content extends Model
 
     protected static function booted(): void
     {
-        // berjalan OTOMATIS setiap kali $content->delete() dipanggil
         static::deleting(function (Content $content) {
-            Storage::disk('local')->delete(
-                $content->path_hi_res
-            );
+            $stillReferenced = TransactionItem::query()
+                ->where('final_file_path', $content->path_hi_res)
+                ->exists();
 
-            Storage::disk('public')->delete(
-                $content->path_low_res
-            );
+            if (! $stillReferenced) {
+                Storage::disk('local')->delete($content->path_hi_res);
+            }
 
-            // Hapus relasi tags ketika konten dihapus
+            Storage::disk('public')->delete($content->path_low_res);
+
             $content->tags()->detach();
         });
     }

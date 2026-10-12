@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Content;
 use App\Models\Transaction;
+use App\Models\TransactionItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -112,15 +113,9 @@ class PaymentFulfillmentService
                         &&
                         $item->content
                     ) {
-                        if (
-                            $item->item_type === 'content'
-                            &&
-                            $item->content
-                        ) {
-                            if (! $item->final_file_path) {
-                                $itemUpdates['final_file_path'] =
-                                    $item->content->path_hi_res;
-                            }
+                        if ($item->item_type === 'content' && ! $item->final_file_path) {
+                            $itemUpdates['final_file_path'] =
+                                $this->copyOriginalForBuyer($item);
                         }
 
                         if (
@@ -211,5 +206,27 @@ class PaymentFulfillmentService
             $paidAt->format('Ymd'),
             $transaction->id
         );
+    }
+
+    private function copyOriginalForBuyer(TransactionItem $item): string
+    {
+        $sourcePath = $item->content->path_hi_res;
+
+        if (! Storage::disk('local')->exists($sourcePath)) {
+            throw new RuntimeException('Hi-res source image not found.');
+        }
+
+        $extension = pathinfo($sourcePath, PATHINFO_EXTENSION) ?: 'jpg';
+
+        $finalPath = sprintf(
+            'transactions/%d/items/%d/final-original.%s',
+            $item->transaction_id,
+            $item->id,
+            $extension
+        );
+
+        Storage::disk('local')->copy($sourcePath, $finalPath);
+
+        return $finalPath;
     }
 }
