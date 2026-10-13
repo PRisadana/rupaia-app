@@ -4,6 +4,17 @@
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
+                @if ($errors->any())
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Something went wrong:</strong>
+                        <ul class="mb-0 mt-2">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
                 <div class="card shadow-sm">
                     <div class="card-body p-4 p-md-5">
                         <h2 class="mb-2">

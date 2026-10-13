@@ -77,4 +77,17 @@ class TransactionItem extends Model
     {
         return $this->belongsTo(Payout::class);
     }
+
+    public function scopeHoldingContent($query, $contentId)
+    {
+        $holdMinutes = (int) config('marketplace.pending_hold_minutes', 60);
+
+        return $query
+            ->where('content_id', $contentId)
+            ->whereHas('transaction', function ($transactionQuery) use ($holdMinutes) {
+                $transactionQuery
+                    ->where('status', 'pending')
+                    ->where('created_at', '>=', now()->subMinutes($holdMinutes));
+            });
+    }
 }

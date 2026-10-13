@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Cart;
 use App\Models\Transaction;
+use App\Models\Content;
+use App\Models\TransactionItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -138,6 +140,25 @@ class CheckoutController extends Controller
                     if ($item->item_type === 'content' || $item->item_type === 'content_with_preset') {
                         $product = $item->content;
                         $license = $product->license;
+
+                        if ($product->sale_type === 'single_sale') {
+                            $lockedContent = Content::query()
+                                ->whereKey($product->id)
+                                ->lockForUpdate()
+                                ->first();
+
+                            if (
+                                ! $lockedContent
+                                || $lockedContent->sale_status !== 'available'
+                                || TransactionItem::holdingContent($product->id)->exists()
+                            ) {
+                                throw ValidationException::withMessages([
+                                    'checkout'
+                                    => "{$product->content_title} is currently being purchased by another buyer or has been sold.",
+                                ]);
+                            }
+                        }
+
                         $transaction->items()->create([
                             'seller_id' => $product->seller_id,
                             'content_id' => $product->id,
@@ -300,6 +321,16 @@ class CheckoutController extends Controller
                     'Unsupported cart item type.';
             }
         }
+
+        $total = $cart->items->sum(
+            fn($item) => (float) $item->price_snapshot
+        );
+
+        if ($total <= 0 || $total != floor($total)) {
+            $errors[] =
+                'The order total must be a whole Rupiah amount greater than zero.';
+        }
+
         return $errors;
     }
 

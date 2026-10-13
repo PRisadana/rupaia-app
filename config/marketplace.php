@@ -7,4 +7,6 @@ return [
         0.10
     ),
 
+    'pending_hold_minutes' => (int) env('PENDING_HOLD_MINUTES', 60),
+
 ];

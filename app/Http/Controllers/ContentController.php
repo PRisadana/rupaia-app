@@ -13,6 +13,7 @@ use App\Models\Content;
 use App\Models\Folder;
 use App\Models\Tags;
 use App\Models\License;
+use App\Models\TransactionItem;
 use App\Services\ContentUploadService;
 use throwable;
 
@@ -350,6 +351,12 @@ class ContentController extends Controller
     {
         // OTORISASI: Cek apakah user ini boleh menghapus konten ini. Ini akan memanggil ContentPolicy@delete
         $this->authorize('delete', $content);
+
+        if (TransactionItem::holdingContent($content->id)->exists()) {
+            return back()->withErrors([
+                'delete' => 'This content cannot be deleted because a buyer has a pending payment for it. Please try again later.',
+            ]);
+        }
 
         // Hapus data konten dari database
         $content->delete();

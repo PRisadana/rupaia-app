@@ -20,10 +20,17 @@ class MidtransPaymentService
     public function createSnapToken(Transaction $transaction): string
     {
         $transaction->loadMissing('buyer');
+
+        $grossAmount = (int) round((float) $transaction->total_amount);
+
+        if ($grossAmount <= 0) {
+            throw new \RuntimeException('Transaction amount must be greater than zero.');
+        }
+
         $params = [
             'transaction_details' => [
                 'order_id' => $transaction->order_code,
-                'gross_amount' => (int) $transaction->total_amount,
+                'gross_amount' => $grossAmount,
             ],
 
             'customer_details' => [

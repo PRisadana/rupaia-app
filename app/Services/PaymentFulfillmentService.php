@@ -33,6 +33,10 @@ class PaymentFulfillmentService
                     'items.preset',
                 ]);
 
+                if ($transaction->status !== 'completed') {
+                    $this->assertItemsCanBeFulfilled($transaction);
+                }
+
                 $commissionRate = (float) config('marketplace.platform_commission_rate');
 
                 if ($commissionRate < 0 || $commissionRate > 1) {
@@ -228,5 +232,53 @@ class PaymentFulfillmentService
         Storage::disk('local')->copy($sourcePath, $finalPath);
 
         return $finalPath;
+    }
+
+    private function assertItemsCanBeFulfilled(Transaction $transaction): void
+    {
+        foreach ($transaction->items as $item) {
+            if (in_array($item->item_type, ['content', 'content_with_preset'], true)) {
+                $content = Content::query()
+                    ->whereKey($item->content_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $content) {
+                    $this->blockFulfillment($transaction, $item, 'the content no longer exists');
+                }
+
+                if ($content->sale_type === 'single_sale') {
+                    $soldToOthers = TransactionItem::query()
+                        ->where('content_id', $content->id)
+                        ->where('transaction_id', '!=', $transaction->id)
+                        ->whereHas('transaction', function ($transactionQuery) {
+                            $transactionQuery->where('status', 'completed');
+                        })
+                        ->exists();
+
+                    if ($soldToOthers) {
+                        $this->blockFulfillment($transaction, $item, 'the single-sale content was already sold');
+                    }
+                }
+            }
+
+            if ($item->item_type === 'bundle' && ! $item->folder) {
+                $this->blockFulfillment($transaction, $item, 'the bundle no longer exists');
+            }
+        }
+    }
+
+    private function blockFulfillment(Transaction $transaction, TransactionItem $item, string $reason): never
+    {
+        Log::error('Payment fulfillment blocked.', [
+            'transaction_id' => $transaction->id,
+            'order_code' => $transaction->order_code,
+            'transaction_item_id' => $item->id,
+            'reason' => $reason,
+        ]);
+
+        throw new RuntimeException(
+            "Fulfillment blocked for {$transaction->order_code}: {$reason}."
+        );
     }
 }

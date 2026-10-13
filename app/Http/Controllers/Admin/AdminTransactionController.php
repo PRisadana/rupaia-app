@@ -112,11 +112,21 @@ class AdminTransactionController extends Controller
 
         $fraudStatus = isset($response->fraud_status) ? (string) $response->fraud_status : null;
 
-        $paymentStatusService->apply(
-            $transaction,
-            $transactionStatus,
-            $fraudStatus
-        );
+        try {
+            $paymentStatusService->apply(
+                $transaction,
+                $transactionStatus,
+                $fraudStatus
+            );
+        } catch (Throwable $e) {
+            report($e);
+
+            return back()
+                ->withErrors([
+                    'sync'
+                    => 'Payment status could not be applied: ' . $e->getMessage(),
+                ]);
+        }
 
         return redirect()
             ->route(
