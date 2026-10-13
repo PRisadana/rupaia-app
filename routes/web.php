@@ -69,6 +69,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/kyc/{kyc}', [KycController::class, 'show'])->name('kyc.show');
     Route::get('/kyc/{kyc}/document', [KycController::class, 'document'])->name('kyc.seller.document');
 
+    Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+    Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
+
+    Route::post('/transactions/{transaction}/payment', [PaymentController::class, 'create'])->name('transactions.payment.create');
+
+    Route::get('/transactions/{transaction}/items/{transactionItem}/download', [TransactionDownloadController::class, 'download'])->name('transactions.items.download');
+});
+
+
+Route::middleware(['auth', 'buyer'])->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/content/{content}', [CartController::class, 'storeContent'])->name('cart.content.store');
     Route::post('/cart/bundle/{folder}', [CartController::class, 'storeBundle'])->name('cart.bundle.store');
@@ -77,14 +87,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-
-    Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
-    Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
-
-    Route::post('/transactions/{transaction}/payment', [PaymentController::class, 'create'])->name('transactions.payment.create');
-
-    Route::get('/transactions/{transaction}/items/{transactionItem}/download', [TransactionDownloadController::class, 'download'])->name('transactions.items.download');
 });
+
 
 Route::middleware(['auth', 'seller'])->group(function () {
     Route::get('/dashboard/content', [ContentController::class, 'index'])->name('content.index');

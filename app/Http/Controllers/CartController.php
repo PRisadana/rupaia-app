@@ -7,16 +7,18 @@ use App\Models\CartItem;
 use App\Models\Content;
 use App\Models\Folder;
 use App\Models\Preset;
-use Illuminate\Support\Facades\Storage;
+use App\Services\PurchaseValidationService;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
+    public function __construct(
+        private PurchaseValidationService $purchaseValidationService
+    ) {}
+
     public function index(Request $request)
     {
         $user = $request->user();
-
-        $this->ensureBuyerAccess($user);
 
         $cart = Cart::with([
             'items.content.user',
@@ -39,31 +41,16 @@ class CartController extends Controller
         $priceChanged = [];
 
         foreach ($items as $item) {
-            if ($item->item_type === 'content' || $item->item_type === 'content_with_preset') {
-                if (! $item->content) {
-                    $availabilityErrors[$item->id]
-                        = 'Content no longer exists.';
-                    continue;
-                }
-                $error = $this->contentPurchaseError($item->content, $user);
-                $currentPrice = (float) $item->content->price;
-            } elseif ($item->item_type === 'bundle') {
-                if (! $item->folder) {
-                    $availabilityErrors[$item->id]
-                        = 'Bundle no longer exists.';
-                    continue;
-                }
-                $error = $this->bundlePurchaseError($item->folder, $user);
-                $currentPrice = (float) $item->folder->bundle_price;
-            } else {
-                $availabilityErrors[$item->id]
-                    = 'Unsupported cart item type.';
-                continue;
-            }
+            $error = $this->purchaseValidationService->cartItemError($item, $user);
 
             if ($error) {
-                $availabilityErrors[$item->id]
-                    = $error;
+                $availabilityErrors[$item->id] = $error;
+            }
+
+            $currentPrice = $this->purchaseValidationService->currentPrice($item);
+
+            if ($currentPrice === null) {
+                continue;
             }
 
             $currentPrices[$item->id] = $currentPrice;
@@ -71,8 +58,7 @@ class CartController extends Controller
         }
 
         $subtotal = $items->sum(
-            fn($item) =>
-            (float) $item->price_snapshot
+            fn($item) => (float) $item->price_snapshot
         );
 
         $hasInvalidItem = ! empty($availabilityErrors);
@@ -100,11 +86,10 @@ class CartController extends Controller
     {
         $user = $request->user();
 
-        $this->ensureBuyerAccess($user);
-
         $content->load('folder');
 
-        $purchaseError = $this->contentPurchaseError($content, $user);
+        $purchaseError = $this->purchaseValidationService->contentError($content, $user);
+
         $validated = $request->validate([
             'preset_id' => [
                 'nullable',
@@ -123,8 +108,7 @@ class CartController extends Controller
             if (! $preset) {
                 return back()
                     ->withErrors([
-                        'cart'
-                        => 'The selected preset is no longer available.',
+                        'cart' => 'The selected preset is no longer available.',
                     ]);
             }
         }
@@ -145,20 +129,13 @@ class CartController extends Controller
 
         $duplicateExists = $cart->items()
             ->where('content_id', $content->id)
-            ->whereIn(
-                'item_type',
-                [
-                    'content',
-                    'content_with_preset',
-                ]
-            )
+            ->whereIn('item_type', ['content', 'content_with_preset'])
             ->exists();
 
         if ($duplicateExists) {
             return back()
                 ->withErrors([
-                    'cart'
-                    => 'This content is already in your cart.',
+                    'cart' => 'This content is already in your cart.',
                 ]);
         }
 
@@ -166,26 +143,19 @@ class CartController extends Controller
             'content_id' => $content->id,
             'folder_id' => null,
             'preset_id' => $preset?->id,
-            'item_type' => $preset
-                ? 'content_with_preset'
-                : 'content',
+            'item_type' => $preset ? 'content_with_preset' : 'content',
             'price_snapshot' => $content->price,
         ]);
 
         return back()
-            ->with(
-                'success',
-                'Content added to cart successfully.'
-            );
+            ->with('success', 'Content added to cart successfully.');
     }
 
     public function storeBundle(Request $request, Folder $folder)
     {
         $user = $request->user();
 
-        $this->ensureBuyerAccess($user);
-
-        $purchaseError = $this->bundlePurchaseError($folder, $user);
+        $purchaseError = $this->purchaseValidationService->bundleError($folder, $user);
 
         if ($purchaseError) {
             return back()
@@ -209,8 +179,7 @@ class CartController extends Controller
         if ($duplicateExists) {
             return back()
                 ->withErrors([
-                    'cart'
-                    => 'This bundle is already in your cart.',
+                    'cart' => 'This bundle is already in your cart.',
                 ]);
         }
 
@@ -223,92 +192,46 @@ class CartController extends Controller
         ]);
 
         return back()
-            ->with(
-                'success',
-                'Bundle added to cart successfully.'
-            );
+            ->with('success', 'Bundle added to cart successfully.');
     }
 
     public function refreshPrice(Request $request, CartItem $cartItem)
     {
         $user = $request->user();
 
-        $this->ensureBuyerAccess($user);
-
         $cartItem->load([
             'cart',
             'content.folder',
-            'folder',
+            'content.license',
+            'folder.license',
+            'preset',
         ]);
 
         if ($cartItem->cart->buyer_id !== $user->id || $cartItem->cart->status !== 'active') {
             abort(403);
         }
 
-        if ($cartItem->item_type === 'content' || $cartItem->item_type === 'content_with_preset') {
-            if (! $cartItem->content) {
-                return back()
-                    ->withErrors([
-                        'cart'
-                        => 'Content no longer exists.',
-                    ]);
-            }
+        $error = $this->purchaseValidationService->cartItemError($cartItem, $user);
 
-            $error = $this->contentPurchaseError(
-                $cartItem->content,
-                $user
-            );
-            if ($error) {
-                return back()
-                    ->withErrors([
-                        'cart' => $error,
-                    ]);
-            }
-            $currentPrice = (float) $cartItem->content->price;
-        } elseif ($cartItem->item_type === 'bundle') {
-            if (! $cartItem->folder) {
-                return back()
-                    ->withErrors([
-                        'cart'
-                        => 'Bundle no longer exists.',
-                    ]);
-            }
-            $error = $this->bundlePurchaseError(
-                $cartItem->folder,
-                $user
-            );
-            if ($error) {
-                return back()
-                    ->withErrors([
-                        'cart' => $error,
-                    ]);
-            }
-            $currentPrice = (float) $cartItem->folder->bundle_price;
-        } else {
+        if ($error) {
             return back()
                 ->withErrors([
-                    'cart'
-                    => 'Unsupported cart item type.',
+                    'cart' => $error,
                 ]);
         }
 
         $cartItem->update([
-            'price_snapshot' => $currentPrice,
+            'price_snapshot' => $this->purchaseValidationService->currentPrice($cartItem),
         ]);
 
         return redirect()
             ->route('cart.index')
-            ->with(
-                'success',
-                'Cart price has been updated.'
-            );
+            ->with('success', 'Cart price has been updated.');
     }
 
     public function destroy(Request $request, CartItem $cartItem)
     {
         $user = $request->user();
-
-        $this->ensureBuyerAccess($user);
 
         $cartItem->load('cart');
 
@@ -320,89 +243,6 @@ class CartController extends Controller
 
         return redirect()
             ->route('cart.index')
-            ->with(
-                'success',
-                'Item removed from cart.'
-            );
-    }
-
-
-    private function ensureBuyerAccess($user): void
-    {
-        if (! in_array(
-            $user->role,
-            ['buyer', 'seller'],
-            true
-        )) {
-            abort(403);
-        }
-    }
-
-    private function contentPurchaseError(Content $content, $user): ?string
-    {
-        if (! Storage::disk('local')->exists(
-            $content->path_hi_res
-        )) {
-            return ('Hi-res source image not found.');
-        }
-
-        if ($content->seller_id === $user->id) {
-            return 'You cannot purchase your own content.';
-        }
-
-        if ($content->status !== 'active') {
-            return 'This content is not currently available.';
-        }
-
-        if ($content->visibility !== 'public') {
-            return 'This content is not publicly available.';
-        }
-
-        if ($content->sale_status !== 'available') {
-            return 'This content is currently unavailable for purchase.';
-        }
-
-        if ($content->sale_status !== 'available') {
-            return 'This content is currently unavailable for purchase.';
-        }
-
-        if (
-            $content->folder
-            && $content->folder->is_bundle
-            && ! $content->folder->allow_individual_sale
-        ) {
-            return 'This content is only available as part of its bundle.';
-        }
-
-        return null;
-    }
-
-    private function bundlePurchaseError(Folder $folder, $user): ?string
-    {
-        if ($folder->seller_id === $user->id) {
-            return 'You cannot purchase your own bundle.';
-        }
-
-        if (! $folder->is_bundle) {
-            return 'This folder is not a bundle.';
-        }
-
-        if ($folder->status !== 'active') {
-            return 'This bundle is not currently available.';
-        }
-
-        if ($folder->visibility !== 'public') {
-            return 'This bundle is not publicly available.';
-        }
-
-        if ($folder->bundle_price === null) {
-            return 'This bundle does not have a valid price.';
-        }
-
-        if (! $folder->hasPurchasableBundleContents()) {
-            return 'This bundle does not contain purchasable content.';
-        }
-
-        return null;
+            ->with('success', 'Item removed from cart.');
     }
 }

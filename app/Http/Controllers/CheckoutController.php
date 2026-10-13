@@ -6,6 +6,7 @@ use App\Models\Cart;
 use App\Models\Transaction;
 use App\Models\Content;
 use App\Models\TransactionItem;
+use App\Services\PurchaseValidationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -13,13 +14,13 @@ use Illuminate\Validation\ValidationException;
 
 class CheckoutController extends Controller
 {
+    public function __construct(
+        private PurchaseValidationService $purchaseValidationService
+    ) {}
+
     public function index(Request $request)
     {
         $user = $request->user();
-
-        if (! in_array($user->role, ['buyer', 'seller'], true)) {
-            abort(403);
-        }
 
         $cart = Cart::with([
             'items.content.user',
@@ -65,10 +66,6 @@ class CheckoutController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
-
-        if (! in_array($user->role, ['buyer', 'seller'], true)) {
-            abort(403);
-        }
 
         $transaction = DB::transaction(
             function () use ($user) {
@@ -226,99 +223,21 @@ class CheckoutController extends Controller
     private function validateCartForCheckout(Cart $cart, $user): array
     {
         $errors = [];
+
         foreach ($cart->items as $item) {
-            if ($item->item_type === 'content' || $item->item_type === 'content_with_preset') {
-                $content = $item->content;
-                if (! $content) {
-                    $errors[] =
-                        'One of the contents no longer exists.';
-                    continue;
-                }
+            $name = $this->purchaseValidationService->itemName($item);
 
-                if ($content->seller_id === $user->id) {
-                    $errors[] =
-                        "{$content->content_title} is your own content.";
-                }
+            $error = $this->purchaseValidationService->cartItemError($item, $user);
 
-                if ($content->status !== 'active') {
-                    $errors[] =
-                        "{$content->content_title} is no longer active.";
-                }
+            if ($error) {
+                $errors[] = "{$name}: {$error}";
+                continue;
+            }
 
-                if ($content->visibility !== 'public') {
-                    $errors[] =
-                        "{$content->content_title} is no longer public.";
-                }
+            $currentPrice = $this->purchaseValidationService->currentPrice($item);
 
-                if ($content->sale_status !== 'available') {
-                    $errors[] =
-                        "{$content->content_title} is no longer available.";
-                }
-
-                if ($content->folder && $content->folder->is_bundle && ! $content->folder->allow_individual_sale) {
-                    $errors[] =
-                        "{$content->content_title} is only available through its bundle.";
-                }
-
-                if ((float) $content->price !== (float) $item->price_snapshot) {
-                    $errors[] =
-                        "The price of {$content->content_title} has changed.";
-                }
-
-                if (! $content->license) {
-                    $errors[] =
-                        "{$content->content_title} does not have a valid license.";
-                }
-
-                if ($item->item_type === 'content_with_preset' && (! $item->preset || ! $item->preset->is_active)) {
-                    $errors[] =
-                        "{$content->content_title} uses an unavailable preset.";
-                }
-            } elseif ($item->item_type === 'bundle') {
-                $folder = $item->folder;
-                if (! $folder) {
-                    $errors[] =
-                        'One of the bundles no longer exists.';
-                    continue;
-                }
-
-                if ($folder->seller_id === $user->id) {
-                    $errors[] =
-                        "{$folder->folder_name} is your own bundle.";
-                }
-
-                if (! $folder->is_bundle) {
-                    $errors[] =
-                        "{$folder->folder_name} is no longer a bundle.";
-                }
-
-                if ($folder->status !== 'active') {
-                    $errors[] =
-                        "{$folder->folder_name} is no longer active.";
-                }
-
-                if ($folder->visibility !== 'public') {
-                    $errors[] =
-                        "{$folder->folder_name} is no longer public.";
-                }
-
-                if (! $folder->hasPurchasableBundleContents()) {
-                    $errors[] =
-                        "{$folder->folder_name} no longer contains purchasable content.";
-                }
-
-                if ((float) $folder->bundle_price !== (float) $item->price_snapshot) {
-                    $errors[] =
-                        "The price of {$folder->folder_name} has changed.";
-                }
-
-                if (! $folder->license) {
-                    $errors[] =
-                        "{$folder->folder_name} does not have a valid license.";
-                }
-            } else {
-                $errors[] =
-                    'Unsupported cart item type.';
+            if ($currentPrice !== (float) $item->price_snapshot) {
+                $errors[] = "The price of {$name} has changed.";
             }
         }
 
