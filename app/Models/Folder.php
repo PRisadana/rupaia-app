@@ -125,4 +125,22 @@ class Folder extends Model
             'license_id' => $this->license_id,
         ]);
     }
+
+    public function allFolderIds(): array
+    {
+        $ids = [$this->id];
+        $parentIds = [$this->id];
+
+        while (! empty($parentIds)) {
+            $childIds = Folder::whereIn('parent_id', $parentIds)
+                ->whereNotIn('id', $ids)
+                ->pluck('id')
+                ->all();
+
+            $ids = array_merge($ids, $childIds);
+            $parentIds = $childIds;
+        }
+
+        return $ids;
+    }
 }

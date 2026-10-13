@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Folder;
 use App\Models\License;
+use App\Models\TransactionItem;
+use App\Models\Content;
+use App\Rules\WholeRupiah;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class FolderController extends Controller
 {
@@ -42,7 +46,12 @@ class FolderController extends Controller
             'folder_name' => 'required|string|max:255',
             'folder_description' => 'nullable|string|max:1000',
             'visibility' => 'required|in:public,private,by_request',
-            'parent_id' => ['nullable', 'exists:folders,id'],
+            'parent_id' => [
+                'nullable',
+                Rule::exists('folders', 'id')->where(function ($query) use ($user) {
+                    return $query->where('seller_id', $user->id);
+                }),
+            ],
             'license_id' => [
                 'nullable',
                 Rule::exists('licenses', 'id')->where(function ($query) {
@@ -51,7 +60,7 @@ class FolderController extends Controller
             ],
             'allow_individual_sale' => 'required|boolean',
             'is_bundle' => 'required|boolean',
-            'bundle_price' => 'nullable|numeric|min:0',
+            'bundle_price' => ['nullable', 'numeric', 'min:0', new WholeRupiah],
             // 'status' => 'required|in:active,deleted,banned',
         ]);
 
@@ -118,7 +127,7 @@ class FolderController extends Controller
             ],
             'allow_individual_sale' => 'nullable|boolean',
             'is_bundle' => 'required|boolean',
-            'bundle_price' => 'nullable|numeric|min:0'
+            'bundle_price' => ['nullable', 'numeric', 'min:0', new WholeRupiah],
         ]);
 
         $requestedIsBundle = (int) $validated['is_bundle'] === 1;
@@ -173,13 +182,28 @@ class FolderController extends Controller
     public function destroy(Folder $folder)
     {
         $this->authorize('delete', $folder);
-        // INI AKAN MEMICU SEMUA KEJADIAN:
-        // - DB akan menghapus folder ini
-        // - DB (via cascade) akan menghapus semua sub-folder
-        // - DB (via cascade) akan menghapus semua 'content' di folder ini & sub-folder
-        // - Model Event 'deleting' akan dipanggil untuk 
-        //   setiap 'content' yang dihapus, dan membersihkan file di storage.
-        $folder->delete();
+
+        $folderIds = $folder->allFolderIds();
+        $contents = Content::whereIn('folder_id', $folderIds)->get();
+
+        $hasPendingContent = TransactionItem::holdingContent($contents->pluck('id')->all())->exists();
+        $hasPendingBundle = TransactionItem::holdingFolder($folderIds)->exists();
+
+        if ($hasPendingContent || $hasPendingBundle) {
+            return back()->withErrors([
+                'delete' => 'This folder cannot be deleted because a buyer has a pending payment for its content or bundle. Please try again later.',
+            ]);
+        }
+
+        DB::transaction(function () use ($contents, $folder) {
+            // Hapus konten lewat model supaya event 'deleting' berjalan:
+            // file hi-res dan low-res dihapus, relasi tag dilepas.
+            foreach ($contents as $content) {
+                $content->delete();
+            }
+
+            $folder->delete();
+        });
 
         return redirect()->route('folder.index')->with('success', 'Folder deleted successfully!');
     }
@@ -261,7 +285,12 @@ class FolderController extends Controller
             'folder_name' => 'required|string|max:255',
             'folder_description' => 'nullable|string|max:1000',
             'visibility' => 'required|in:public,private,by_request',
-            'parent_id' => ['required', 'exists:folders,id'],
+            'parent_id' => [
+                'required',
+                Rule::exists('folders', 'id')->where(function ($query) use ($user) {
+                    return $query->where('seller_id', $user->id);
+                }),
+            ],
             'license_id' => [
                 'nullable',
                 Rule::exists('licenses', 'id')->where(function ($query) {
@@ -270,7 +299,7 @@ class FolderController extends Controller
             ],
             'allow_individual_sale' => 'required|boolean',
             'is_bundle' => 'required|boolean',
-            'bundle_price' => 'nullable|numeric|min:0',
+            'bundle_price' => ['nullable', 'numeric', 'min:0', new WholeRupiah],
         ]);
 
         $requestedIsBundle = (int) $validated['is_bundle'] === 1;
@@ -298,6 +327,10 @@ class FolderController extends Controller
         $validated['bundle_price'] = $requestedIsBundle
             ? $validated['bundle_price']
             : null;
+
+        $validated['allow_individual_sale'] = $requestedIsBundle
+            ? $validated['allow_individual_sale']
+            : true;
 
         // $parentFolder = Folder::where('id', $validated['parent_id'])
         //     ->where('seller_id', $user->id)
@@ -345,10 +378,9 @@ class FolderController extends Controller
 
         $destinationFolderId = $validated['parent_id'] ?? null;
 
-        // Cegah folder jadi parent dirinya sendiri
-        if ($destinationFolderId && $destinationFolderId == $folder->id) {
+        if ($destinationFolderId && in_array($destinationFolderId, $folder->allFolderIds())) {
             return back()->withErrors([
-                'parent_id' => 'Folder tidak boleh menjadi parent dirinya sendiri'
+                'parent_id' => 'Folder cannot be moved into itself or its subfolder.',
             ]);
         }
 

@@ -176,7 +176,7 @@
                                     This bundle does not allow individual sale, so content price is not used.
                                 </div>
                             @else
-                                <input id="price" name="price" type="number" min="0" step="0.01"
+                                <input id="price" name="price" type="number" min="0" step="1"
                                     value="{{ old('price') }}" class="form-control @error('price') is-invalid @enderror">
 
                                 <div class="form-text">

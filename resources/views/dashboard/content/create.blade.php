@@ -121,7 +121,7 @@
                                 Content Price (IDR)
                             </label>
 
-                            <input id="price" name="price" type="number" min="0" step="0.01"
+                            <input id="price" name="price" type="number" min="0" step="1"
                                 value="{{ old('price') }}" class="form-control @error('price') is-invalid @enderror">
 
                             @error('price')

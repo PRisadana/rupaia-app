@@ -106,7 +106,7 @@
 
                         <div class="mb-3">
                             <label for="price" class="form-label">Default Price (IDR)</label>
-                            <input id="price" name="price" type="number" min="0" step="0.01"
+                            <input id="price" name="price" type="number" min="0" step="1"
                                 class="form-control @error('price') is-invalid @enderror" value="{{ old('price') }}">
 
                             @error('price')

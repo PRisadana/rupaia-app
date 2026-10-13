@@ -163,7 +163,7 @@
 
                             <div class="mb-3">
                                 <label for="bundle_price" class="form-label">Bundle Price</label>
-                                <input id="bundle_price" name="bundle_price" type="number" min="0" step="0.01"
+                                <input id="bundle_price" name="bundle_price" type="number" min="0" step="1"
                                     class="form-control @error('bundle_price') is-invalid @enderror"
                                     value="{{ old('bundle_price', $folder->bundle_price) }}">
 

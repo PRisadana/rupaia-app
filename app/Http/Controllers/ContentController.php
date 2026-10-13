@@ -15,6 +15,7 @@ use App\Models\Tags;
 use App\Models\License;
 use App\Models\TransactionItem;
 use App\Services\ContentUploadService;
+use App\Rules\WholeRupiah;
 use throwable;
 
 class ContentController extends Controller
@@ -209,7 +210,7 @@ class ContentController extends Controller
         $validated = $request->validate([
             'content_title' => 'required|string|max:255',
             'content_description' => 'nullable|string',
-            'price' => 'nullable|numeric|min:0',
+            'price' => ['nullable', 'numeric', 'min:0', new WholeRupiah],
             'license_id' => [
                 'required',
                 Rule::exists('licenses', 'id')->where(function ($query) {
@@ -283,7 +284,7 @@ class ContentController extends Controller
         $validated = $request->validate([
             'content_title' => 'required|string|max:255',
             'content_description' => 'nullable|string',
-            'price' => 'nullable|numeric|min:0',
+            'price' => ['nullable', 'numeric', 'min:0', new WholeRupiah],
             'license_id' => [
                 'required',
                 Rule::exists('licenses', 'id')->where(function ($query) {
@@ -550,7 +551,7 @@ class ContentController extends Controller
         $validated = $request->validate([
             'content_title' => 'required|string|max:255',
             'content_description' => 'nullable|string',
-            'price' => 'nullable|numeric|min:0',
+            'price' => ['nullable', 'numeric', 'min:0', new WholeRupiah],
             'license_id' => [
                 'required',
                 Rule::exists('licenses', 'id')->where(function ($query) {
@@ -816,7 +817,7 @@ class ContentController extends Controller
             'images' => ['required', 'array', 'max:50'],
             'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:10240'],
             'default_description' => ['nullable', 'string'],
-            'price' => ['nullable', 'numeric', 'min:0'],
+            'price' => ['nullable', 'numeric', 'min:0', new WholeRupiah],
             'license_id' => [
                 'nullable',
                 Rule::exists('licenses', 'id')->where(function ($query) {
@@ -1111,7 +1112,7 @@ class ContentController extends Controller
             'images' => ['required', 'array', 'max:50'],
             'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:10240'],
             'default_description' => ['nullable', 'string'],
-            'price' => ['nullable', 'numeric', 'min:0'],
+            'price' => ['nullable', 'numeric', 'min:0', new WholeRupiah],
             'license_id' => [
                 'nullable',
                 Rule::exists('licenses', 'id')->where(function ($query) {
