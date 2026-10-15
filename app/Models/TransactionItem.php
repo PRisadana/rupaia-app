@@ -81,12 +81,18 @@ class TransactionItem extends Model
 
     public function scopeInPendingTransaction($query)
     {
-        $holdMinutes = (int) config('marketplace.pending_hold_minutes', 60);
-
-        return $query->whereHas('transaction', function ($transactionQuery) use ($holdMinutes) {
-            $transactionQuery
-                ->where('status', 'pending')
-                ->where('created_at', '>=', now()->subMinutes($holdMinutes));
+        return $query->whereHas('transaction', function ($transactionQuery) {
+            $transactionQuery->where(function ($statusQuery) {
+                $statusQuery->where('status', 'processing')
+                    ->orWhere(function ($pendingQuery) {
+                        $pendingQuery->where('status', 'pending')
+                            ->where(
+                                'created_at',
+                                '>=',
+                                now()->subMinutes((int) config('marketplace.pending_hold_minutes'))
+                            );
+                    });
+            });
         });
     }
 

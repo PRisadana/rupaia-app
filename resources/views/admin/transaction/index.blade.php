@@ -137,10 +137,26 @@
                                         <span class="badge bg-secondary">
                                             Cancelled
                                         </span>
+                                    @elseif ($transaction->status === 'processing')
+                                        <span class="badge bg-info text-dark">
+                                            Processing
+                                        </span>
                                     @else
                                         <span class="badge bg-secondary">
                                             {{ ucfirst($transaction->status) }}
                                         </span>
+                                    @endif
+
+                                    @if ($transaction->status === 'processing')
+                                        <div class="small text-muted mt-1">
+                                            Your payment was received. Your files are being prepared.
+                                            This page refreshes automatically.
+                                        </div>
+                                        <script>
+                                            setTimeout(function() {
+                                                window.location.reload();
+                                            }, 5000);
+                                        </script>
                                     @endif
                                 </td>
                                 <td>

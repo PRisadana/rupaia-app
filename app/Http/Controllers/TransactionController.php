@@ -11,10 +11,6 @@ class TransactionController extends Controller
     {
         $user = $request->user();
 
-        if (! in_array($user->role, ['buyer', 'seller'], true)) {
-            abort(403);
-        }
-
         $transactions = Transaction::withCount('items')
             ->where('buyer_id', $user->id)
             ->latest()

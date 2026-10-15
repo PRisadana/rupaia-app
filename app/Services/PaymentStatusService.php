@@ -19,7 +19,7 @@ class PaymentStatusService
             );
 
         if ($isSuccess) {
-            $this->fulfillment->complete($transaction);
+            $this->fulfillment->markAsPaid($transaction);
             return;
         }
 

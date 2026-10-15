@@ -76,11 +76,22 @@
                                                         </span>
                                                     @break
 
+                                                    @case('processing')
+                                                        <span class="badge bg-info text-dark">
+                                                            Processing
+                                                        </span>
+                                                    @break
+
                                                     @default
                                                         <span class="badge bg-warning text-dark">
                                                             Pending
                                                         </span>
                                                 @endswitch
+                                                @if ($transaction->status === 'processing')
+                                                    <div class="small text-muted mt-1">
+                                                        Your payment was received. Your files are being prepared.
+                                                    </div>
+                                                @endif
                                             </td>
                                             <td>
                                                 @switch($transaction->payment_status)

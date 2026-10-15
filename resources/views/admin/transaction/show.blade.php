@@ -62,10 +62,26 @@
                         <span class="badge bg-warning text-dark">
                             Pending
                         </span>
+                    @elseif ($transaction->status === 'processing')
+                        <span class="badge bg-info text-dark">
+                            Processing
+                        </span>
                     @else
                         <span class="badge bg-secondary">
                             {{ ucfirst($transaction->status) }}
                         </span>
+                    @endif
+
+                    @if ($transaction->status === 'processing')
+                        <div class="small text-muted mt-1">
+                            Your payment was received. Your files are being prepared.
+                            This page refreshes automatically.
+                        </div>
+                        <script>
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 5000);
+                        </script>
                     @endif
 
                     @if ($transaction->payment_status === 'success')
@@ -232,18 +248,15 @@
                                     <div class="fw-semibold ">
                                         {{ $item->seller->name ?? '-' }}
                                     </div>
-
                                     <div class="small text-muted">
                                         {{ $item->seller->email ?? '-' }}
                                     </div>
                                 </td>
-
                                 <td>
                                     <div class="fw-semibold">
                                         {{ $item->item_name_snapshot }}
                                     </div>
                                 </td>
-
                                 <td>
                                     @if ($item->item_type === 'bundle' && $item->folder)
                                         <a href="{{ route('folder.show', $item->folder->id) }}" class="badge bg-dark">
@@ -263,25 +276,16 @@
                                             {{ ucwords(str_replace('_', ' ', $item->item_type)) }}
                                         </span>
                                     @endif
-
                                 </td>
-
-
                                 <td>
                                     {{ $item->license_name_snapshot }}
                                 </td>
-
-
                                 <td class="text-nowrap">
-
                                     Rp
                                     {{ number_format($item->price_snapshot, 0, ',', '.') }}
-
                                 </td>
 
-
                                 <td class="text-nowrap">
-
                                     @if ($item->commission_amount !== null)
                                         Rp
                                         {{ number_format($item->commission_amount, 0, ',', '.') }}
@@ -290,12 +294,9 @@
                                             -
                                         </span>
                                     @endif
-
                                 </td>
 
-
                                 <td class="text-nowrap">
-
                                     @if ($item->seller_amount !== null)
                                         Rp
                                         {{ number_format($item->seller_amount, 0, ',', '.') }}
@@ -304,17 +305,12 @@
                                             -
                                         </span>
                                     @endif
-
                                 </td>
-
-
                                 <td>
-
                                     @if ($item->final_file_path && $item->download_expires_at && now()->lte($item->download_expires_at))
                                         <span class="badge bg-success">
                                             Available
                                         </span>
-
                                         <div class="small text-muted mt-1">
                                             {{ $item->download_count }}
                                             download(s)
@@ -328,32 +324,18 @@
                                             Locked
                                         </span>
                                     @endif
-
                                 </td>
-
                             </tr>
-
-
                         @empty
-
                             <tr>
-
                                 <td colspan="9" class="text-center py-4 text-muted">
-
                                     No transaction items found.
-
                                 </td>
-
                             </tr>
                         @endforelse
-
                     </tbody>
-
                 </table>
-
             </div>
-
         </div>
-
     </div>
 @endsection

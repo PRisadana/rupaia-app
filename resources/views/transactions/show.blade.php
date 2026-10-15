@@ -67,11 +67,29 @@
                                     </span>
                                 @break
 
+                                @case('processing')
+                                    <span class="badge bg-info text-dark">
+                                        Processing
+                                    </span>
+                                @break
+
                                 @default
                                     <span class="badge bg-warning text-dark">
                                         Pending
                                     </span>
                             @endswitch
+
+                            @if ($transaction->status === 'processing')
+                                <div class="small text-muted mt-1">
+                                    Your payment was received. Your files are being prepared.
+                                    This page refreshes automatically.
+                                </div>
+                                <script>
+                                    setTimeout(function() {
+                                        window.location.reload();
+                                    }, 5000);
+                                </script>
+                            @endif
                         </div>
 
                         <div class="mb-4">
