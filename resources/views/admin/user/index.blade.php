@@ -2,6 +2,16 @@
 
 @section('content')
     <div class="container-fluid px-4 admin-page-wrapper">
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
         <div class="d-flex justify-content-between align-items-center my-4 admin-page-title">
             <div>
                 <h1 class="m-0">Users</h1>

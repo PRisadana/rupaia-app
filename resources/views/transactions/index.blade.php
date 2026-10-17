@@ -5,7 +5,6 @@
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <div class="mb-4">
-
                     <h2 class="fw-bold mb-1">
                         My Transactions
                     </h2>
@@ -13,7 +12,6 @@
                     <p class="text-muted mb-0">
                         View your checkout and payment history.
                     </p>
-
                 </div>
 
                 @if ($transactions->isEmpty())

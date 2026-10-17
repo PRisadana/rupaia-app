@@ -37,8 +37,9 @@
 
         <div class="mb-3">
             <label for="email" :value="__('Email')" class="form-label">Email</label>
-            <input id="email" name="email" type="email" class="form-control @error('name') is-invalid @enderror"
-                value="{{ old('email', $user->email) }}" required autocomplete="username">
+            <input id="email" name="email" type="email"
+                class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $user->email) }}"
+                required autocomplete="username">
 
             @error('email')
                 <div class="invalid-feedback">

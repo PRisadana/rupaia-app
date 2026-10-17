@@ -5,12 +5,17 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Services\UserDeletionService;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    public function __construct(
+        private UserDeletionService $userDeletionService
+    ) {}
+
     public function index()
     {
         $users = User::latest()->paginate(10);
@@ -76,9 +81,21 @@ class UserController extends Controller
         return redirect()->route('admin.user.index')->with('success', 'User updated successfully.');
     }
 
-    public function destroyUser(User $user)
+    public function destroyUser(Request $request, User $user)
     {
-        $user->delete();
+        if ($user->is($request->user())) {
+            return redirect()->route('admin.user.index')
+                ->with('error', 'You cannot delete your own account.');
+        }
+
+        $blockReason = $this->userDeletionService->blockReason($user);
+
+        if ($blockReason) {
+            return redirect()->route('admin.user.index')
+                ->with('error', $blockReason);
+        }
+
+        $this->userDeletionService->delete($user);
 
         return redirect()->route('admin.user.index')->with('success', 'User deleted successfully.');
     }

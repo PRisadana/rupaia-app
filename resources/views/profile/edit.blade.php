@@ -3,6 +3,13 @@
 @section('content')
     <div class="row justify-content-center">
 
+        @if (session('delete_account_error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('delete_account_error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
         <div class="col-lg-10">
             <div class="card shadow-sm mb-4">
                 <div class="card-body p-4 p-md-5">

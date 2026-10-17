@@ -9,12 +9,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
+use App\Services\UserDeletionService;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
     public function edit(Request $request): View
     {
         $user = $request->user();
@@ -58,7 +56,7 @@ class ProfileController extends Controller
         if ($request->hasFile('profile_photo_path')) {
             // Hapus foto lama jika ada
             if ($request->user()->profile_photo_path) {
-                Storage::delete($request->user()->profile_photo_path);
+                Storage::disk('public')->delete($request->user()->profile_photo_path);
             }
 
             // Simpan foto baru dan dapatkan path-nya
@@ -75,7 +73,7 @@ class ProfileController extends Controller
     /**
      * Delete the user's account.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request, UserDeletionService $userDeletionService): RedirectResponse
     {
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current_password'],
@@ -83,9 +81,15 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        $blockReason = $userDeletionService->blockReason($user);
+
+        if ($blockReason) {
+            return back()->with('delete_account_error', $blockReason);
+        }
+
         Auth::logout();
 
-        $user->delete();
+        $userDeletionService->delete($user);
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

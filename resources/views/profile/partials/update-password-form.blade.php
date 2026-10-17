@@ -14,7 +14,7 @@
         @method('put')
 
         <div class="mb-3">
-            <label for="update_password_current_passowrd" class="form-label">{{ __('Current Password') }}</label>
+            <label for="update_password_current_password" class="form-label">{{ __('Current Password') }}</label>
             <input id="update_password_current_password" name="current_password" type="password"
                 class="form-control @error('current_password', 'updatePassword') is-invalid @enderror"
                 autocomplete="current-password">
@@ -59,4 +59,8 @@
             @endif
         </div>
     </form>
+    @if (session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
 </section>

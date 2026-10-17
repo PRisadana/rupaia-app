@@ -30,24 +30,36 @@
                         <div class="mb-3">
                             <label for="delete_password" class="form-label">{{ __('Password') }}</label>
                             <input id="delete_password" name="password" type="password"
-                                class="form-control @error('password', 'deleteUser') is-invalid @enderror"
+                                class="form-control @error('password', 'userDeletion') is-invalid @enderror"
                                 autocomplete="current-password" placeholder="{{ __('Password') }}" required>
 
-                            @error('password', 'deleteUser')
+                            @error('password', 'userDeletion')
                                 <div class="invalid-feedback">
                                     {{ $message }}
                                 </div>
                             @enderror
                         </div>
+                    </div>
 
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                {{ __('Cancel') }}
-                            </button>
-                            <button type="submit" class="btn btn-danger">
-                                {{ __('Delete Account') }}
-                            </button>
-                        </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            {{ __('Cancel') }}
+                        </button>
+                        <button type="submit" class="btn btn-danger">
+                            {{ __('Delete Account') }}
+                        </button>
+                    </div>
                 </form>
+
             </div>
+        </div>
+    </div>
+
+    @if ($errors->userDeletion->isNotEmpty())
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                new bootstrap.Modal(document.getElementById('deleteAccountModal')).show();
+            });
+        </script>
+    @endif
 </section>
