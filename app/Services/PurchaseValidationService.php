@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\CartItem;
 use App\Models\Content;
 use App\Models\Folder;
+use App\Models\TransactionItem;
 use Illuminate\Support\Facades\Storage;
 
 class PurchaseValidationService
@@ -37,6 +38,10 @@ class PurchaseValidationService
 
         if (! $content->license) {
             return 'This content does not have a valid license.';
+        }
+
+        if ($this->hasActivePurchase($user, 'content_id', $content->id)) {
+            return 'You already have an active purchase of this content.';
         }
 
         if (! Storage::disk('local')->exists($content->path_hi_res)) {
@@ -74,6 +79,10 @@ class PurchaseValidationService
 
         if (! $folder->hasPurchasableBundleContents()) {
             return 'This bundle does not contain purchasable content.';
+        }
+
+        if ($this->hasActivePurchase($user, 'folder_id', $folder->id)) {
+            return 'You already have an active purchase of this bundle.';
         }
 
         return null;
@@ -133,5 +142,13 @@ class PurchaseValidationService
         }
 
         return $item->content?->content_title ?? 'A content';
+    }
+
+    private function hasActivePurchase($user, string $column, int $productId): bool
+    {
+        return TransactionItem::query()
+            ->where($column, $productId)
+            ->activePurchaseOf($user->id)
+            ->exists();
     }
 }

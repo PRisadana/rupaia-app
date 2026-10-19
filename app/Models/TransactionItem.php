@@ -109,4 +109,26 @@ class TransactionItem extends Model
             ->whereIn('folder_id', Arr::wrap($folderIds))
             ->inPendingTransaction();
     }
+
+    public function scopeActivePurchaseOf($query, int $buyerId)
+    {
+        $holdMinutes = (int) config('marketplace.pending_hold_minutes', 60);
+
+        return $query
+            ->whereHas('transaction', function ($transaction) use ($buyerId, $holdMinutes) {
+                $transaction->where('buyer_id', $buyerId)
+                    ->where(function ($status) use ($holdMinutes) {
+                        $status->where('status', 'processing')
+                            ->orWhere('status', 'completed')
+                            ->orWhere(function ($pending) use ($holdMinutes) {
+                                $pending->where('status', 'pending')
+                                    ->where('created_at', '>=', now()->subMinutes($holdMinutes));
+                            });
+                    });
+            })
+            ->where(function ($item) {
+                $item->whereNull('download_expires_at')
+                    ->orWhere('download_expires_at', '>', now());
+            });
+    }
 }
