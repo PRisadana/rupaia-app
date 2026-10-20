@@ -6,20 +6,66 @@ use App\Models\User;
 use App\Models\Content;
 use App\Models\ShowcaseItem;
 use App\Models\Folder;
+use App\Models\Tags;
+use App\Models\License;
 use Illuminate\Http\Request;
+use App\Http\Requests\CatalogFilterRequest;
 
 class HomeController extends Controller
 {
-    public function index()
-    {
-        $contents = Content::where('visibility', 'public')
-            ->where('status', 'active')
-            ->where('sale_status', 'available')
-            ->with('user', 'tags', 'folder', 'license')
-            ->latest()
-            ->paginate(99);
+    // public function index()
+    // {
+    //     $contents = Content::where('visibility', 'public')
+    //         ->where('status', 'active')
+    //         ->where('sale_status', 'available')
+    //         ->with('user', 'tags', 'folder', 'license')
+    //         ->latest()
+    //         ->paginate(99);
 
-        return view('welcome', compact('contents'));
+    //     return view('welcome', compact('contents'));
+    // }
+
+    public function index(CatalogFilterRequest $request)
+    {
+        $perPage = (int) config('marketplace.catalog_per_page', 100);
+        $filters = $request->validated();
+        $type = $filters['type'] ?? 'content';
+
+        $contents = null;
+        $bundles = null;
+
+        if ($type === 'bundle') {
+            $bundles = Folder::catalogBundles()
+                ->filterCatalog($filters)
+                ->with([
+                    'user',
+                    'license',
+                    'contents' => fn($content) => $content->catalog(),
+                ])
+                ->latest()
+                ->paginate($perPage)
+                ->withQueryString();
+        } else {
+            $contents = Content::catalog()
+                ->filterCatalog($filters)
+                ->with('user', 'tags', 'folder', 'license')
+                ->latest()
+                ->paginate($perPage)
+                ->withQueryString();
+        }
+
+        $tags = Tags::whereHas('contents', fn($content) => $content->catalog())
+            ->orderBy('tag_name')
+            ->get();
+
+        $licenses = License::where('is_active', true)->orderBy('name')->get();
+
+        $sellers = User::where('role', 'seller')
+            ->whereHas('contents', fn($content) => $content->catalog())
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('welcome', compact('contents', 'bundles', 'type', 'tags', 'licenses', 'sellers'));
     }
 
     public function showDetailContent(Content $content)

@@ -9,4 +9,6 @@ return [
 
     'pending_hold_minutes' => (int) env('PENDING_HOLD_MINUTES', 60),
 
+    'catalog_per_page' => (int) env('CATALOG_PER_PAGE', 100),
+
 ];

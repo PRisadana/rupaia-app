@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Concerns\Searchable;
 
 class Content extends Model
 {
     use HasFactory;
+    use Searchable;
 
     protected $fillable = [
         'seller_id',
@@ -106,5 +108,31 @@ class Content extends Model
     public function reviewer()
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function scopeCatalog($query)
+    {
+        return $query->where('visibility', 'public')
+            ->where('status', 'active')
+            ->where('sale_status', 'available');
+    }
+
+    public function scopeFilterCatalog($query, array $filters)
+    {
+        return $query
+            ->when($filters['q'] ?? null, function ($query, $keyword) {
+                $query->where(function ($group) use ($keyword) {
+                    $group->search($keyword, ['content_title', 'content_description'])
+                        ->orWhereHas('tags', fn($tag) => $tag->search($keyword, ['tag_name']));
+                });
+            })
+            ->when($filters['tag'] ?? null, function ($query, $tagId) {
+                $query->whereHas('tags', fn($tag) => $tag->where('tags.id', $tagId));
+            })
+            ->when($filters['license'] ?? null, fn($query, $id) => $query->where('license_id', $id))
+            ->when($filters['seller'] ?? null, fn($query, $id) => $query->where('seller_id', $id))
+            ->when($filters['sale_type'] ?? null, fn($query, $type) => $query->where('sale_type', $type))
+            ->when(isset($filters['min_price']), fn($query) => $query->where('price', '>=', $filters['min_price']))
+            ->when(isset($filters['max_price']), fn($query) => $query->where('price', '<=', $filters['max_price']));
     }
 }

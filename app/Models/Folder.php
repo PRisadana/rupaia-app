@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\Searchable;
 
 class Folder extends Model
 {
     // protected $table = 'tb_folder';
+
+    use Searchable;
 
     protected $fillable = [
         'seller_id',
@@ -142,5 +145,25 @@ class Folder extends Model
         }
 
         return $ids;
+    }
+
+    public function scopeCatalogBundles($query)
+    {
+        return $query->where('is_bundle', true)
+            ->where('visibility', 'public')
+            ->where('status', 'active')
+            ->whereNotNull('bundle_price')
+            ->whereNotNull('license_id')
+            ->whereHas('contents', fn($content) => $content->catalog()->where('sale_type', 'multi_sale'));
+    }
+
+    public function scopeFilterCatalog($query, array $filters)
+    {
+        return $query
+            ->search($filters['q'] ?? null, ['folder_name', 'folder_description'])
+            ->when($filters['license'] ?? null, fn($query, $id) => $query->where('license_id', $id))
+            ->when($filters['seller'] ?? null, fn($query, $id) => $query->where('seller_id', $id))
+            ->when(isset($filters['min_price']), fn($query) => $query->where('bundle_price', '>=', $filters['min_price']))
+            ->when(isset($filters['max_price']), fn($query) => $query->where('bundle_price', '<=', $filters['max_price']));
     }
 }

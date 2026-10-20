@@ -3,10 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\Searchable;
 
 class Tags extends Model
 {
-    // protected $table = 'tb_tag';
+    use Searchable;
 
     protected $fillable = [
         'tag_name',
