@@ -7,19 +7,29 @@ use App\Models\Content;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Concerns\Searchable;
 
 class AdminContentController extends Controller
 {
-    public function index()
+    private const REVIEW_STATUSES = ['pending_review', 'active', 'rejected', 'banned'];
+
+    public function index(Request $request)
     {
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'status' => ['nullable', Rule::in(self::REVIEW_STATUSES)],
+        ]);
+
         $contents = Content::with([
             'user',
             'folder',
             'license',
             'similarContent.user',
         ])
+            ->filterAdmin($filters)
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.content.index', compact('contents'));
     }
@@ -44,12 +54,9 @@ class AdminContentController extends Controller
         $validated = $request->validate([
             'status' => [
                 'required',
-                Rule::in([
-                    'pending_review',
-                    'active',
-                    'rejected',
-                    'banned',
-                ]),
+                Rule::in(
+                    self::REVIEW_STATUSES,
+                ),
             ],
             'review_note' => [
                 'nullable',

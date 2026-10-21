@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use App\Models\Concerns\Searchable;
+use Illuminate\Validation\Rule;
 
 class TransactionController extends Controller
 {
@@ -11,15 +13,18 @@ class TransactionController extends Controller
     {
         $user = $request->user();
 
+        $filters = $request->validate([
+            'status' => ['nullable', Rule::in(Transaction::STATUSES)],
+        ]);
+
         $transactions = Transaction::withCount('items')
             ->where('buyer_id', $user->id)
+            ->when($filters['status'] ?? null, fn($query, $status) => $query->where('status', $status))
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
-        return view(
-            'transactions.index',
-            compact('transactions')
-        );
+        return view('transactions.index', compact('transactions'));
     }
 
     public function show(Request $request, Transaction $transaction)

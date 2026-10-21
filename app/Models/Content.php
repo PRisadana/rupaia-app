@@ -135,4 +135,16 @@ class Content extends Model
             ->when(isset($filters['min_price']), fn($query) => $query->where('price', '>=', $filters['min_price']))
             ->when(isset($filters['max_price']), fn($query) => $query->where('price', '<=', $filters['max_price']));
     }
+
+    public function scopeFilterAdmin($query, array $filters)
+    {
+        return $query
+            ->when($filters['status'] ?? null, fn($q, $status) => $q->where('status', $status))
+            ->when($filters['q'] ?? null, function ($q, $keyword) {
+                $q->where(function ($group) use ($keyword) {
+                    $group->search($keyword, ['content_title'])
+                        ->orWhereHas('user', fn($seller) => $seller->search($keyword, ['name']));
+                });
+            });
+    }
 }

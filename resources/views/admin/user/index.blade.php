@@ -15,7 +15,7 @@
         <div class="d-flex justify-content-between align-items-center my-4 admin-page-title">
             <div>
                 <h1 class="m-0">Users</h1>
-                <p class="text-muted mb-0">Manage and review user status.</p>
+                <p class="text-muted mb-0">Manage user accounts and roles</p>
             </div>
             <a href="{{ route('admin.user.create') }}"
                 class="btn btn-outline-secondary px-4 py-2 d-inline-flex align-items-center align-items-center gap-2"><i
@@ -25,6 +25,11 @@
         </div>
 
         <div class="admin-table-wrapper">
+            @include('admin.partials.filter-bar', [
+                'action' => route('admin.user.index'),
+                'searchPlaceholder' => 'Search name or email',
+                'filters' => [['name' => 'role', 'label' => 'Roles', 'options' => ['admin', 'buyer', 'seller']]],
+            ])
             <div class="table-responsive">
                 <table class="table table-striped table-hover">
                     <thead>
@@ -39,7 +44,7 @@
                     <tbody>
                         @forelse ($users as $user)
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $users->firstItem() + $loop->index }}</td>
                                 <td>{{ $user->name }}</td>
                                 <td>{{ $user->email }}</td>
                                 <td>
@@ -59,13 +64,15 @@
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger"
                                             onclick="return confirm('Are you sure you want to delete this user?')"><i
-                                                class="fi fi-rr-trash"></i></button></button>
+                                                class="fi fi-rr-trash"></i></button>
                                     </form>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center">No users found.</td>
+                                <td colspan="13" class="text-center">
+                                    {{ request()->hasAny(['q', 'role']) ? 'No users match your filters.' : 'No users found.' }}.
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>

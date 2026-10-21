@@ -14,83 +14,34 @@
         @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('success') }}
-
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
                 </button>
             </div>
         @endif
 
-        @if ($errors->any())
+        {{-- @if ($errors->any())
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-
                 @foreach ($errors->all() as $error)
                     <div>{{ $error }}</div>
                 @endforeach
-
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
                 </button>
-
             </div>
-        @endif
+        @endif --}}
 
         <div class="admin-table-wrapper">
-            {{-- Filter --}}
-            {{-- <form method="GET" action="{{ route('admin.transaction.index') }}" class="row g-2 mb-4">
-                <div class="col-md-5">
-                    <input type="text" name="q" value="{{ request('q') }}" class="form-control"
-                        placeholder="Search order code, buyer name, or email">
-                </div>
-                <div class="col-md-3">
-                    <select name="payment_status" class="form-select">
-                        <option value="">
-                            All Payment Status
-                        </option>
-                        <option value="pending" @selected(request('payment_status') === 'pending')>
-                            Pending
-                        </option>
-
-                        <option value="success" @selected(request('payment_status') === 'success')>
-                            Success
-                        </option>
-
-                        <option value="failed" @selected(request('payment_status') === 'failed')>
-                            Failed
-                        </option>
-
-                        <option value="expired" @selected(request('payment_status') === 'expired')>
-                            Expired
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="col-md-auto">
-
-                    <button type="submit" class="btn btn-dark">
-
-                        <i class="fi fi-rr-search me-1"></i>
-                        Search
-
-                    </button>
-
-                </div>
-
-
-                @if (request()->filled('q') || request()->filled('payment_status'))
-                    <div class="col-md-auto">
-
-                        <a href="{{ route('admin.transaction.index') }}" class="btn btn-outline-secondary">
-
-                            Reset
-
-                        </a>
-
-                    </div>
-                @endif
-
-            </form> --}}
+            @include('admin.partials.filter-bar', [
+                'action' => route('admin.transaction.index'),
+                'searchPlaceholder' => 'Search order code, invoice, buyer name, or email',
+                'filters' => [
+                    ['name' => 'status', 'label' => 'Status', 'options' => App\Models\Transaction::STATUSES],
+                    [
+                        'name' => 'payment_status',
+                        'label' => 'Payment',
+                        'options' => App\Models\Transaction::PAYMENT_STATUSES,
+                    ],
+                ],
+            ])
 
             <div class="table-responsive">
                 <table class="table table-striped table-hover align-middle">
@@ -145,18 +96,6 @@
                                         <span class="badge bg-secondary">
                                             {{ ucfirst($transaction->status) }}
                                         </span>
-                                    @endif
-
-                                    @if ($transaction->status === 'processing')
-                                        <div class="small text-muted mt-1">
-                                            Your payment was received. Your files are being prepared.
-                                            This page refreshes automatically.
-                                        </div>
-                                        <script>
-                                            setTimeout(function() {
-                                                window.location.reload();
-                                            }, 5000);
-                                        </script>
                                     @endif
                                 </td>
                                 <td>

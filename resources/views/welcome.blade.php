@@ -18,7 +18,7 @@
                     Discover authentic visual works from Indonesia's best creators.
                 </h1>
                 <p class="lead">
-                    Explore a collection of premium photos, illustrations, and videos for your projects, or start selling
+                    Explore a collection of premium photos and illustrations for your projects, or start selling
                     your work on a secure and trusted platform.
                 </p>
 

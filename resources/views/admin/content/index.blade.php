@@ -2,6 +2,12 @@
 
 @section('content')
     <div class="container-fluid px-4 admin-page-wrapper">
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
         <div class="d-flex justify-content-between align-items-center my-4 admin-page-title">
             <div>
                 <h1 class="m-0">Contents</h1>
@@ -10,13 +16,23 @@
         </div>
 
         <div class="admin-table-wrapper">
+            @include('admin.partials.filter-bar', [
+                'action' => route('admin.content.index'),
+                'searchPlaceholder' => 'Search content title or seller name',
+                'filters' => [
+                    [
+                        'name' => 'status',
+                        'label' => 'Status',
+                        'options' => ['pending_review', 'active', 'rejected', 'banned'],
+                    ],
+                ],
+            ])
             <div class="table-responsive">
                 <table class="table table-striped table-hover align-middle">
                     <thead>
                         <tr>
                             <th scope="col">No</th>
                             <th scope="col">Author</th>
-                            {{-- <th scope="col">Folder</th> --}}
                             <th scope="col">Content Title</th>
                             <th scope="col">Content Description</th>
                             <th scope="col">Price (Rp)</th>
@@ -32,7 +48,7 @@
                     <tbody>
                         @forelse ($contents as $content)
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $contents->firstItem() + $loop->index }}</td>
                                 <td><a href="{{ route('authors.show', $content->user->id) }}"
                                         class="text-dark fw-semibold">{{ $content->user->name }}</a></td>
                                 <td><a href="{{ route('admin.content.status.edit', $content) }}"
@@ -102,7 +118,9 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center">No contents found.</td>
+                                <td colspan="13" class="text-center">
+                                    {{ request()->hasAny(['q', 'status']) ? 'No contents match your filters.' : 'No contents found.' }}
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>

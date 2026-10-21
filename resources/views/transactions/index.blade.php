@@ -14,19 +14,34 @@
                     </p>
                 </div>
 
-                @if ($transactions->isEmpty())
-                    <div class="card shadow-sm">
-                        <div class="card-body text-center py-5">
-                            <i class="fi fi-rr-receipt" style="font-size: 48px;">
-                            </i>
-                            <h5 class="mt-3">
-                                No transactions yet
-                            </h5>
-                            <p class="text-muted mb-0">
-                                Your completed checkouts will appear here.
-                            </p>
-                        </div>
+                <form method="GET" action="{{ route('transactions.index') }}" class="row g-2 mb-4">
+                    <div class="col-sm-5 col-md-4">
+                        <select name="status" class="form-select" aria-label="Transaction status">
+                            <option value="">All statuses</option>
+                            @foreach (App\Models\Transaction::STATUSES as $status)
+                                <option value="{{ $status }}" @selected(request('status') === $status)>
+                                    {{ ucfirst($status) }}
+                                </option>
+                            @endforeach
+                        </select>
+                        {{-- @error('status')
+                            <div class="small text-danger mt-1">{{ $message }}</div>
+                        @enderror --}}
                     </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-dark">Apply</button>
+                    </div>
+                    @if (request()->filled('status'))
+                        <div class="col-auto">
+                            <a href="{{ route('transactions.index') }}" class="btn btn-outline-secondary">Reset</a>
+                        </div>
+                    @endif
+                </form>
+
+                @if ($transactions->isEmpty())
+                    <h5 class="mt-3">
+                        {{ request()->filled('status') ? 'No transactions match this filter' : 'No transactions yet' }}
+                    </h5>
                 @else
                     <div class="card shadow-sm">
                         <div class="table-responsive">

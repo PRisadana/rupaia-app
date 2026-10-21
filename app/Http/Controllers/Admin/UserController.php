@@ -16,9 +16,21 @@ class UserController extends Controller
         private UserDeletionService $userDeletionService
     ) {}
 
-    public function index()
+    private const ROLES = ['admin', 'buyer', 'seller'];
+
+    public function index(Request $request)
     {
-        $users = User::latest()->paginate(10);
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'role' => ['nullable', Rule::in(self::ROLES)],
+        ]);
+
+        $users = User::query()
+            ->when($filters['role'] ?? null, fn($query, $role) => $query->where('role', $role))
+            ->when($filters['q'] ?? null, fn($query, $keyword) => $query->search($keyword, ['name', 'email']))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.user.index', compact('users'));
     }

@@ -8,52 +8,23 @@ use App\Services\MidtransPaymentService;
 use App\Services\PaymentStatusService;
 use Illuminate\Http\Request;
 use Throwable;
+use Illuminate\validation\Rule;
 
 class AdminTransactionController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Transaction::query()
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'status' => ['nullable', Rule::in(Transaction::STATUSES)],
+            'payment_status' => ['nullable', Rule::in(Transaction::PAYMENT_STATUSES)],
+        ]);
+
+        $transactions = Transaction::query()
             ->with('buyer')
             ->withCount('items')
-            ->latest();
-
-        if ($request->filled('payment_status')) {
-            $query->where('payment_status', $request->payment_status);
-        }
-
-        // if ($request->filled('q')) {
-        //     $search = $request->q;
-        //     $query->where(
-        //         function ($query) use ($search) {
-        //             $query
-        //                 ->where(
-        //                     'order_code',
-        //                     'like',
-        //                     "%{$search}%"
-        //                 )
-        //                 ->orWhereHas(
-        //                     'buyer',
-        //                     function ($buyerQuery)
-        //                     use ($search) {
-        //                         $buyerQuery
-        //                             ->where(
-        //                                 'name',
-        //                                 'like',
-        //                                 "%{$search}%"
-        //                             )
-        //                             ->orWhere(
-        //                                 'email',
-        //                                 'like',
-        //                                 "%{$search}%"
-        //                             );
-        //                     }
-        //                 );
-        //         }
-        //     );
-        // }
-
-        $transactions = $query
+            ->filterAdmin($filters)
+            ->latest()
             ->paginate(15)
             ->withQueryString();
 
