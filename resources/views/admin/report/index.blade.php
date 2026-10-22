@@ -13,13 +13,16 @@
             <h1 class="m-0">Published Content Reports</h1>
         </div>
         <hr>
+        @include('admin.partials.filter-bar', [
+            'action' => route('admin.report.index'),
+            'filters' => [['name' => 'status', 'label' => 'Reports', 'options' => App\Models\Report::STATUSES]],
+        ])
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
                     <th scope="col">No</th>
                     <th scope="col">Content</th>
                     <th scope="col">Seller</th>
-                    {{-- <th scope="col">Content From</th> --}}
                     <th scope="col">Report Status</th>
                     <th scope="col">Action Taken</th>
                     <th scope="col">Pending Reports</th>
@@ -35,14 +38,12 @@
                     @endphp
 
                     <tr>
-                        <td>{{ $loop->iteration }}</td>
-
+                        <td>{{ $reportedContents->firstItem() + $loop->index }}</td>
                         <td>
                             <a href="{{ route('content.detail', $content->id) }}" class="text-dark fw-semibold">
                                 {{ $content->content_title }}
                             </a>
                         </td>
-
                         <td>
                             <a href="{{ route('authors.show', $content->user->id) }}" class="text-dark fw-semibold">
                                 {{ $content->user->name }}
@@ -108,7 +109,7 @@
                 @empty
                     <tr>
                         <td colspan="9" class="text-center text-muted">
-                            No reported contents found.
+                            {{ request()->filled('status') ? 'No reported contents match this filter.' : 'No reported contents found.' }}
                         </td>
                     </tr>
                 @endforelse

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class ShowcaseItem extends Model
 {
+    public const STATUSES = ['active', 'banned'];
+
     protected $fillable = [
         'seller_id',
         'content_id',

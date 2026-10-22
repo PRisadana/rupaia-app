@@ -5,12 +5,21 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\ShowcaseItem;
+use Illuminate\Validation\Rule;
 
 class AdminShowcaseController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $showcaseItems = ShowcaseItem::latest()->paginate(10);
+        $filters = $request->validate([
+            'status' => ['nullable', Rule::in(ShowcaseItem::STATUSES)],
+        ]);
+
+        $showcaseItems = ShowcaseItem::with(['user', 'content'])
+            ->when($filters['status'] ?? null, fn($query, $status) => $query->where('status', $status))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.showcase.index', compact('showcaseItems'));
     }
@@ -25,7 +34,7 @@ class AdminShowcaseController extends Controller
     public function updateStatusShowcase(Request $request, ShowcaseItem $showcaseItem)
     {
         $validated = $request->validate([
-            'status' => 'required|in:active,banned',
+            'status' => ['required', Rule::in(ShowcaseItem::STATUSES)],
         ]);
 
         $showcaseItem->update([

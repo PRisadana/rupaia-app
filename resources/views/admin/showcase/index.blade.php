@@ -17,6 +17,12 @@
         </div>
 
         <div class="admin-table-wrapper">
+            @include('admin.partials.filter-bar', [
+                'action' => route('admin.showcase.index'),
+                'filters' => [
+                    ['name' => 'status', 'label' => 'Status', 'options' => App\Models\ShowcaseItem::STATUSES],
+                ],
+            ])
             <div class="table-responsive">
                 <table class="table table-striped table-hover align-middle">
                     <thead>

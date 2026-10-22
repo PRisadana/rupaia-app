@@ -18,7 +18,7 @@
             </div>
         @endif
 
-        @if ($errors->any())
+        {{-- @if ($errors->any())
             <div class="alert alert-danger">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
@@ -26,48 +26,12 @@
                     @endforeach
                 </ul>
             </div>
-        @endif
+        @endif --}}
 
-        {{-- <div class="card mb-4">
-            <div class="card-body">
-                <form method="GET" action="{{ route('admin.payout.index') }}" class="row g-2">
-                    <div class="col-md-6">
-                        <input type="text" name="q" class="form-control" value="{{ request('q') }}"
-                            placeholder="Search seller, email, bank, account number...">
-                    </div>
-
-                    <div class="col-md-3">
-                        <select name="status" class="form-select">
-                            <option value="">
-                                All Status
-                            </option>
-
-                            <option value="pending" @selected(request('status') === 'pending')>
-                                Pending
-                            </option>
-
-                            <option value="paid" @selected(request('status') === 'paid')>
-                                Paid
-                            </option>
-
-                            <option value="rejected" @selected(request('status') === 'rejected')>
-                                Rejected
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-3">
-                        <button class="btn btn-dark" type="submit">
-                            Filter
-                        </button>
-
-                        <a href="{{ route('admin.payout.index') }}" class="btn btn-outline-secondary">
-                            Reset
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </div> --}}
+        @include('admin.partials.filter-bar', [
+            'action' => route('admin.payout.index'),
+            'filters' => [['name' => 'status', 'label' => 'Status', 'options' => App\Models\Payout::STATUSES]],
+        ])
 
         <div class="card">
             <div class="table-responsive">
@@ -134,8 +98,7 @@
                                 </td>
 
                                 <td>
-                                    <a href="{{ route('admin.payout.show', $payout) }}"
-                                        class="btn btn-sm btn-outline-dark">
+                                    <a href="{{ route('admin.payout.show', $payout) }}" class="btn btn-sm btn-outline-dark">
                                         View Detail
                                     </a>
                                 </td>

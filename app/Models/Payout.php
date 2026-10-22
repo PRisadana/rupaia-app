@@ -9,6 +9,8 @@ class Payout extends Model
 {
     use HasFactory;
 
+    public const STATUSES = ['pending', 'paid', 'rejected'];
+
     protected $fillable = [
         'seller_id',
         'bank_account_id',

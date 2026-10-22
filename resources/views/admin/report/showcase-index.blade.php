@@ -13,6 +13,10 @@
             <h1 class="m-0">Showcase Reports</h1>
         </div>
         <hr>
+        @include('admin.partials.filter-bar', [
+            'action' => route('admin.report.index'),
+            'filters' => [['name' => 'status', 'label' => 'Reports', 'options' => App\Models\Report::STATUSES]],
+        ])
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
@@ -35,8 +39,7 @@
                     @endphp
 
                     <tr>
-                        <td>{{ $loop->iteration }}</td>
-
+                        <td>{{ $reportedShowcases->firstItem() + $loop->index }}</td>
                         <td>
                             <a href="{{ route('authors.show.detail', $showcaseItem->id) }}" class="text-dark fw-semibold">
                                 {{ $showcaseItem->description }}
@@ -119,7 +122,7 @@
                 @empty
                     <tr>
                         <td colspan="9" class="text-center text-muted">
-                            No reported showcases found.
+                            {{ request()->filled('status') ? 'No reported contents match this filter.' : 'No reported contents found.' }}
                         </td>
                     </tr>
                 @endforelse

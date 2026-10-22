@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Report extends Model
 {
+
+    public const STATUSES = ['pending', 'ignored', 'resolved'];
+
     protected $fillable = [
         'reporter_id',
         'content_id',

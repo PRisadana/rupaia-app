@@ -5,24 +5,40 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Folder;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AdminFolderController extends Controller
 {
+    // public function index(Request $request)
+    // {
+    //     $folders = Folder::with(['user', 'parent'])
+    //         // ->when($request->filled('status'), function ($query) use ($request) {
+    //         //     $query->where('status', $request->status);
+    //         // })
+    //         // ->when($request->filled('visibility'), function ($query) use ($request) {
+    //         //     $query->where('visibility', $request->visibility);
+    //         // })
+    //         // ->when($request->filled('is_bundle'), function ($query) use ($request) {
+    //         //     $query->where('is_bundle', $request->is_bundle);
+    //         // })
+    //         ->latest()
+    //         ->paginate(10);
+    //     // ->withQueryString();
+
+    //     return view('admin.folder.index', compact('folders'));
+    // }
+
     public function index(Request $request)
     {
-        $folders = Folder::with(['user', 'parent'])
-            // ->when($request->filled('status'), function ($query) use ($request) {
-            //     $query->where('status', $request->status);
-            // })
-            // ->when($request->filled('visibility'), function ($query) use ($request) {
-            //     $query->where('visibility', $request->visibility);
-            // })
-            // ->when($request->filled('is_bundle'), function ($query) use ($request) {
-            //     $query->where('is_bundle', $request->is_bundle);
-            // })
+        $filters = $request->validate([
+            'status' => ['nullable', Rule::in(Folder::STATUSES)],
+        ]);
+
+        $folders = Folder::with(['user', 'parent', 'license'])
+            ->when($filters['status'] ?? null, fn($query, $status) => $query->where('status', $status))
             ->latest()
-            ->paginate(10);
-        // ->withQueryString();
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.folder.index', compact('folders'));
     }
@@ -37,7 +53,7 @@ class AdminFolderController extends Controller
     public function updateStatusFolder(Request $request, Folder $folder)
     {
         $validated = $request->validate([
-            'status' => 'required|in:active,banned',
+            'status' => ['required', Rule::in(Folder::STATUSES)],
         ]);
 
         $folder->updateStatusRecursive($validated['status']);

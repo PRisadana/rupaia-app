@@ -7,9 +7,9 @@ use App\Models\Concerns\Searchable;
 
 class Folder extends Model
 {
-    // protected $table = 'tb_folder';
-
     use Searchable;
+
+    public const STATUSES = ['active', 'banned'];
 
     protected $fillable = [
         'seller_id',

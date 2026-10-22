@@ -14,8 +14,16 @@ class AdminReportController extends Controller
 {
     public function index(Request $request)
     {
+        $filters = $request->validate([
+            'status' => ['nullable', Rule::in(Report::STATUSES)],
+        ]);
+
         $reportedContents = Content::query()
             ->whereHas('reports')
+            ->when($filters['status'] ?? null, fn($query, $status) => $query->whereHas(
+                'reports',
+                fn($report) => $report->where('status', $status)
+            ))
             ->with([
                 'user',
                 'reports' => function ($query) {
@@ -36,7 +44,8 @@ class AdminReportController extends Controller
                 'reports as total_reports_count',
             ])
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.report.index', compact('reportedContents'));
     }
@@ -119,8 +128,16 @@ class AdminReportController extends Controller
 
     public function indexShowcase(Request $request)
     {
+        $filters = $request->validate([
+            'status' => ['nullable', Rule::in(Report::STATUSES)],
+        ]);
+
         $reportedShowcases = ShowcaseItem::query()
             ->whereHas('reports')
+            ->when($filters['status'] ?? null, fn($query, $status) => $query->whereHas(
+                'reports',
+                fn($report) => $report->where('status', $status)
+            ))
             ->with([
                 'user',
                 'reports' => function ($query) {
@@ -141,7 +158,8 @@ class AdminReportController extends Controller
                 'reports as total_reports_count',
             ])
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.report.showcase-index', compact('reportedShowcases'));
     }

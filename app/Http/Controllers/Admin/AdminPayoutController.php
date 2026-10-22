@@ -9,50 +9,68 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule;
 
 class AdminPayoutController extends Controller
 {
+    // public function index(Request $request)
+    // {
+    //     $query = Payout::query()
+    //         ->with([
+    //             'seller',
+    //             'bankAccount',
+    //         ])
+    //         ->withCount('items')
+    //         ->orderByDesc('requested_at');
+
+    //     // if ($request->filled('status')) {
+    //     //     $query->where('status', $request->status);
+    //     // }
+
+    //     // if ($request->filled('q')) {
+    //     //     $search = $request->q;
+
+    //     //     $query->where(function ($query) use ($search) {
+    //     //         $query
+    //     //             ->where('id', $search)
+    //     //             ->orWhereHas('seller', function ($sellerQuery) use ($search) {
+    //     //                 $sellerQuery
+    //     //                     ->where('name', 'like', "%{$search}%")
+    //     //                     ->orWhere('email', 'like', "%{$search}%");
+    //     //             })
+    //     //             ->orWhereHas('bankAccount', function ($bankQuery) use ($search) {
+    //     //                 $bankQuery
+    //     //                     ->where('bank_name', 'like', "%{$search}%")
+    //     //                     ->orWhere('account_number', 'like', "%{$search}%");
+    //     //             });
+    //     //     });
+    //     // }
+
+    //     $payouts = $query
+    //         ->paginate(15)
+    //         ->withQueryString();
+
+    //     return view(
+    //         'admin.payout.index',
+    //         compact('payouts')
+    //     );
+    // }
+
     public function index(Request $request)
     {
-        $query = Payout::query()
-            ->with([
-                'seller',
-                'bankAccount',
-            ])
+        $filters = $request->validate([
+            'status' => ['nullable', Rule::in(Payout::STATUSES)],
+        ]);
+
+        $payouts = Payout::query()
+            ->with(['seller', 'bankAccount'])
             ->withCount('items')
-            ->orderByDesc('requested_at');
-
-        // if ($request->filled('status')) {
-        //     $query->where('status', $request->status);
-        // }
-
-        // if ($request->filled('q')) {
-        //     $search = $request->q;
-
-        //     $query->where(function ($query) use ($search) {
-        //         $query
-        //             ->where('id', $search)
-        //             ->orWhereHas('seller', function ($sellerQuery) use ($search) {
-        //                 $sellerQuery
-        //                     ->where('name', 'like', "%{$search}%")
-        //                     ->orWhere('email', 'like', "%{$search}%");
-        //             })
-        //             ->orWhereHas('bankAccount', function ($bankQuery) use ($search) {
-        //                 $bankQuery
-        //                     ->where('bank_name', 'like', "%{$search}%")
-        //                     ->orWhere('account_number', 'like', "%{$search}%");
-        //             });
-        //     });
-        // }
-
-        $payouts = $query
+            ->when($filters['status'] ?? null, fn($query, $status) => $query->where('status', $status))
+            ->orderByDesc('requested_at')
             ->paginate(15)
             ->withQueryString();
 
-        return view(
-            'admin.payout.index',
-            compact('payouts')
-        );
+        return view('admin.payout.index', compact('payouts'));
     }
 
     public function show(Payout $payout)

@@ -18,11 +18,11 @@
             </div>
         @endif
 
-        @if ($errors->any())
+        @if ($errors->has('kyc'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <strong>Action failed:</strong>
                 <ul class="mb-0 mt-2">
-                    @foreach ($errors->all() as $error)
+                    @foreach ($errors->get('kyc') as $error)
                         <li>{{ $error }}</li>
                     @endforeach
                 </ul>
@@ -31,24 +31,12 @@
             </div>
         @endif
 
-        <div class="mb-3 d-flex flex-wrap gap-2">
-            <a href="{{ route('admin.kyc.index') }}"
-                class="btn btn-sm {{ !$status ? 'btn-secondary' : 'btn-outline-secondary' }}">
-                All
-            </a>
-            <a href="{{ route('admin.kyc.index', ['status' => 'pending']) }}"
-                class="btn btn-sm {{ $status === 'pending' ? 'btn-warning' : 'btn-outline-warning' }}">
-                Pending
-            </a>
-            <a href="{{ route('admin.kyc.index', ['status' => 'verified']) }}"
-                class="btn btn-sm {{ $status === 'verified' ? 'btn-success' : 'btn-outline-success' }}">
-                Verified
-            </a>
-            <a href="{{ route('admin.kyc.index', ['status' => 'rejected']) }}"
-                class="btn btn-sm {{ $status === 'rejected' ? 'btn-danger' : 'btn-outline-danger' }}">
-                Rejected
-            </a>
-        </div>
+        @include('admin.partials.filter-bar', [
+            'action' => route('admin.kyc.index'),
+            'filters' => [
+                ['name' => 'status', 'label' => 'Status', 'options' => App\Models\KycSubmission::STATUSES],
+            ],
+        ])
 
         <div class="admin-table-wrapper">
             <div class="table-responsive">
@@ -124,7 +112,7 @@
                         @empty
                             <tr>
                                 <td colspan="8" class="text-center">
-                                    No KYC submissions found.
+                                    {{ request()->filled('status') ? 'No KYC submissions match this filter.' : 'No KYC submissions found.' }}
                                 </td>
                             </tr>
                         @endforelse

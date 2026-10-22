@@ -9,6 +9,8 @@ class KycSubmission extends Model
 {
     use HasFactory;
 
+    public const STATUSES = ['pending', 'verified', 'rejected'];
+
     protected $fillable = [
         'user_id',
         'processed_by',

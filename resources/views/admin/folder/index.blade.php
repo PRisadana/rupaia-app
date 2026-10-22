@@ -17,6 +17,10 @@
         </div>
 
         <div class="admin-table-wrapper">
+            @include('admin.partials.filter-bar', [
+                'action' => route('admin.folder.index'),
+                'filters' => [['name' => 'status', 'label' => 'Status', 'options' => App\Models\Folder::STATUSES]],
+            ])
             <div class="table-responsive">
                 <table class="table table-striped table-hover">
                     <thead>
@@ -37,7 +41,7 @@
                     <tbody>
                         @forelse ($folders as $folder)
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $folders->firstItem() + $loop->index }}</td>
                                 <td><a href="{{ route('authors.show', $folder->user->id) }}"
                                         class="text-dark fw-semibold">{{ $folder->user->name }}</a></td>
                                 <td>
@@ -50,8 +54,8 @@
                                         <span class="text-muted fst-italic">Null</span>
                                     @endif
                                 </td>
-                                <td><a
-                                        href="{{ route('folder.show', $folder->id) }}"class="text-dark fw-semibold text-color-dark">{{ $folder->folder_name }}</a>
+                                <td><a href="{{ route('folder.show', $folder->id) }}"
+                                        class="text-dark fw-semibold text-color-dark">{{ $folder->folder_name }}</a>
                                 </td>
                                 <td>{{ $folder->folder_description }}</td>
                                 <td>
@@ -88,7 +92,9 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center">No contents found.</td>
+                                <td colspan="11" class="text-center">
+                                    {{ request()->filled('status') ? 'No folders match this filter.' : 'No folders found.' }}
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>

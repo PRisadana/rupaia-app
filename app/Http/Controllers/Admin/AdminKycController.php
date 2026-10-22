@@ -9,35 +9,23 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class AdminKycController extends Controller
 {
     public function index(Request $request)
     {
-        $query = KycSubmission::with([
-            'user',
-            'processor',
+        $filters = $request->validate([
+            'status' => ['nullable', Rule::in(KycSubmission::STATUSES)],
         ]);
 
-        $status = $request->query('status');
-
-        if (in_array($status, [
-            'pending',
-            'verified',
-            'rejected',
-        ])) {
-            $query->where('status', $status);
-        }
-
-        $submissions = $query
+        $submissions = KycSubmission::with(['user', 'processor'])
+            ->when($filters['status'] ?? null, fn($query, $status) => $query->where('status', $status))
             ->latest('submitted_at')
             ->paginate(10)
             ->withQueryString();
 
-        return view(
-            'admin.kyc.index',
-            compact('submissions', 'status')
-        );
+        return view('admin.kyc.index', compact('submissions'));
     }
 
     public function show(KycSubmission $kyc)
