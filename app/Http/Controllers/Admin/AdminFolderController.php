@@ -6,28 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Folder;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+
 
 class AdminFolderController extends Controller
 {
-    // public function index(Request $request)
-    // {
-    //     $folders = Folder::with(['user', 'parent'])
-    //         // ->when($request->filled('status'), function ($query) use ($request) {
-    //         //     $query->where('status', $request->status);
-    //         // })
-    //         // ->when($request->filled('visibility'), function ($query) use ($request) {
-    //         //     $query->where('visibility', $request->visibility);
-    //         // })
-    //         // ->when($request->filled('is_bundle'), function ($query) use ($request) {
-    //         //     $query->where('is_bundle', $request->is_bundle);
-    //         // })
-    //         ->latest()
-    //         ->paginate(10);
-    //     // ->withQueryString();
-
-    //     return view('admin.folder.index', compact('folders'));
-    // }
-
     public function index(Request $request)
     {
         $filters = $request->validate([
@@ -56,7 +39,7 @@ class AdminFolderController extends Controller
             'status' => ['required', Rule::in(Folder::STATUSES)],
         ]);
 
-        $folder->updateStatusRecursive($validated['status']);
+        DB::transaction(fn() => $folder->updateStatusRecursive($validated['status']));
 
         return redirect()
             ->route('admin.folder.index')

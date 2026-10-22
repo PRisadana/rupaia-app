@@ -75,17 +75,23 @@ class Folder extends Model
 
     public function updateStatusRecursive(string $status): void
     {
-        // update folder saat ini
+        if (! in_array($status, self::STATUSES, true)) {
+            throw new \InvalidArgumentException("Unsupported folder status: {$status}");
+        }
+
         $this->update([
             'status' => $status,
         ]);
 
-        // update semua content di folder ini
-        $this->contents()->update([
-            'status' => $status,
-        ]);
+        [$from, $to] = $status === 'banned'
+            ? ['active', 'banned']
+            : ['banned', 'active'];
 
-        // update semua subfolder dan isinya
+        $this->contents()
+            ->where('status', $from)
+            ->update(['status' => $to]);
+
+        // Rekursif ke seluruh subfolder
         foreach ($this->children as $child) {
             $child->updateStatusRecursive($status);
         }
