@@ -49,6 +49,7 @@
                         <tr>
                             <th scope="col">No</th>
                             <th scope="col">Order Code</th>
+                            <th scope="col">Invoice</th>
                             <th scope="col">Buyer</th>
                             <th scope="col">Total</th>
                             <th scope="col">Items</th>
@@ -63,6 +64,7 @@
                             <tr>
                                 <td>{{ $transactions->firstItem() + $loop->index }}</td>
                                 <td class="fw-semibold">{{ $transaction->order_code }}</td>
+                                <td class="fw-semibold">{{ $transaction->invoice_number }}</td>
                                 <td>
                                     <div class="fw-semibold">
                                         {{ $transaction->buyer->name ?? '-' }}

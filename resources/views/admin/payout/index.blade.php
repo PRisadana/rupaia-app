@@ -1,9 +1,8 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="container-fluid px-4">
-
-        <div class="d-flex justify-content-between align-items-center my-4">
+    <div class="container-fluid px-4 admin-page-wrapper">
+        <div class="d-flex justify-content-between align-items-center my-4 admin-page-title">
             <div>
                 <h1 class="m-0">Payouts</h1>
                 <p class="text-muted mb-0">
@@ -13,99 +12,79 @@
         </div>
 
         @if (session('success'))
-            <div class="alert alert-success">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                </button>
             </div>
         @endif
 
-        {{-- @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif --}}
+        <div class="admin-table-wrapper">
+            @include('admin.partials.filter-bar', [
+                'action' => route('admin.payout.index'),
+                'filters' => [['name' => 'status', 'label' => 'Status', 'options' => App\Models\Payout::STATUSES]],
+            ])
 
-        @include('admin.partials.filter-bar', [
-            'action' => route('admin.payout.index'),
-            'filters' => [['name' => 'status', 'label' => 'Status', 'options' => App\Models\Payout::STATUSES]],
-        ])
-
-        <div class="card">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                <table class="table table-striped table-hover align-middle">
+                    <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Seller</th>
-                            <th>Bank Account</th>
-                            <th>Items</th>
-                            <th class="text-end">
-                                Amount
-                            </th>
-                            <th>Requested At</th>
-                            <th>Status</th>
-                            <th>Action</th>
+                            <th scope="col">No</th>
+                            <th scope="col">ID</th>
+                            <th scope="col">Seller</th>
+                            <th scope="col">Bank Account</th>
+                            <th scope="col">Items</th>
+                            <th scope="col">Amount</th>
+                            <th scope="col">Requested At</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Action</th>
                         </tr>
                     </thead>
-
                     <tbody>
                         @forelse ($payouts as $payout)
                             <tr>
+                                <td>{{ $payouts->firstItem() + $loop->index }}</td>
+                                <td class="fw-semibold">#{{ $payout->id }}</td>
                                 <td>
-                                    #{{ $payout->id }}
-                                </td>
-                                <td>
-                                    <strong>
-                                        {{ $payout->seller->name }}
-                                    </strong>
+                                    <div class="fw-semibold">
+                                        {{ $payout->seller->name ?? '-' }}
+                                    </div>
                                     <div class="small text-muted">
-                                        {{ $payout->seller->email }}
+                                        {{ $payout->seller->email ?? '-' }}
                                     </div>
                                 </td>
                                 <td>
-                                    {{ $payout->bankAccount->bank_name }}
+                                    <div>{{ $payout->bankAccount->bank_name ?? '-' }}</div>
                                     <div class="small text-muted">
-                                        {{ $payout->bankAccount->account_number }}
+                                        {{ $payout->bankAccount->account_number ?? '-' }}
                                     </div>
                                 </td>
-                                <td>
-                                    {{ $payout->items_count }}
+                                <td>{{ $payout->items_count }}</td>
+                                <td class="text-nowrap">
+                                    Rp{{ number_format($payout->amount, 0, ',', '.') }}
                                 </td>
-                                <td class="text-end fw-semibold">
-                                    Rp
-                                    {{ number_format($payout->amount, 0, ',', '.') }}
-                                </td>
-                                <td>
+                                <td class="text-nowrap">
                                     {{ $payout->requested_at ? $payout->requested_at->format('d M Y H:i') : '-' }}
                                 </td>
                                 <td>
                                     @if ($payout->status === 'pending')
-                                        <span class="badge bg-warning text-dark">
-                                            Pending
-                                        </span>
+                                        <span class="badge bg-warning text-dark">Pending</span>
                                     @elseif ($payout->status === 'paid')
-                                        <span class="badge bg-success">
-                                            Paid
-                                        </span>
+                                        <span class="badge bg-success">Paid</span>
                                     @else
-                                        <span class="badge bg-danger">
-                                            Rejected
-                                        </span>
+                                        <span class="badge bg-danger">Rejected</span>
                                     @endif
                                 </td>
-
                                 <td>
-                                    <a href="{{ route('admin.payout.show', $payout) }}" class="btn btn-sm btn-outline-dark">
-                                        View Detail
+                                    <a href="{{ route('admin.payout.show', $payout) }}"
+                                        class="btn btn-sm btn-outline-primary" title="View Detail">
+                                        <i class="fi fi-rr-eye"></i>
                                     </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-5">
+                                <td colspan="9" class="text-center py-4 text-muted">
                                     No payout requests found.
                                 </td>
                             </tr>
@@ -113,13 +92,9 @@
                     </tbody>
                 </table>
             </div>
-
-            @if ($payouts->hasPages())
-                <div class="card-footer bg-white">
-                    {{ $payouts->links() }}
-                </div>
-            @endif
+            <div class="mt-3">
+                {{ $payouts->links() }}
+            </div>
         </div>
-
     </div>
 @endsection

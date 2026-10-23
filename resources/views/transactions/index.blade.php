@@ -24,9 +24,9 @@
                                 </option>
                             @endforeach
                         </select>
-                        {{-- @error('status')
+                        @error('status')
                             <div class="small text-danger mt-1">{{ $message }}</div>
-                        @enderror --}}
+                        @enderror
                     </div>
                     <div class="col-auto">
                         <button type="submit" class="btn btn-dark">Apply</button>

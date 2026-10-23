@@ -1,156 +1,75 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="container-fluid px-4">
-        <h1 class="my-4">Dashboard</h1>
-        <hr>
-        <div class="row my-4">
-            <div class="col-xl-3 col-md-6">
-                <div class="card text-bg-light mb-4" style="max-width: 18rem;">
-                    <div class="card-header">Total Users</div>
-                    <div class="card-body">
-                        <h5 class="card-title">{{ $totalUsers }}</h5>
-                        <p class="card-text">Total number of users in the system.</p>
-                    </div>
-                    <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-dark stretched-link" href="{{ route('admin.user.index') }}">View Details</a>
-                        <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
-                    </div>
-                </div>
-            </div>
+    @php
+        $badgeClass = [
+            'active' => 'bg-success',
+            'completed' => 'bg-success',
+            'paid' => 'bg-success',
+            'verified' => 'bg-success',
+            'resolved' => 'bg-success',
+            'pending' => 'bg-warning text-dark',
+            'pending_review' => 'bg-warning text-dark',
+            'processing' => 'bg-info text-dark',
+            'rejected' => 'bg-danger',
+            'banned' => 'bg-danger',
+            'cancelled' => 'bg-secondary',
+            'ignored' => 'bg-secondary',
+        ];
+    @endphp
 
-            <div class="col-xl-3 col-md-6">
-                <div class="card text-bg-light mb-4" style="max-width: 18rem;">
-                    <div class="card-header">Total Contents</div>
-                    <div class="card-body">
-                        <h5 class="card-title">{{ $totalContents }}</h5>
-                        <p class="card-text">Total number of contents in the system.</p>
-                    </div>
-                    <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-dark stretched-link" href="{{ route('admin.content.index') }}">View
-                            Details</a>
-                        <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="card text-bg-light mb-4" style="max-width: 18rem;">
-                    <div class="card-header">Total Folders</div>
-                    <div class="card-body">
-                        <h5 class="card-title">{{ $totalFolders }}</h5>
-                        <p class="card-text">Total number of folders in the system.</p>
-                    </div>
-                    <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-dark stretched-link" href="{{ route('admin.folder.index') }}">View
-                            Details</a>
-                        <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="card text-bg-light mb-4" style="max-width: 18rem;">
-                    <div class="card-header">Total Showcases</div>
-                    <div class="card-body">
-                        <h5 class="card-title">{{ $totalShowcaseItems }}</h5>
-                        <p class="card-text">Total number of showcases in the system.</p>
-                    </div>
-                    <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-dark stretched-link" href="{{ route('admin.showcase.index') }}">View
-                            Details</a>
-                        <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="card text-bg-light mb-4" style="max-width: 18rem;">
-                    <div class="card-header">Total Presets</div>
-                    <div class="card-body">
-                        <h5 class="card-title">{{ $totalPresets }}</h5>
-                        <p class="card-text">Total number of presets in the system.</p>
-                    </div>
-                    <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-dark stretched-link" href="{{ route('admin.preset.index') }}">View Details</a>
-                        <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="card text-bg-light mb-4" style="max-width: 18rem;">
-                    <div class="card-header">Total Tags</div>
-                    <div class="card-body">
-                        <h5 class="card-title">{{ $totalTags }}</h5>
-                        <p class="card-text">Total number of tags in the system.</p>
-                    </div>
-                    <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-dark stretched-link" href="{{ route('admin.tag.index') }}">View Details</a>
-                        <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="card text-bg-light mb-4" style="max-width: 18rem;">
-                    <div class="card-header">Total Licenses</div>
-                    <div class="card-body">
-                        <h5 class="card-title">{{ $totalLicenses }}</h5>
-                        <p class="card-text">Total number of licenses in the system.</p>
-                    </div>
-                    <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-dark stretched-link" href="{{ route('admin.license.index') }}">View
-                            Details</a>
-                        <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="card text-bg-light mb-4" style="max-width: 18rem;">
-                    <div class="card-header">Total Reports</div>
-                    <div class="card-body">
-                        <h5 class="card-title">{{ $totalReports }}</h5>
-                        <p class="card-text">Total number of reports in the system.</p>
-                    </div>
-                    <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-dark stretched-link" href="{{ route('admin.report.index') }}">View Details</a>
-                        <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="card text-bg-warning mb-4" style="max-width: 18rem;">
-                    <div class="card-header">Pending Content Review</div>
-                    <div class="card-body">
-                        <h5 class="card-title">{{ $pendingReviewContents }}</h5>
-                        <p class="card-text">Contents waiting for admin review.</p>
-                    </div>
-                    <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-dark stretched-link" href="{{ route('admin.content.index') }}">
-                            View Details
-                        </a>
-                        <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="card text-bg-light mb-4" style="max-width: 18rem;">
-                    <div class="card-header">Total Transactions</div>
-                    <div class="card-body">
-                        <h5 class="card-title">{{ $totalTransactions }}</h5>
-                        <p class="card-text">Total number of transactions in the system.</p>
-                    </div>
-                    <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-dark stretched-link" href="{{ route('admin.transaction.index') }}">View
-                            Details</a>
-                        <div class="small text-dark"><i class="fas fa-angle-right"></i></div>
-                    </div>
-                </div>
-            </div>
+    <div class="container-fluid px-4 admin-page-wrapper">
+        <div class="my-4 admin-page-title">
+            <h1 class="m-0">Dashboard</h1>
+            <p class="text-muted mb-0">Overview of everything in the Rupaia system.</p>
         </div>
+
+        <h5 class="mb-3">Needs attention</h5>
+        <div class="row g-3 mb-4">
+            @foreach ($attention as $item)
+                <div class="col-xl-2 col-md-4 col-6">
+                    <a href="{{ $item['url'] }}" class="text-decoration-none">
+                        <div class="card admin-card h-100 {{ $item['count'] > 0 ? 'border-warning border-2' : '' }}">
+                            <div class="card-body">
+                                <div class="h2 mb-1 text-dark">{{ number_format($item['count']) }}</div>
+                                <div class="small text-muted">{{ $item['label'] }}</div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            @endforeach
+        </div>
+
+        @foreach ($sections as $section)
+            <h5 class="mb-3">{{ $section['title'] }}</h5>
+            <div class="row g-3 mb-4">
+                @foreach ($section['items'] as $item)
+                    <div class="col-xl-4 col-md-6">
+                        <div class="card admin-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="small text-muted">{{ $item['label'] }}</div>
+                                        <div class="h3 mb-0">{{ number_format($item['total']) }}</div>
+                                    </div>
+                                    <a href="{{ route($item['route']) }}" class="btn btn-sm btn-outline-dark">View</a>
+                                </div>
+
+                                @if ($item['breakdown'])
+                                    <div class="d-flex flex-wrap gap-2 mt-3">
+                                        @foreach ($item['breakdown'] as $status => $count)
+                                            <a href="{{ route($item['route'], ['status' => $status]) }}"
+                                                class="badge text-decoration-none {{ $badgeClass[$status] ?? 'bg-secondary' }}">
+                                                {{ ucfirst(str_replace('_', ' ', $status)) }}: {{ $count }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endforeach
     </div>
 @endsection

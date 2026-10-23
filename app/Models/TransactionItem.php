@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Carbon\Carbon;
 
 class TransactionItem extends Model
 {
@@ -77,6 +78,25 @@ class TransactionItem extends Model
     public function payout()
     {
         return $this->belongsTo(Payout::class);
+    }
+
+    public function scopeSuccessfulSalesOf($query, int $sellerId)
+    {
+        return $query
+            ->where('seller_id', $sellerId)
+            ->whereNotNull('seller_amount')
+            ->whereHas('transaction', function ($transaction) {
+                $transaction
+                    ->where('status', 'completed')
+                    ->where('payment_status', 'success');
+            });
+    }
+
+    public function scopePaidSince($query, ?Carbon $start)
+    {
+        return $query->when($start, function ($q) use ($start) {
+            $q->whereHas('transaction', fn($t) => $t->where('paid_at', '>=', $start));
+        });
     }
 
     public function scopeInPendingTransaction($query)
