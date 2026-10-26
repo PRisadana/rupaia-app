@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Transaction;
 use Illuminate\Http\Request;
-use App\Models\Concerns\Searchable;
 use Illuminate\Validation\Rule;
 
 class TransactionController extends Controller
@@ -41,6 +40,7 @@ class TransactionController extends Controller
             'items.folder',
             'items.preset',
             'items.license',
+            'items.rating',
         ]);
 
         return view(

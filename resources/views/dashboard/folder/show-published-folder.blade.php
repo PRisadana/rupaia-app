@@ -108,6 +108,10 @@
     </div>
     @endif
 
+    @if ($ratingSummary)
+        @include('components.product-rating', ['summary' => $ratingSummary])
+    @endif
+
     <h2><strong>{{ $folder->folder_name }}</strong></h2>
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">

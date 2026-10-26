@@ -15,6 +15,8 @@
             'banned' => 'bg-danger',
             'cancelled' => 'bg-secondary',
             'ignored' => 'bg-secondary',
+            'visible' => 'bg-success',
+            'hidden' => 'bg-secondary',
         ];
     @endphp
 

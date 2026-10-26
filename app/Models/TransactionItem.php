@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
+use App\Models\Concerns\Searchable;
 
 class TransactionItem extends Model
 {
-    use HasFactory;
+    use HasFactory, Searchable;
 
     protected $fillable = [
         'transaction_id',
@@ -78,6 +79,11 @@ class TransactionItem extends Model
     public function payout()
     {
         return $this->belongsTo(Payout::class);
+    }
+
+    public function rating()
+    {
+        return $this->hasOne(Rating::class);
     }
 
     public function scopeSuccessfulSalesOf($query, int $sellerId)

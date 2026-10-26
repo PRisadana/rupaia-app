@@ -8,8 +8,10 @@ use App\Models\ShowcaseItem;
 use App\Models\Folder;
 use App\Models\Tags;
 use App\Models\License;
+use App\Models\Rating;
 use Illuminate\Http\Request;
 use App\Http\Requests\CatalogFilterRequest;
+use App\Services\RatingService;
 
 class HomeController extends Controller
 {
@@ -68,7 +70,7 @@ class HomeController extends Controller
         return view('welcome', compact('contents', 'bundles', 'type', 'tags', 'licenses', 'sellers'));
     }
 
-    public function showDetailContent(Content $content)
+    public function showDetailContent(Content $content, RatingService $ratingService)
     {
         if ($content->visibility !== 'public' || $content->status !== 'active' || $content->sale_status !== 'available') {
             abort(404);
@@ -105,19 +107,9 @@ class HomeController extends Controller
                 ->get();
         }
 
-        // foreach ($content->tags as $tag) {
-        //     $relatedByTags = $relatedByTags->merge(
-        //         $tag->contents()
-        //             ->where('id', '!=', $content->id)
-        //             ->where('visibility', 'public')
-        //             ->where('status', 'active')
-        //             ->latest()
-        //             ->take(4)
-        //             ->get()
-        //     );
+        $ratingSummary = $ratingService->summaryForContent($content->id);
 
-
-        return view('dashboard.content.show-detail-content', compact('content', 'relatedContents', 'relatedByTags'));
+        return view('dashboard.content.show-detail-content', compact('content', 'relatedContents', 'relatedByTags', 'ratingSummary'));
     }
 
     public function showShowcase(User $user)
@@ -154,7 +146,7 @@ class HomeController extends Controller
         return view('dashboard.showcase.show-detail-showcase', compact('showcaseItem'));
     }
 
-    public function showPublishedFolder(Folder $folder)
+    public function showPublishedFolder(Folder $folder, RatingService $ratingService)
     {
         if ($folder->visibility !== 'public' || $folder->status !== 'active') {
             abort(404);
@@ -181,6 +173,10 @@ class HomeController extends Controller
             ? $folder->hasPurchasableBundleContents()
             : false;
 
+        $ratingSummary = $folder->is_bundle
+            ? $ratingService->summaryForBundle($folder->id)
+            : null;
+
         $breadcrumbs = collect();
         $tempFolder = $folder;
 
@@ -191,6 +187,6 @@ class HomeController extends Controller
             $tempFolder = $tempFolder->parent;
         }
 
-        return view('dashboard.folder.show-published-folder', compact('folder', 'subfolders', 'contents', 'breadcrumbs', 'hasPurchasableBundleContents'));
+        return view('dashboard.folder.show-published-folder', compact('folder', 'subfolders', 'contents', 'breadcrumbs', 'hasPurchasableBundleContents', 'ratingSummary'));
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminKycController;
 use App\Http\Controllers\Admin\AdminTransactionController;
 use App\Http\Controllers\Admin\AdminPayoutController;
+use App\Http\Controllers\Admin\AdminRatingController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\PresetController;
 use App\Http\Controllers\Admin\LicenseController;
@@ -31,6 +32,8 @@ use App\Http\Controllers\SellerReportController;
 use App\Http\Controllers\TransactionDownloadController;
 use App\Http\Controllers\SellerSalesController;
 use App\Http\Controllers\SellerPayoutController;
+use App\Http\Controllers\SellerRatingController;
+use App\Http\Controllers\RatingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('dashboard');
@@ -87,6 +90,8 @@ Route::middleware(['auth', 'buyer'])->group(function () {
     Route::post('/transactions/{transaction}/payment', [PaymentController::class, 'create'])->name('transactions.payment.create');
 
     Route::get('/transactions/{transaction}/items/{transactionItem}/download', [TransactionDownloadController::class, 'download'])->name('transactions.items.download');
+
+    Route::post('/transactions/{transaction}/items/{transactionItem}/rating', [RatingController::class, 'store'])->name('transactions.items.rating.store');
 });
 
 
@@ -135,6 +140,7 @@ Route::middleware(['auth', 'seller'])->group(function () {
     Route::get('/dashboard/reports', [SellerReportController::class, 'index'])->name('seller.report.index');
 
     Route::get('/dashboard/sales', [SellerSalesController::class, 'index'])->name('seller.sales.index');
+    Route::get('/dashboard/ratings', [SellerRatingController::class, 'index'])->name('seller.rating.index');
 
     Route::get('/dashboard/payouts', [SellerPayoutController::class, 'index'])->name('seller.payout.index');
     Route::post('/dashboard/payouts', [SellerPayoutController::class, 'store'])->name('seller.payout.store');
@@ -191,6 +197,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/reports/showcases', [AdminReportController::class, 'indexShowcase'])->name('report.showcase.index');
     Route::get('/reports/showcases/{showcaseItem}', [AdminReportController::class, 'showcaseShow'])->name('report.showcase.show');
     Route::patch('/reports/showcases/{showcaseItem}/process', [AdminReportController::class, 'processShowcaseReports'])->name('report.showcase.process');
+
+    Route::get('/ratings', [AdminRatingController::class, 'index'])->name('rating.index');
+    Route::patch('/ratings/{rating}/status', [AdminRatingController::class, 'updateStatus'])->name('rating.status');
 
     Route::get('/licenses', [LicenseController::class, 'index'])->name('license.index');
     Route::post('/licenses/store', [LicenseController::class, 'store'])->name('license.store');

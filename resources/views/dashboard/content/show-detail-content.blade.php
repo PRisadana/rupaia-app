@@ -182,6 +182,7 @@
                 </div>
             </div>
         </div>
+        @include('components.product-rating', ['summary' => $ratingSummary])
     </div>
 
     <h1 class="h3 fw-bold mb-2">More from the same folder</h1>

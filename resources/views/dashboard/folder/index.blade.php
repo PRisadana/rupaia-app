@@ -38,7 +38,7 @@
         </div>
     </div>
 
-    <ul class="nav nav-underline justify-content-center">
+    {{-- <ul class="nav nav-underline justify-content-center">
         <li class="nav-item">
             <a class="nav-link text-secondary" aria-current="page" href="{{ route('showcase.index') }}">Showcases</a>
         </li>
@@ -55,7 +55,8 @@
         <li class="nav-item">
             <a class="nav-link text-secondary" href="{{ route('seller.sales.index') }}">Sales</a>
         </li>
-    </ul>
+    </ul> --}}
+    @include('components.seller-nav', ['active' => 'folder'])
 
     <div class="row my-4">
         @foreach ($folders as $folder)

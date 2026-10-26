@@ -65,6 +65,14 @@
                     Showcase Reports
                 </a>
 
+                <a class="nav-link {{ request()->routeIs('admin.rating.*') ? 'active' : '' }}"
+                    href="{{ route('admin.rating.index') }}">
+                    <div class="sb-nav-link-icon d-inline-flex align-items-center">
+                        <i class="fi fi-rr-star mt-1"></i>
+                    </div>
+                    Ratings
+                </a>
+
                 <div class="sb-sidenav-menu-heading">Transactions</div>
 
                 <a class="nav-link {{ request()->routeIs('admin.kyc.*') ? 'active' : '' }}"

@@ -14,6 +14,7 @@ use App\Models\ShowcaseItem;
 use App\Models\Tags;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\Rating;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -32,6 +33,7 @@ class AdminDashboardController extends Controller
 
         $contentReports  = $this->countByStatus(Report::whereNotNull('content_id'));
         $showcaseReports = $this->countByStatus(Report::whereNotNull('showcase_id'));
+        $ratings = $this->countByStatus(Rating::query());
 
         $pendingReport = fn($query) => $query->where('status', 'pending');
 
@@ -82,6 +84,7 @@ class AdminDashboardController extends Controller
                     $this->item('Contents', $contents->sum(), 'admin.content.index', $this->breakdown($contents, self::CONTENT_STATUSES)),
                     $this->item('Folders', $folders->sum(), 'admin.folder.index', $this->breakdown($folders, Folder::STATUSES)),
                     $this->item('Showcases', $showcases->sum(), 'admin.showcase.index', $this->breakdown($showcases, ShowcaseItem::STATUSES)),
+                    $this->item('Ratings', $ratings->sum(), 'admin.rating.index', $this->breakdown($ratings, Rating::STATUSES)),
                     $this->item('Content reports', $contentReports->sum(), 'admin.report.index', $this->breakdown($contentReports, Report::STATUSES)),
                     $this->item('Showcase reports', $showcaseReports->sum(), 'admin.report.showcase.index', $this->breakdown($showcaseReports, Report::STATUSES)),
                 ],

@@ -122,6 +122,11 @@
                             @endswitch
                         </div>
 
+                        @php
+                            $canRate =
+                                $transaction->status === 'completed' && $transaction->payment_status === 'success';
+                        @endphp
+
                         <div class="table-responsive">
                             <table class="table">
                                 <thead>
@@ -132,6 +137,7 @@
                                         <th>License</th>
                                         <th>Price</th>
                                         <th>Action</th>
+                                        <th>Rating</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -179,11 +185,104 @@
                                                     @endif
                                                 @endif
                                             </td>
+                                            <td>
+                                                @if ($canRate)
+                                                    @php
+                                                        $rating = $item->rating;
+                                                    @endphp
+
+                                                    @if ($rating && $rating->status === 'hidden')
+                                                        <span class="badge bg-secondary">Hidden by admin</span>
+                                                    @else
+                                                        @if ($rating)
+                                                            <div class="text-warning" aria-hidden="true">
+                                                                {{ str_repeat('★', $rating->rating_value) }}{{ str_repeat('☆', 5 - $rating->rating_value) }}
+                                                            </div>
+                                                            @if ($rating->comment)
+                                                                <div class="small text-muted text-break">
+                                                                    {{ \Illuminate\Support\Str::limit($rating->comment, 60) }}
+                                                                </div>
+                                                            @endif
+                                                        @endif
+
+                                                        <button type="button" class="btn btn-sm btn-outline-dark mt-1"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#ratingModal-{{ $item->id }}">
+                                                            {{ $rating ? 'Edit rating' : 'Rate' }}
+                                                        </button>
+                                                    @endif
+                                                @endif
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
+                        @if ($canRate)
+                            @foreach ($transaction->items as $item)
+                                @php $rating = $item->rating; @endphp
+                                @continue($rating && $rating->status === 'hidden')
+
+                                <div class="modal fade" id="ratingModal-{{ $item->id }}" tabindex="-1"
+                                    aria-labelledby="ratingModalLabel-{{ $item->id }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <form method="POST"
+                                            action="{{ route('transactions.items.rating.store', ['transaction' => $transaction, 'transactionItem' => $item]) }}"
+                                            class="modal-content">
+                                            @csrf
+
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="ratingModalLabel-{{ $item->id }}">
+                                                    Rate: {{ $item->item_name_snapshot }}
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                <label class="form-label d-block">Your rating</label>
+                                                <div class="btn-group mb-3" role="group" aria-label="Rating">
+                                                    @for ($star = 1; $star <= 5; $star++)
+                                                        <input type="radio" class="btn-check" name="rating_value"
+                                                            id="star-{{ $item->id }}-{{ $star }}"
+                                                            value="{{ $star }}" required
+                                                            @checked($rating?->rating_value === $star)>
+                                                        <label class="btn btn-outline-warning"
+                                                            for="star-{{ $item->id }}-{{ $star }}">
+                                                            {{ $star }} ★
+                                                        </label>
+                                                    @endfor
+                                                </div>
+
+                                                <label for="comment-{{ $item->id }}" class="form-label">
+                                                    Comment (optional)
+                                                </label>
+                                                <textarea name="comment" id="comment-{{ $item->id }}" class="form-control" rows="4" maxlength="1000"
+                                                    placeholder="Share your experience with this item.">{{ $rating?->comment }}</textarea>
+
+                                                <div class="form-check mt-3">
+                                                    <input class="form-check-input" type="checkbox" name="is_name_masked"
+                                                        id="mask-{{ $item->id }}" value="1"
+                                                        @checked($rating ? $rating->is_name_masked : true)>
+                                                    <label class="form-check-label" for="mask-{{ $item->id }}">
+                                                        Hide half of my name in this review
+                                                    </label>
+                                                    <div class="form-text">
+                                                        Example: "Resandy Prisadana" appears as "Resa*** Prisa****".
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-outline-secondary"
+                                                    data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-dark">Save Rating</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
 
                         <hr>
 
@@ -199,7 +298,8 @@
                         <div class="mt-4">
                             @if ($transaction->status === 'pending' && $transaction->payment_status === 'pending')
                                 @if (!$transaction->snap_token)
-                                    <form method="POST" action="{{ route('transactions.payment.create', $transaction) }}">
+                                    <form method="POST"
+                                        action="{{ route('transactions.payment.create', $transaction) }}">
                                         @csrf
                                         <button type="submit" class="btn btn-dark">
                                             <i class="fi fi-rr-credit-card me-1"></i>

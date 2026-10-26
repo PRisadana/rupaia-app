@@ -9,7 +9,7 @@
             </p>
         </div>
 
-        <ul class="nav nav-underline justify-content-center mb-4">
+        {{-- <ul class="nav nav-underline justify-content-center mb-4">
             <li class="nav-item">
                 <a class="nav-link text-secondary" href="{{ route('showcase.index') }}">
                     Showcases
@@ -39,7 +39,8 @@
                     Sales
                 </a>
             </li>
-        </ul>
+        </ul> --}}
+        @include('components.seller-nav', ['active' => 'sales'])
 
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
             <div>
