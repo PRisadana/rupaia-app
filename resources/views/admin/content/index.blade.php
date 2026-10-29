@@ -59,7 +59,7 @@
                                 <td>{{ $content->content_description }}</td>
                                 <td>{{ number_format($content->price, 0, ',', '.') }}</td>
                                 <td>
-                                    <span class="badge bg-primary">{{ $folder->license->name ?? null }}</span>
+                                    <span class="badge bg-primary">{{ $content->license->name ?? null }}</span>
                                 </td>
                                 <td>
                                     @if ($content->sale_type === 'single_sale')
