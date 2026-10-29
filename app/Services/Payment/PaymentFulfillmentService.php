@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Payment;
 
 use App\Jobs\FulfillTransactionJob;
 use App\Models\Content;
@@ -9,6 +9,8 @@ use App\Models\TransactionItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Services\Distribution\BundleZipService;
+use App\Services\Editing\EditingService;
 use RuntimeException;
 
 class PaymentFulfillmentService

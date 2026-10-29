@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Services\PaymentFulfillmentService;
-use App\Services\PaymentStatusService;
+use App\Services\Payment\PaymentFulfillmentService;
+use App\Services\Payment\PaymentStatusService;
 
 class MidtransWebhookController extends Controller
 {

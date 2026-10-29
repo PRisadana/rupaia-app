@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Transaction;
-use App\Services\PaymentFulfillmentService;
+use App\Services\Payment\PaymentFulfillmentService;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;

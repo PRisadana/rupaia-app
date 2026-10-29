@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
-use App\Services\UserDeletionService;
+use App\Services\Account\UserDeletionService;
 
 class ProfileController extends Controller
 {

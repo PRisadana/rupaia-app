@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Distribution;
 
 use App\Models\Transaction;
 use App\Models\TransactionItem;

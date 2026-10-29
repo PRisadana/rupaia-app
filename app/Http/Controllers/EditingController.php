@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Content;
 use App\Models\Preset;
-use App\Services\EditingService;
+use App\Services\Editing\EditingService;
 
 class EditingController extends Controller
 {

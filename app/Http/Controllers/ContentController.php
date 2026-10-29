@@ -14,7 +14,7 @@ use App\Models\Folder;
 use App\Models\Tags;
 use App\Models\License;
 use App\Models\TransactionItem;
-use App\Services\ContentUploadService;
+use App\Services\Content\ContentUploadService;
 use App\Rules\WholeRupiah;
 use throwable;
 

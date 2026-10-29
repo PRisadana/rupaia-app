@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Editing;
 
 use App\Models\Content;
 use App\Models\Preset;

@@ -7,7 +7,7 @@ use App\Models\CartItem;
 use App\Models\Content;
 use App\Models\Folder;
 use App\Models\Preset;
-use App\Services\PurchaseValidationService;
+use App\Services\Checkout\PurchaseValidationService;
 use Illuminate\Http\Request;
 
 class CartController extends Controller

@@ -6,7 +6,7 @@ use App\Models\Cart;
 use App\Models\Transaction;
 use App\Models\Content;
 use App\Models\TransactionItem;
-use App\Services\PurchaseValidationService;
+use App\Services\Checkout\PurchaseValidationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;

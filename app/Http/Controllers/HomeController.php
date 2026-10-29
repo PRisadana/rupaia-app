@@ -9,23 +9,11 @@ use App\Models\Folder;
 use App\Models\Tags;
 use App\Models\License;
 use App\Models\Rating;
-use Illuminate\Http\Request;
 use App\Http\Requests\CatalogFilterRequest;
-use App\Services\RatingService;
+use App\Services\Rating\RatingService;
 
 class HomeController extends Controller
 {
-    // public function index()
-    // {
-    //     $contents = Content::where('visibility', 'public')
-    //         ->where('status', 'active')
-    //         ->where('sale_status', 'available')
-    //         ->with('user', 'tags', 'folder', 'license')
-    //         ->latest()
-    //         ->paginate(99);
-
-    //     return view('welcome', compact('contents'));
-    // }
 
     public function index(CatalogFilterRequest $request)
     {

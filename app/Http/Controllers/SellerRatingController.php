@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Rating;
-use App\Services\RatingService;
+use App\Services\Rating\RatingService;
 use Illuminate\Support\Facades\Auth;
 
 class SellerRatingController extends Controller

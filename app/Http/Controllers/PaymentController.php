@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaction;
-use App\Services\MidtransPaymentService;
+use App\Services\Payment\MidtransPaymentService;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller

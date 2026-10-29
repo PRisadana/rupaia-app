@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
-use App\Services\MidtransPaymentService;
-use App\Services\PaymentStatusService;
+use App\Services\Payment\MidtransPaymentService;
+use App\Services\Payment\PaymentStatusService;
 use Illuminate\Http\Request;
 use Throwable;
 use Illuminate\validation\Rule;
