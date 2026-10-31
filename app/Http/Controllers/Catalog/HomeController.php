@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Catalog;
 
 use App\Models\User;
 use App\Models\Content;
@@ -11,6 +11,7 @@ use App\Models\License;
 use App\Models\Rating;
 use App\Http\Requests\CatalogFilterRequest;
 use App\Services\Rating\RatingService;
+use App\Http\Controllers\Controller;
 
 class HomeController extends Controller
 {

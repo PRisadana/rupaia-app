@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Folder;
 
 use Illuminate\Http\Request;
 use App\Models\Folder;
@@ -10,6 +10,7 @@ use App\Models\Content;
 use App\Rules\WholeRupiah;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 
 class FolderController extends Controller
 {

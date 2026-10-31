@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Cart;
 
 use App\Models\Cart;
 use App\Models\CartItem;
@@ -9,6 +9,7 @@ use App\Models\Folder;
 use App\Models\Preset;
 use App\Services\Checkout\PurchaseValidationService;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 class CartController extends Controller
 {

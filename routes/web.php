@@ -1,227 +1,31 @@
 <?php
 
-use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Admin\AdminContentController;
-use App\Http\Controllers\Admin\AdminFolderController;
-use App\Http\Controllers\Admin\AdminShowcaseController;
-use App\Http\Controllers\Admin\AdminReportController;
-use App\Http\Controllers\Admin\AdminKycController;
-use App\Http\Controllers\Admin\AdminTransactionController;
-use App\Http\Controllers\Admin\AdminPayoutController;
-use App\Http\Controllers\Admin\AdminRatingController;
-use App\Http\Controllers\Admin\TagController;
-use App\Http\Controllers\Admin\PresetController;
-use App\Http\Controllers\Admin\LicenseController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ContentController;
-use App\Http\Controllers\FolderController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ShowcaseController;
-use App\Http\Controllers\EditingController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\PolicyController;
-use App\Http\Controllers\KycController;
-use App\Http\Controllers\BankAccountController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\TransactionController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\MidtransWebhookController;
-use App\Http\Controllers\SellerReportController;
-use App\Http\Controllers\TransactionDownloadController;
-use App\Http\Controllers\SellerSalesController;
-use App\Http\Controllers\SellerPayoutController;
-use App\Http\Controllers\SellerRatingController;
-use App\Http\Controllers\RatingController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [HomeController::class, 'index'])->name('dashboard');
-Route::get('/content/{content}', [HomeController::class, 'showDetailContent'])->name('content.detail');
-Route::get('/content/{user}/showcase', [HomeController::class, 'showShowcase'])->name('authors.show');
-Route::get('/showcase/{showcaseItem}', [HomeController::class, 'showDetailShowcase'])->name('authors.show.detail');
-Route::get('/showcase/{user}/published', [HomeController::class, 'showPublishedContent'])->name('authors.show.published');
-Route::get('/folder/{folder}', [HomeController::class, 'showPublishedFolder'])->name('folder.show');
+Route::view('/about', 'about');
 
-Route::get('/policies', [PolicyController::class, 'index'])->name('policies.index');
-
-Route::post('/midtrans/notification', [MidtransWebhookController::class, 'handle'])->name('midtrans.notification');
-
-Route::get('/about', function () {
-    return view('about');
-});
-
-// Route::get('/', function () {
-//     return view('welcome');
-// })->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    Route::get('/contents/{content}/edit-preview', [EditingController::class, 'showPreviewPage'])->name('editing.preview');
-    Route::get('/contents/{content}/image-preview', [EditingController::class, 'imagePreview'])->name('content.image-preview');
-
-    Route::post('/contents/{content}/report', [ReportController::class, 'storeContentReport'])->name('content.report');
-    Route::post('/showcases/{showcaseItem}/report', [ReportController::class, 'storeShowcaseReport'])->name('showcase.report');
-
-    Route::get('/kyc', [KycController::class, 'index'])->name('kyc.index');
-    Route::get('/kyc/create', [KycController::class, 'create'])->name('kyc.create');
-    Route::post('/kyc', [KycController::class, 'store'])->name('kyc.store');
-    Route::get('/kyc/{kyc}', [KycController::class, 'show'])->name('kyc.show');
-    Route::get('/kyc/{kyc}/document', [KycController::class, 'document'])->name('kyc.seller.document');
-});
-
-
-Route::middleware(['auth', 'buyer'])->group(function () {
-    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-    Route::post('/cart/content/{content}', [CartController::class, 'storeContent'])->name('cart.content.store');
-    Route::post('/cart/bundle/{folder}', [CartController::class, 'storeBundle'])->name('cart.bundle.store');
-    Route::patch('/cart/items/{cartItem}/refresh-price', [CartController::class, 'refreshPrice'])->name('cart.items.refresh-price');
-    Route::delete('/cart/items/{cartItem}', [CartController::class, 'destroy'])->name('cart.items.destroy');
-
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-
-    Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
-    Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
-
-    Route::post('/transactions/{transaction}/payment', [PaymentController::class, 'create'])->name('transactions.payment.create');
-
-    Route::get('/transactions/{transaction}/items/{transactionItem}/download', [TransactionDownloadController::class, 'download'])->name('transactions.items.download');
-
-    Route::post('/transactions/{transaction}/items/{transactionItem}/rating', [RatingController::class, 'store'])->name('transactions.items.rating.store');
-});
-
-
-Route::middleware(['auth', 'seller'])->group(function () {
-    Route::get('/dashboard/content', [ContentController::class, 'index'])->name('content.index');
-    Route::post('/dashboard/content/store', [ContentController::class, 'store'])->name('content.store');
-    Route::get('/dashboard/content/create', [ContentController::class, 'create'])->name('content.create');
-    Route::get('/dashboard/content/{content}/edit', [ContentController::class, 'edit'])->name('content.edit');
-    Route::put('/dashboard/content/{content}', [ContentController::class, 'update'])->name('content.update');
-    Route::delete('/dashboard/content/{content}', [ContentController::class, 'destroy'])->name('content.destroy');
-
-    Route::get('/dashboard/content/batch/create', [ContentController::class, 'createBatch'])->name('content.batch.create');
-    Route::post('/dashboard/content/batch/store', [ContentController::class, 'storeBatch'])->name('content.batch.store');
-
-    Route::get('/dashboard/folder/', [FolderController::class, 'index'])->name('folder.index');
-    Route::post('/dashboard/folder/store', [FolderController::class, 'store'])->name('folder.store');
-    Route::get('/dashboard/folder/create', [FolderController::class, 'create'])->name('folder.create');
-    Route::get('/dashboard/folder/{folder}/edit', [FolderController::class, 'edit'])->name('folder.edit');
-    Route::put('/dashboard/folder/{folder}', [FolderController::class, 'update'])->name('folder.update');
-    Route::delete('/dashboard/folder/{folder}', [FolderController::class, 'destroy'])->name('folder.destroy');
-
-    // Route::get('/dashboard/folder/detail/', [ContentController::class, 'detailFolderIndex'])->name('detail.folder.index');
-    Route::get('/dashboard/folder/detail/{folder}', [FolderController::class, 'detailFolderIndex'])->whereNumber('folder')->name('detail.folder.show');
-    Route::post('/dashboard/folder/detail/store', [FolderController::class, 'storeDetailFolder'])->name('detail.folder.store');
-    Route::get('/dashboard/folder/detail/create', [FolderController::class, 'createDetailFolder'])->name('detail.folder.create');
-
-    Route::get('/dashboard/folder/detail/content/create', [ContentController::class, 'createContentDetailFolder'])->name('content.detail.folder.create');
-    Route::post('/dashboard/folder/detail/content/store', [ContentController::class, 'storeContentDetailFolder'])->name('content.detail.folder.store');
-
-    Route::get('/dashboard/folder/{folder}/content/batch/create', [ContentController::class, 'createBatchFromFolder'])->name('content.folder.batch.create');
-    Route::post('/dashboard/folder/{folder}/content/batch/store', [ContentController::class, 'storeBatchFromFolder'])->name('content.folder.batch.store');
-
-    // Route::get('/dashboard/content/{content}/move', [ContentController::class, 'contentMoveForm'])->name('content.move.form');
-    Route::put('/dashboard/content/{content}/move', [ContentController::class, 'contentMove'])->name('content.move');
-    Route::put('/dashboard/folder/{folder}/move', [FolderController::class, 'folderMove'])->name('folder.move');
-
-    Route::get('/dashboard/showcase/', [ShowcaseController::class, 'showcaseIndex'])->name('showcase.index');
-    Route::post('/dashboard/showcase/store', [ShowcaseController::class, 'showcaseStore'])->name('showcase.store');
-    Route::get('/dashboard/showcase/create', [ShowcaseController::class, 'showcaseCreate'])->name('showcase.create');
-    Route::get('/dashboard/showcase/{showcaseItem}/edit', [ShowcaseController::class, 'showcaseEdit'])->name('showcase.edit');
-    Route::put('/dashboard/showcase/{showcaseItem}', [ShowcaseController::class, 'showcaseUpdate'])->name('showcase.update');
-    Route::delete('/dashboard/showcase/{showcaseItem}', [ShowcaseController::class, 'showcaseDestroy'])->name('showcase.destroy');
-    Route::post('/dashboard/showcase/store-from-content', [ShowcaseController::class, 'showcaseFromContentStore'])->name('showcase.from.content.store');
-    Route::get('/dashboard/showcase/create-from-content', [ShowcaseController::class, 'showcaseFromContentCreate'])->name('showcase.from.content.create');
-
-    Route::get('/dashboard/reports', [SellerReportController::class, 'index'])->name('seller.report.index');
-
-    Route::get('/dashboard/sales', [SellerSalesController::class, 'index'])->name('seller.sales.index');
-    Route::get('/dashboard/ratings', [SellerRatingController::class, 'index'])->name('seller.rating.index');
-
-    Route::get('/dashboard/payouts', [SellerPayoutController::class, 'index'])->name('seller.payout.index');
-    Route::post('/dashboard/payouts', [SellerPayoutController::class, 'store'])->name('seller.payout.store');
-
-    Route::get('/profile/bank-accounts/create', [BankAccountController::class, 'create'])->name('bank-accounts.create');
-    Route::post('/profile/bank-accounts', [BankAccountController::class, 'store'])->name('bank-accounts.store');
-    Route::get('/profile/bank-accounts/{bankAccount}/edit', [BankAccountController::class, 'edit'])->name('bank-accounts.edit');
-    Route::put('/profile/bank-accounts/{bankAccount}', [BankAccountController::class, 'update'])->name('bank-accounts.update');
-    Route::patch('/profile/bank-accounts/{bankAccount}/default', [BankAccountController::class, 'setDefault'])->name('bank-accounts.default');
-    Route::delete('/profile/bank-accounts/{bankAccount}', [BankAccountController::class, 'destroy'])->name('bank-accounts.destroy');
-});
-
-
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-
-    Route::get('/presets', [PresetController::class, 'index'])->name('preset.index');
-    Route::post('/presets/store', [PresetController::class, 'storePreset'])->name('preset.store');
-    Route::get('/presets/create', [PresetController::class, 'createPreset'])->name('preset.create');
-    Route::get('/presets/{preset}/edit', [PresetController::class, 'editPreset'])->name('preset.edit');
-    Route::put('/presets/{preset}', [PresetController::class, 'updatePreset'])->name('preset.update');
-    Route::delete('/presets/{preset}', [PresetController::class, 'destroyPreset'])->name('preset.destroy');
-
-    Route::get('/users', [UserController::class, 'index'])->name('user.index');
-    Route::post('/users/store', [UserController::class, 'storeUser'])->name('user.store');
-    Route::get('/users/create', [UserController::class, 'createUser'])->name('user.create');
-    Route::get('/users/{user}/edit', [UserController::class, 'editUser'])->name('user.edit');
-    Route::put('/users/{user}', [UserController::class, 'updateUser'])->name('user.update');
-    Route::delete('/users/{user}', [UserController::class, 'destroyUser'])->name('user.destroy');
-
-    Route::get('/contents', [AdminContentController::class, 'index'])->name('content.index');
-    Route::get('/contents/{content}/edit', [AdminContentController::class, 'editStatusContent'])->name('content.status.edit');
-    Route::put('/contents/{content}', [AdminContentController::class, 'updateStatusContent'])->name('content.status.update');
-
-    Route::get('/folders', [AdminFolderController::class, 'index'])->name('folder.index');
-    Route::get('/folders/{folder}/edit', [AdminFolderController::class, 'editStatusFolder'])->name('folder.status.edit');
-    Route::put('/folders/{folder}', [AdminFolderController::class, 'updateStatusFolder'])->name('folder.status.update');
-
-    Route::get('/showcases', [AdminShowcaseController::class, 'index'])->name('showcase.index');
-    Route::get('/showcases/{showcaseItem}/edit', [AdminShowcaseController::class, 'editStatusShowcase'])->name('showcase.status.edit');
-    Route::put('/showcases/{showcaseItem}', [AdminShowcaseController::class, 'updateStatusShowcase'])->name('showcase.status.update');
-
-    Route::get('/tags', [TagController::class, 'index'])->name('tag.index');
-    Route::post('/tags/store', [TagController::class, 'storeTag'])->name('tag.store');
-    Route::get('/tags/create', [TagController::class, 'createTag'])->name('tag.create');
-    Route::get('/tags/{tag}/edit', [TagController::class, 'editTag'])->name('tag.edit');
-    Route::put('/tags/{tag}', [TagController::class, 'updateTag'])->name('tag.update');
-    Route::delete('/tags/{tag}', [TagController::class, 'destroyTag'])->name('tag.destroy');
-
-    Route::get('/reports', [AdminReportController::class, 'index'])->name('report.index');
-    Route::get('/reports/contents/{content}', [AdminReportController::class, 'show'])->name('report.show');
-    Route::patch('/reports/contents/{content}/process', [AdminReportController::class, 'processContentReports'])->name('report.process');
-
-    Route::get('/reports/showcases', [AdminReportController::class, 'indexShowcase'])->name('report.showcase.index');
-    Route::get('/reports/showcases/{showcaseItem}', [AdminReportController::class, 'showcaseShow'])->name('report.showcase.show');
-    Route::patch('/reports/showcases/{showcaseItem}/process', [AdminReportController::class, 'processShowcaseReports'])->name('report.showcase.process');
-
-    Route::get('/ratings', [AdminRatingController::class, 'index'])->name('rating.index');
-    Route::patch('/ratings/{rating}/status', [AdminRatingController::class, 'updateStatus'])->name('rating.status');
-
-    Route::get('/licenses', [LicenseController::class, 'index'])->name('license.index');
-    Route::post('/licenses/store', [LicenseController::class, 'store'])->name('license.store');
-    Route::get('/licenses/create', [LicenseController::class, 'create'])->name('license.create');
-    Route::get('/licenses/{license}/edit', [LicenseController::class, 'edit'])->name('license.edit');
-    Route::put('/licenses/{license}', [LicenseController::class, 'update'])->name('license.update');
-    Route::delete('/licenses/{license}', [LicenseController::class, 'destroy'])->name('license.destroy');
-
-    Route::get('/kyc', [AdminKycController::class, 'index'])->name('kyc.index');
-    Route::get('/kyc/{kyc}', [AdminKycController::class, 'show'])->name('kyc.show');
-    Route::get('/kyc/{kyc}/document', [AdminKycController::class, 'document'])->name('kyc.document');
-    Route::patch('/kyc/{kyc}/verify', [AdminKycController::class, 'verify'])->name('kyc.verify');
-    Route::patch('/kyc/{kyc}/reject', [AdminKycController::class, 'reject'])->name('kyc.reject');
-
-    Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transaction.index');
-    Route::get('/transactions/{transaction}', [AdminTransactionController::class, 'show'])->name('transaction.show');
-    Route::post('/transactions/{transaction}/sync-status', [AdminTransactionController::class, 'syncStatus'])->name('transaction.sync-status');
-
-    Route::get('/payouts', [AdminPayoutController::class, 'index'])->name('payout.index');
-    Route::get('/payouts/{payout}', [AdminPayoutController::class, 'show'])->name('payout.show');
-    Route::patch('/payouts/{payout}/paid', [AdminPayoutController::class, 'markPaid'])->name('payout.paid');
-    Route::patch('/payouts/{payout}/reject', [AdminPayoutController::class, 'reject'])->name('payout.reject');
-});
-
+// Increment 1: Core System
 require __DIR__ . '/auth.php';
+require __DIR__ . '/modules/account.php';
+require __DIR__ . '/modules/content.php';
+require __DIR__ . '/modules/folder.php';
+require __DIR__ . '/modules/license.php';
+require __DIR__ . '/modules/showcase.php';
+require __DIR__ . '/modules/catalog.php';
+require __DIR__ . '/modules/policy.php';
+
+// Increment 2: Transaction System
+require __DIR__ . '/modules/cart.php';
+require __DIR__ . '/modules/checkout.php';
+require __DIR__ . '/modules/payment.php';
+require __DIR__ . '/modules/kyc.php';
+require __DIR__ . '/modules/bank-account.php';
+require __DIR__ . '/modules/payout.php';
+require __DIR__ . '/modules/distribution.php';
+require __DIR__ . '/modules/report.php';
+require __DIR__ . '/modules/admin.php';
+
+// Increment 3: Advanced Features
+require __DIR__ . '/modules/editing.php';
+require __DIR__ . '/modules/analytics.php';
+require __DIR__ . '/modules/rating.php';

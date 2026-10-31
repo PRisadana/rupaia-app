@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Payment;
 
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Services\Payment\PaymentFulfillmentService;
 use App\Services\Payment\PaymentStatusService;
+use App\Http\Controllers\Controller;
 
 class MidtransWebhookController extends Controller
 {

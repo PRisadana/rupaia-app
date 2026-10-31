@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Showcase;
 
 use Illuminate\Http\Request;
 use App\Models\Content;
@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
-
+use App\Http\Controllers\Controller;
 
 class ShowcaseController extends Controller
 {

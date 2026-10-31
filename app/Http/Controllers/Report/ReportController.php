@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Report;
 
 use App\Models\Content;
 use App\Models\Report;
 use App\Models\ShowcaseItem;
 use Illuminate\Validation\Rule;
+use App\Http\Controllers\Controller;
 
 use Illuminate\Http\Request;
 

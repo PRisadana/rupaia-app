@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Distribution;
 
 use App\Models\TransactionItem;
 use App\Models\Transaction;
@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Filesystem\FilesystemAdapter;
+use App\Http\Controllers\Controller;
 
 class TransactionDownloadController extends Controller
 {

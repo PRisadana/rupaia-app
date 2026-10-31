@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Rating;
 
 use App\Models\Rating;
 use App\Services\Rating\RatingService;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Controller;
 
 class SellerRatingController extends Controller
 {

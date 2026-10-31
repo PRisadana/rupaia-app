@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Editing;
 
 use Illuminate\Http\Request;
 use App\Models\Content;
 use App\Models\Preset;
 use App\Services\Editing\EditingService;
+use App\Http\Controllers\Controller;
 
 class EditingController extends Controller
 {

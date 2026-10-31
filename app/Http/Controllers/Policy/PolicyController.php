@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Policy;
 
 use Illuminate\Http\Request;
 use App\Models\License;
+use App\Http\Controllers\Controller;
 
 class PolicyController extends Controller
 {
