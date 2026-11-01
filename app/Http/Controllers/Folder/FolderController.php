@@ -18,8 +18,6 @@ class FolderController extends Controller
     {
         $user = $request->user();
 
-        // $this->authorize('view', $folder);
-
         $folders = $user->folders()->whereNull('parent_id')->latest()->paginate(12);
 
         return view('dashboard.folder.index', compact('folders'));
@@ -333,19 +331,6 @@ class FolderController extends Controller
             ? $validated['allow_individual_sale']
             : true;
 
-        // $parentFolder = Folder::where('id', $validated['parent_id'])
-        //     ->where('seller_id', $user->id)
-        //     ->firstOrFail();
-
-        // if ($parentFolder->is_bundle == 1 && blank($validated['bundle_price'])) {
-        //     return back()
-        //         ->withErrors(['bundle_price' => 'Bundle price must be provided when the folder is marked as a bundle.'])
-        //         ->withInput();
-        // }
-
-        // $bundlePrice = $validated['is_bundle'] == 1 ? $validated['bundle_price'] : null;
-        // $validated['bundle_price'] = $bundlePrice;
-
         $user->folders()->create($validated);
 
         // Kalau ada parent, balik ke folder tersebut
@@ -399,8 +384,6 @@ class FolderController extends Controller
             $folder->parent_id = null;
             $folder->save();
         }
-
-        // $folder->parent_id = $destinationFolderId;
 
         if ($destinationFolderId) {
             return redirect()

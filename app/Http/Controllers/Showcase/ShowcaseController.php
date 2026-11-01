@@ -145,7 +145,6 @@ class ShowcaseController extends Controller
             'custom_path' => null,
             'item_source' => 'content',
             'description' => $user->contents()->where('id', $validated['content_id'])->value('content_description'),
-            // 'status' => $validated['status'],
         ]);
 
         return redirect()

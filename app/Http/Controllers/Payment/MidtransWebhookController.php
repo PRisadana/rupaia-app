@@ -74,44 +74,6 @@ class MidtransWebhookController extends Controller
             $fraudStatus
         );
 
-        // if ($transactionStatus === 'settlement' || ($transactionStatus === 'capture' && $fraudStatus === 'accept')) {
-        //     $paymentFulfillmentService->complete($transaction);
-        //     Log::info(
-        //         'Midtrans payment fulfilled.',
-        //         [
-        //             'order_id'
-        //             => $orderId,
-        //         ]
-        //     );
-        // } elseif ($transactionStatus === 'pending') {
-        //     $transaction->update([
-        //         'status' => 'pending',
-        //         'payment_status' => 'pending',
-        //     ]);
-        // } elseif (
-        //     $transactionStatus === 'expire'
-        // ) {
-        //     $transaction->update([
-        //         'status' => 'cancelled',
-        //         'payment_status' => 'expired',
-        //     ]);
-        // } elseif (
-        //     in_array(
-        //         $transactionStatus,
-        //         [
-        //             'deny',
-        //             'cancel',
-        //             'failure',
-        //         ],
-        //         true
-        //     )
-        // ) {
-        //     $transaction->update([
-        //         'status' => 'cancelled',
-        //         'payment_status' => 'failed',
-        //     ]);
-        // }
-
         return response()->json([
             'message' => 'Notification processed.',
         ]);
