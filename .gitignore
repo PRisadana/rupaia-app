@@ -6,9 +6,11 @@
 /storage/*.key
 /storage/pail
 /vendor
+database/seeders/assets/
 .env
 .env.backup
 .env.production
+.env.seed
 .phpactor.json
 .phpunit.result.cache
 Homestead.json
