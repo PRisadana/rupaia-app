@@ -10,5 +10,6 @@ return [
         'admin_name' => env('SEED_ADMIN_NAME', 'Administrator'),
         'admin_email' => env('SEED_ADMIN_EMAIL', 'admin@rupaia.test'),
         'admin_password' => env('SEED_ADMIN_PASSWORD'),
+        'sample_password' => env('SEED_SAMPLE_PASSWORD'),
     ],
 ];

@@ -6,9 +6,6 @@ use Illuminate\Database\seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Menjalankan seeder data wajib aplikasi Rupaia.
-     */
     public function run(): void
     {
         $this->call([
