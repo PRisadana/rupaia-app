@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+import os
 from pathlib import Path
 
 from flask import Flask, jsonify, request, send_file
@@ -125,5 +126,11 @@ def apply_lut_final():
         "final"
     )
 
+# if __name__ == "__main__":
+#     app.run(debug=True, host="127.0.0.1", port=5001)
 if __name__ == "__main__":
-    app.run(debug=True, host="127.0.0.1", port=5001)
+    app.run(
+        debug=os.environ.get("FLASK_DEBUG") == "1",
+        host="127.0.0.1",
+        port=5001,
+    )
