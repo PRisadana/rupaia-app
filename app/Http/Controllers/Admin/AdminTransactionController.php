@@ -8,7 +8,7 @@ use App\Services\Payment\MidtransPaymentService;
 use App\Services\Payment\PaymentStatusService;
 use Illuminate\Http\Request;
 use Throwable;
-use Illuminate\validation\Rule;
+use Illuminate\Validation\Rule;
 
 class AdminTransactionController extends Controller
 {
