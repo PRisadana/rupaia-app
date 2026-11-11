@@ -62,7 +62,7 @@ return [
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
+            'throw' => true,
             'report' => false,
         ],
 
@@ -82,5 +82,14 @@ return [
     'links' => [
         public_path('storage') => storage_path('app/public'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Disk Berkas Privat
+    |--------------------------------------------------------------------------
+    | Disk untuk berkas hi-res, hasil final, dan ZIP bundel.
+    | 'local' = penyimpanan di server/laptop, 's3' = bucket AWS S3.
+    */
+    'private_disk' => env('RUPAIA_PRIVATE_DISK', 'local'),
 
 ];
