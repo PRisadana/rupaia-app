@@ -8,7 +8,7 @@ use App\Models\Transaction;
 use App\Models\TransactionItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use App\Support\PrivateStorage;
 use App\Services\Distribution\BundleZipService;
 use App\Services\Editing\EditingService;
 use RuntimeException;
@@ -215,9 +215,10 @@ class PaymentFulfillmentService
 
     private function copyOriginalForBuyer(TransactionItem $item): string
     {
+        $disk = PrivateStorage::disk();
         $sourcePath = $item->content->path_hi_res;
 
-        if (! Storage::disk('local')->exists($sourcePath)) {
+        if (! $disk->exists($sourcePath)) {
             throw new RuntimeException('Hi-res source image not found.');
         }
 
@@ -230,7 +231,7 @@ class PaymentFulfillmentService
             $extension
         );
 
-        Storage::disk('local')->copy($sourcePath, $finalPath);
+        $disk->copy($sourcePath, $finalPath);
 
         return $finalPath;
     }

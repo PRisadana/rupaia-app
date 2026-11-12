@@ -5,6 +5,7 @@ namespace App\Services\Editing;
 use App\Models\Content;
 use App\Models\Preset;
 use App\Models\TransactionItem;
+use App\Support\PrivateStorage;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -15,25 +16,20 @@ class EditingService
     public function generatePreview(Content $content, Preset $preset): string
     {
         if (! $preset->is_active) {
-            throw new RuntimeException(
-                'Preset is no longer available.'
-            );
+            throw new RuntimeException('Preset is no longer available.');
         }
 
-        if (! Storage::disk('public')->exists(
-            $content->path_low_res
-        )) {
-            throw new RuntimeException(
-                'Preview image not found.'
-            );
-        }
+        $disk = Storage::disk('public');
 
-        $imagePath = Storage::disk('public')->path($content->path_low_res);
+        if (! $disk->exists($content->path_low_res)) {
+            throw new RuntimeException('Preview image not found.');
+        }
 
         $lutFilename = $this->prepareLut($preset);
 
         $response = $this->sendToEditingService(
-            $imagePath,
+            $disk->get($content->path_low_res),
+            basename($content->path_low_res),
             $lutFilename,
             'apply-lut-preview',
             30
@@ -44,20 +40,17 @@ class EditingService
 
     public function generateFinal(Content $content, Preset $preset, TransactionItem $item): string
     {
-        if (! Storage::disk('local')->exists(
-            $content->path_hi_res
-        )) {
-            throw new RuntimeException(
-                'Hi-res source image not found.'
-            );
-        }
+        $disk = PrivateStorage::disk();
 
-        $imagePath = Storage::disk('local')->path($content->path_hi_res);
+        if (! $disk->exists($content->path_hi_res)) {
+            throw new RuntimeException('Hi-res source image not found.');
+        }
 
         $lutFilename = $this->prepareLut($preset);
 
         $response = $this->sendToEditingService(
-            $imagePath,
+            $disk->get($content->path_hi_res),
+            basename($content->path_hi_res),
             $lutFilename,
             'apply-lut-final',
             120
@@ -70,14 +63,10 @@ class EditingService
             $preset->id
         );
 
-        Storage::disk('local')->put(
-            $finalPath,
-            $response->body()
-        );
+        $disk->put($finalPath, $response->body());
 
         return $finalPath;
     }
-
 
     private function prepareLut(Preset $preset): string
     {
@@ -127,39 +116,33 @@ class EditingService
     }
 
     private function sendToEditingService(
-        string $imagePath,
+        ?string $contents,
+        string $filename,
         string $lutFilename,
         string $endpoint,
         int $timeout
     ): Response {
+        if ($contents === null) {
+            throw new RuntimeException('Source image could not be read.');
+        }
+
         $baseUrl = rtrim(
-            config(
-                'services.editing.url',
-                'http://127.0.0.1:5001'
-            ),
+            config('services.editing.url', 'http://127.0.0.1:5001'),
             '/'
         );
 
         $response = Http::timeout($timeout)
-            ->attach(
-                'image',
-                file_get_contents($imagePath),
-                basename($imagePath)
-            )
-            ->post(
-                "{$baseUrl}/{$endpoint}",
-                [
-                    'lut_filename'
-                    => $lutFilename,
-                ]
-            );
+            ->attach('image', $contents, $filename)
+            ->post("{$baseUrl}/{$endpoint}", [
+                'lut_filename' => $lutFilename,
+            ]);
 
         if (! $response->successful()) {
             throw new RuntimeException(
-                'Editing service failed: '
-                    . $response->body()
+                'Editing service failed: ' . $response->body()
             );
         }
+
         return $response;
     }
 }

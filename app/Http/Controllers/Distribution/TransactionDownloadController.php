@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Distribution;
 use App\Models\TransactionItem;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Support\PrivateStorage;
 use Illuminate\Support\Str;
 use Illuminate\Filesystem\FilesystemAdapter;
 use App\Http\Controllers\Controller;
@@ -47,7 +47,10 @@ class TransactionDownloadController extends Controller
                 ]);
         }
 
-        if (! $transactionItem->final_file_path || ! Storage::disk('local')->exists($transactionItem->final_file_path)) {
+        /** @var FilesystemAdapter $disk */
+        $disk = PrivateStorage::disk();
+
+        if (! $transactionItem->final_file_path || !$disk->exists($transactionItem->final_file_path)) {
             return back()
                 ->withErrors([
                     'download'
@@ -65,9 +68,6 @@ class TransactionDownloadController extends Controller
             $downloadName .=
                 '.' . $extension;
         }
-
-        /** @var FilesystemAdapter $disk */
-        $disk = Storage::disk('local');
 
         return $disk->download(
             $transactionItem->final_file_path,

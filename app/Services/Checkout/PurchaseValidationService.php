@@ -6,7 +6,7 @@ use App\Models\CartItem;
 use App\Models\Content;
 use App\Models\Folder;
 use App\Models\TransactionItem;
-use Illuminate\Support\Facades\Storage;
+use App\Support\PrivateStorage;
 
 class PurchaseValidationService
 {
@@ -44,7 +44,7 @@ class PurchaseValidationService
             return 'You already have an active purchase of this content.';
         }
 
-        if (! Storage::disk('local')->exists($content->path_hi_res)) {
+        if (! PrivateStorage::disk()->exists($content->path_hi_res)) {
             return 'Hi-res source image not found.';
         }
 
