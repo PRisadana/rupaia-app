@@ -4,6 +4,7 @@ namespace App\Services\Content;
 
 use App\Models\Content;
 use App\Models\Folder;
+use App\Support\PrivateStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -63,15 +64,15 @@ class ContentUploadService
     {
         $fileName = Str::uuid() . '.' . $file->extension();
 
-        $path_hi_res = $file->storeAs("content_file/{$sellerId}/hi_res", $fileName, 'local');
+        $path_hi_res = $file->storeAs("content_file/{$sellerId}/hi_res", $fileName, PrivateStorage::name());
         $path_low_res = "content_file/{$sellerId}/low_res/{$fileName}";
 
         try {
-            $hiResFullPath = Storage::disk('local')->path($path_hi_res);
+            $sourcePath = $file->getRealPath();
 
-            $imageValidation = $this->imageHashService->validateImage($hiResFullPath);
+            $imageValidation = $this->imageHashService->validateImage($sourcePath);
             $moderationResult = $this->imageModerationService->moderateImage(
-                $hiResFullPath,
+                $sourcePath,
                 $data['content_title'],
                 $data['content_description']
             );
@@ -141,7 +142,7 @@ class ContentUploadService
 
             return $content;
         } catch (Throwable $e) {
-            Storage::disk('local')->delete($path_hi_res);
+            PrivateStorage::disk()->delete($path_hi_res);;
             Storage::disk('public')->delete($path_low_res);
 
             throw $e;
