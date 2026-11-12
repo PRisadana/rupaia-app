@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Concerns\Searchable;
+use App\Support\PrivateStorage;
 
 class Content extends Model
 {
@@ -71,7 +72,7 @@ class Content extends Model
                 ->exists();
 
             if (! $stillReferenced) {
-                Storage::disk('local')->delete($content->path_hi_res);
+                PrivateStorage::disk()->delete($content->path_hi_res);
             }
 
             Storage::disk('public')->delete($content->path_low_res);
