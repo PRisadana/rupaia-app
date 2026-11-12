@@ -231,7 +231,7 @@ class PaymentFulfillmentService
             $extension
         );
 
-        $disk->copy($sourcePath, $finalPath);
+        PrivateStorage::copy($sourcePath, $finalPath);
 
         return $finalPath;
     }
