@@ -61,6 +61,25 @@ mkdir -p "$DIR"
 echo "$DIR" > "$HASIL_DASAR/terakhir.txt"
 export HEAP="-Xms512m -Xmx1g -XX:MaxMetaspaceSize=256m"
 
+# Soket MySQL: aaPanel tidak memakai lokasi bawaan Linux, jadi dicari otomatis.
+# Bisa ditentukan manual: MYSQL_SOCKET=/jalur/soket jalankan-uji ...
+if [ -z "${MYSQL_SOCKET:-}" ]; then
+  for S in /tmp/mysql.sock /run/mysqld/mysqld.sock /var/lib/mysql/mysql.sock; do
+    if [ -S "$S" ]; then MYSQL_SOCKET=$S; break; fi
+  done
+fi
+# ping_db berhasil bila server MySQL hidup. Sandi tidak diperlukan: jawaban "Access denied"
+# justru membuktikan server menjawab. Server mati menghasilkan "Can't connect", yang dianggap gagal.
+ping_db() {
+  { [ -n "${MYSQL_SOCKET:-}" ] && command -v mysqladmin >/dev/null; } || return 1
+  mysqladmin --socket="$MYSQL_SOCKET" ping 2>&1 | grep -qE 'is alive|Access denied'
+}
+if ping_db; then
+  echo "Rem MySQL: AKTIF (soket $MYSQL_SOCKET)"
+else
+  echo "PERINGATAN: rem MySQL NONAKTIF (soket tidak ditemukan atau ping gagal). Atur MYSQL_SOCKET bila perlu."
+fi
+
 # ---------- Rem darurat: berjalan di latar belakang selama JMeter hidup ----------
 awasi() {
   local pid_awal_oom jumlah_swap=0 gagal_db=0 mulai_detik pswp_lama pswp_baru laju
@@ -68,7 +87,7 @@ awasi() {
   mulai_detik=$(date +%s)
   pswp_lama=$(awk '/^pswpin|^pswpout/ {s+=$2} END {print s+0}' /proc/vmstat)
   local bisa_ping=0
-  command -v mysqladmin >/dev/null && mysqladmin ping >/dev/null 2>&1 && bisa_ping=1
+  ping_db && bisa_ping=1
   while sleep 10; do
     pgrep -f ApacheJMeter.jar >/dev/null || return 0     # JMeter sudah selesai
     # 1) OOM baru di log kernel
@@ -83,7 +102,7 @@ awasi() {
       alasan="lalu-lintas swap > ${BATAS_SWAP_KBS} KB/detik selama $((SWAP_BERTURUT*10)) detik"; break; fi
     # 3) MySQL tidak menjawab dua kali berturut-turut
     if [ "$bisa_ping" -eq 1 ]; then
-      if mysqladmin ping >/dev/null 2>&1; then gagal_db=0; else gagal_db=$((gagal_db+1)); fi
+      if ping_db; then gagal_db=0; else gagal_db=$((gagal_db+1)); fi
       if [ "$gagal_db" -ge 2 ]; then alasan="MySQL tidak menjawab ping dua kali berturut-turut"; break; fi
     fi
     # 4) Disk hampir penuh
